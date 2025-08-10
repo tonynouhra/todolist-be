@@ -1,0 +1,69 @@
+erDiagram
+    USERS ||--o{ PROJECTS : creates
+    USERS ||--o{ TODOS : owns
+    USERS ||--o{ FILES : uploads
+    USERS ||--o{ AI_INTERACTIONS : generates
+    
+    PROJECTS ||--o{ TODOS : contains
+    
+    TODOS ||--o{ TODOS : has_subtasks
+    TODOS ||--o{ FILES : attachments
+    TODOS ||--o{ AI_INTERACTIONS : related_to
+    
+    USERS {
+        uuid id PK
+        string clerk_user_id UK
+        string email
+        string username
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PROJECTS {
+        uuid id PK
+        uuid user_id FK
+        string name
+        text description
+        string color
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    TODOS {
+        uuid id PK
+        uuid user_id FK
+        uuid project_id FK
+        uuid parent_todo_id FK
+        string title
+        text description
+        enum status
+        int priority
+        timestamp due_date
+        timestamp created_at
+        timestamp updated_at
+        timestamp completed_at
+        boolean ai_generated
+    }
+    
+    FILES {
+        uuid id PK
+        uuid user_id FK
+        uuid todo_id FK
+        string file_name
+        string file_type
+        bigint file_size
+        text storage_url
+        jsonb ai_analysis
+        timestamp created_at
+    }
+    
+    AI_INTERACTIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid todo_id FK
+        string interaction_type
+        text prompt
+        jsonb response
+        int tokens_used
+        timestamp created_at
+    }

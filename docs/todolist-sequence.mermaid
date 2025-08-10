@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant U as User
+    participant C as Client App
+    participant A as API Gateway
+    participant T as Todo Service
+    participant AI as AI Service
+    participant G as Gemini API
+    participant D as Database
+    participant N as Notification Service
+    
+    U->>C: Create new todo with description
+    C->>A: POST /api/todos
+    A->>A: Validate JWT token
+    A->>T: Forward request
+    T->>D: Save main todo
+    D-->>T: Todo ID returned
+    
+    T->>AI: Request sub-task generation
+    Note over AI: Prepare prompt with<br/>todo title & description
+    
+    AI->>G: Generate sub-tasks API call
+    G-->>AI: Sub-tasks JSON response
+    
+    AI->>AI: Parse and validate response
+    
+    loop For each sub-task
+        AI->>D: Create sub-task record
+        D-->>AI: Sub-task ID
+    end
+    
+    AI-->>T: Sub-tasks created
+    T->>N: Send update notification
+    N->>C: WebSocket: New sub-tasks
+    T-->>A: Success response
+    A-->>C: Todo with sub-tasks
+    C-->>U: Display todo hierarchy
+    
+    Note over U,C: User can now see<br/>AI-generated sub-tasks

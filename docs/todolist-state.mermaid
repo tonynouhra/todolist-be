@@ -1,0 +1,45 @@
+stateDiagram-v2
+    [*] --> Created: User creates todo
+    
+    Created --> Todo: Initial state
+    
+    Todo --> InProgress: Start working
+    Todo --> Deleted: Delete todo
+    
+    InProgress --> Todo: Pause work
+    InProgress --> Done: Complete task
+    InProgress --> Blocked: Dependencies not met
+    InProgress --> Deleted: Delete todo
+    
+    Blocked --> InProgress: Unblocked
+    Blocked --> Todo: Reset status
+    Blocked --> Deleted: Delete todo
+    
+    Done --> InProgress: Reopen task
+    Done --> Archived: Archive after 30 days
+    Done --> Deleted: Delete todo
+    
+    Archived --> Done: Restore from archive
+    Archived --> Deleted: Permanent delete
+    
+    Deleted --> [*]
+    
+    note right of Todo
+        Default state for new todos
+        Can have sub-tasks
+    end note
+    
+    note right of InProgress
+        Active work happening
+        Tracks time spent
+    end note
+    
+    note right of Done
+        Completed successfully
+        Records completion time
+    end note
+    
+    note left of Blocked
+        Waiting for dependencies
+        Optional state
+    end note

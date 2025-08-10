@@ -1,0 +1,45 @@
+graph LR
+    subgraph "Development"
+        DEV[Developer<br/>Local Environment]
+        GIT[Git Repository<br/>GitHub/GitLab]
+    end
+    
+    subgraph "CI Pipeline"
+        TRIGGER[Trigger<br/>Push/PR/Tag]
+        LINT[Code Linting<br/>- Python: Black, Flake8<br/>- JS: ESLint]
+        TEST[Testing<br/>- Unit Tests<br/>- Integration Tests]
+        BUILD[Build<br/>- Docker Images<br/>- Static Assets]
+        SCAN[Security Scan<br/>- SAST<br/>- Dependency Check]
+    end
+    
+    subgraph "CD Pipeline"
+        STAGE[Staging Deploy<br/>- Automated<br/>- Smoke Tests]
+        E2E[E2E Testing<br/>- Playwright<br/>- API Tests]
+        APPROVE[Manual Approval<br/>- QA Sign-off]
+        PROD[Production Deploy<br/>- Blue-Green<br/>- Canary]
+    end
+    
+    subgraph "Infrastructure"
+        K8S[Kubernetes Cluster<br/>- Auto-scaling<br/>- Load Balancing]
+        MON[Monitoring<br/>- Prometheus<br/>- Grafana<br/>- Sentry]
+    end
+    
+    DEV -->|commit| GIT
+    GIT -->|webhook| TRIGGER
+    TRIGGER --> LINT
+    LINT -->|pass| TEST
+    TEST -->|pass| BUILD
+    BUILD --> SCAN
+    SCAN -->|pass| STAGE
+    STAGE --> E2E
+    E2E -->|pass| APPROVE
+    APPROVE -->|approved| PROD
+    PROD --> K8S
+    K8S --> MON
+    
+    style DEV fill:#3B82F6,color:#fff
+    style GIT fill:#3B82F6,color:#fff
+    style APPROVE fill:#F59E0B,color:#fff
+    style PROD fill:#10B981,color:#fff
+    style K8S fill:#8B5CF6,color:#fff
+    style MON fill:#8B5CF6,color:#fff

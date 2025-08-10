@@ -1,0 +1,69 @@
+graph TB
+    subgraph "Client Layer"
+        WEB[Web App<br/>React/Vue]
+        IOS[iOS App<br/>Swift/SwiftUI]
+        AND[Android App<br/>Kotlin/Compose]
+        ADM[Admin Panel<br/>React]
+    end
+    
+    subgraph "API Gateway"
+        GW[FastAPI Gateway<br/>- Rate Limiting<br/>- Auth Middleware<br/>- Request Routing]
+    end
+    
+    subgraph "Backend Services"
+        AUTH[Auth Service<br/>Clerk Integration]
+        TODO[Todo Service<br/>CRUD Operations]
+        AI[AI Service<br/>Gemini Integration]
+        FILE[File Service<br/>Upload/Storage]
+        NOTIF[Notification Service<br/>WebSocket/Push]
+    end
+    
+    subgraph "Data Layer"
+        DB[(Neon PostgreSQL<br/>- Users<br/>- Todos<br/>- Files<br/>- AI Interactions)]
+        CACHE[(Redis Cache<br/>- Session Data<br/>- Temp Storage)]
+        STORAGE[(Cloud Storage<br/>S3/CloudFlare R2<br/>- Files<br/>- Images)]
+    end
+    
+    subgraph "External Services"
+        CLERK[Clerk Auth<br/>- OAuth<br/>- JWT]
+        GEMINI[Google Gemini<br/>- Task Generation<br/>- File Analysis]
+    end
+    
+    WEB --> GW
+    IOS --> GW
+    AND --> GW
+    ADM --> GW
+    
+    GW --> AUTH
+    GW --> TODO
+    GW --> AI
+    GW --> FILE
+    GW --> NOTIF
+    
+    AUTH --> CLERK
+    AUTH --> DB
+    AUTH --> CACHE
+    
+    TODO --> DB
+    TODO --> CACHE
+    TODO --> AI
+    
+    AI --> GEMINI
+    AI --> DB
+    
+    FILE --> STORAGE
+    FILE --> DB
+    FILE --> AI
+    
+    NOTIF --> CACHE
+    
+    style WEB fill:#4F46E5,color:#fff
+    style IOS fill:#4F46E5,color:#fff
+    style AND fill:#4F46E5,color:#fff
+    style ADM fill:#4F46E5,color:#fff
+    style GW fill:#10B981,color:#fff
+    style DB fill:#F59E0B,color:#fff
+    style CACHE fill:#F59E0B,color:#fff
+    style STORAGE fill:#F59E0B,color:#fff
+    style CLERK fill:#8B5CF6,color:#fff
+    style GEMINI fill:#8B5CF6,color:#fff
