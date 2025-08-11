@@ -397,11 +397,7 @@ Thumbs.db
 # ===========================
 # Project Specific
 # ===========================
-# AI model files (if cached locally)
-models/
-*.model
-*.pkl
-*.joblib
+
 
 # File processing temp
 processing/
