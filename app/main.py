@@ -6,7 +6,7 @@ middleware, routing, and lifecycle management for the AI-powered todo system.
 """
 
 import sys
-import os
+
 import uuid
 from datetime import datetime
 from contextlib import asynccontextmanager
@@ -128,6 +128,9 @@ def setup_exception_handlers(app: FastAPI):
 
 def setup_routers(app: FastAPI):
     """Configure application routers."""
+    # Import routers
+    from app.domains.user.controller import router as user_router
+    
     # Health check endpoint
     @app.get("/health")
     async def health_check():
@@ -172,11 +175,9 @@ def setup_routers(app: FastAPI):
             "docs_url": "/docs" if settings.environment == "development" else None,
         }
     
-    # TODO: Include domain routers as they are implemented
-    # app.include_router(user_router, prefix="/api/v1/users", tags=["Users"])
-    # app.include_router(todo_router, prefix="/api/v1/todos", tags=["Todos"])
-    # app.include_router(ai_router, prefix="/api/v1/ai", tags=["AI"])
-    # app.include_router(file_router, prefix="/api/v1/files", tags=["Files"])
+    # Include domain routers
+    app.include_router(user_router)
+
 
 
 # Create the application instance
