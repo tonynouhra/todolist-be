@@ -131,6 +131,7 @@ def setup_routers(app: FastAPI):
     # Import routers
     from app.domains.user.controller import router as user_router
     from app.domains.todo.controller import router as todo_router
+    from app.domains.project.controller import router as project_router
     
     # Health check endpoint
     @app.get("/health")
@@ -179,6 +180,7 @@ def setup_routers(app: FastAPI):
     # Include domain routers
     app.include_router(user_router)
     app.include_router(todo_router)
+    app.include_router(project_router)
 
 
 
