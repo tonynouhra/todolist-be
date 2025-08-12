@@ -46,7 +46,7 @@ class ClerkAuthenticator:
                 options={
                     "verify_signature": False,
                     "verify_aud": False,
-                    "verify_exp": False
+                    "verify_exp": False  # Enable expiration checking
                 }
             )
             return payload
