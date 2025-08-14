@@ -17,22 +17,3 @@ mypy app/
 
 alembic revision --autogenerate -m "Description of changes"
 alembic upgrade head
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  6. AI Service Status
-
