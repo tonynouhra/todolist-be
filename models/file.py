@@ -20,6 +20,7 @@ class File(BaseModel):
     file_path = Column(String(500), nullable=False)
     file_size = Column(Integer)
     mime_type = Column(String(100))
+    content_type = Column(String(100))  # Alias for mime_type for AI service compatibility
 
     # Relationships
     user = relationship("User", back_populates="files")

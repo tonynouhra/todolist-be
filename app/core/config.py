@@ -69,7 +69,7 @@ class Settings(BaseSettings):
 
     # ===== AI Service (Gemini) =====
     gemini_api_key: Optional[str] = Field(default=None, description="Google Gemini API key")
-    gemini_model: str = Field(default="gemini-pro", description="Gemini model to use")
+    gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model to use")
     gemini_max_tokens: int = Field(default=1000, description="Maximum tokens for Gemini")
     ai_request_timeout: int = Field(default=30, description="AI request timeout in seconds")
 

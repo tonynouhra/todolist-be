@@ -132,6 +132,7 @@ def setup_routers(app: FastAPI):
     from app.domains.user.controller import router as user_router
     from app.domains.todo.controller import router as todo_router
     from app.domains.project.controller import router as project_router
+    from app.domains.ai.controller import router as ai_router
     
     # Health check endpoint
     @app.get("/health")
@@ -147,14 +148,25 @@ def setup_routers(app: FastAPI):
             except Exception:
                 db_status = "unhealthy"
             
+            # Check AI service status
+            ai_status = "not_configured"
+            if settings.has_ai_enabled:
+                try:
+                    from app.domains.ai.service import AIService
+                    ai_service = AIService(next(get_db()))
+                    status_info = await ai_service.get_service_status()
+                    ai_status = "healthy" if status_info.service_available else "unhealthy"
+                except Exception:
+                    ai_status = "unhealthy"
+            
             return {
-                "status": "healthy" if db_status == "healthy" else "degraded",
+                "status": "healthy" if db_status == "healthy" and (ai_status in ["healthy", "not_configured"]) else "degraded",
                 "version": "1.0.0",
                 "environment": settings.environment,
                 "timestamp": datetime.utcnow().isoformat(),
                 "services": {
                     "database": db_status,
-                    "ai_service": "not_configured",  # Will be updated when AI service is implemented
+                    "ai_service": ai_status,
                 },
             }
         except Exception as e:
@@ -181,6 +193,7 @@ def setup_routers(app: FastAPI):
     app.include_router(user_router)
     app.include_router(todo_router)
     app.include_router(project_router)
+    app.include_router(ai_router)
 
 
 

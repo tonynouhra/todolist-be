@@ -311,10 +311,51 @@ class TodoService:
 
     async def _generate_ai_subtasks(self, todo: Todo) -> None:
         """Generate AI subtasks for a todo."""
-        # AI service integration placeholder - ready for Google Gemini API integration
-        # When implemented, this will:
-        # 1. Send todo title/description to Gemini API
-        # 2. Generate 3-7 relevant subtasks based on the main task
-        # 3. Create subtask records in database with ai_generated=True
-        # 4. Return the generated subtasks
-        pass
+        try:
+            from app.domains.ai.service import AIService
+            from app.schemas.ai import SubtaskGenerationRequest
+            
+            # Create AI service instance
+            ai_service = AIService(self.db)
+            
+            # Build the request
+            request = SubtaskGenerationRequest(
+                title=todo.title,
+                description=todo.description,
+                priority=todo.priority,
+                due_date=todo.due_date,
+                max_subtasks=5
+            )
+            
+            # Generate subtasks using AI
+            response = await ai_service.generate_subtasks(
+                request=request,
+                user_id=todo.user_id,
+                todo_id=todo.id
+            )
+            
+            # Create subtask records in database
+            for subtask_data in response.generated_subtasks:
+                subtask = Todo(
+                    user_id=todo.user_id,
+                    project_id=todo.project_id,  # Inherit parent's project
+                    parent_todo_id=todo.id,
+                    title=subtask_data.title,
+                    description=subtask_data.description,
+                    status="todo",
+                    priority=subtask_data.priority,
+                    ai_generated=True
+                )
+                
+                self.db.add(subtask)
+            
+            # Commit all subtasks
+            await self.db.commit()
+            
+            logger.info(f"Generated {len(response.generated_subtasks)} AI subtasks for todo {todo.id}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to generate AI subtasks for todo {todo.id}: {str(e)}")
+            # Don't fail the main todo creation if AI generation fails
+            await self.db.rollback()
+            pass
