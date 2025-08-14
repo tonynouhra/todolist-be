@@ -173,14 +173,19 @@ class ProjectService:
         projects_with_todos_result = await self.db.execute(projects_with_todos_stmt)
         projects_with_todos = projects_with_todos_result.scalar() or 0
 
-        # Average todos per project
-        avg_todos_stmt = (
-            select(func.avg(func.count(Todo.id)))
+        # Average todos per project - using subquery to avoid nested aggregates
+        todo_counts_subquery = (
+            select(
+                Project.id.label('project_id'),
+                func.count(Todo.id).label('todo_count')
+            )
             .select_from(Project)
             .join(Todo, Project.id == Todo.project_id, isouter=True)
             .where(Project.user_id == user_id)
             .group_by(Project.id)
-        )
+        ).subquery()
+        
+        avg_todos_stmt = select(func.avg(todo_counts_subquery.c.todo_count))
         avg_todos_result = await self.db.execute(avg_todos_stmt)
         avg_todos = avg_todos_result.scalar() or 0.0
 

@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from models.todo import Todo
 from models.user import User
+from models.project import Project
 from app.schemas.todo import TodoCreate, TodoUpdate, TodoFilter
 from app.exceptions.todo import (
     TodoNotFoundError,
@@ -126,7 +127,7 @@ class TodoService:
         # Order by priority (desc) and created_at (desc)
         query = query.order_by(desc(Todo.priority), desc(Todo.created_at))
         
-        return await paginate(query, self.db, pagination.page, pagination.size)
+        return await paginate(self.db, query, pagination)
 
     async def get_todo_with_subtasks(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
         """Get todo with all its subtasks."""
@@ -151,8 +152,12 @@ class TodoService:
         if not todo:
             raise TodoNotFoundError("Todo not found")
 
-        # Update fields
-        update_data = todo_data.model_dump(exclude_unset=True)
+        # Update fields - include None values to allow unsetting fields
+        update_data = todo_data.model_dump(exclude_unset=True, exclude_none=False)
+        
+        # Validate project ownership if project_id is being updated (and not being unset)
+        if 'project_id' in update_data and update_data['project_id'] is not None:
+            await self._validate_project_ownership(update_data['project_id'], user_id)
         
         for field, value in update_data.items():
             if hasattr(todo, field):
@@ -293,6 +298,16 @@ class TodoService:
         
         # If datetime is timezone-aware, convert to UTC
         return dt.astimezone(timezone.utc)
+
+    async def _validate_project_ownership(self, project_id: UUID, user_id: UUID) -> None:
+        """Validate that a project belongs to the user."""
+        if project_id:  # Allow None/null values for removing project assignment
+            query = select(Project).where(and_(Project.id == project_id, Project.user_id == user_id))
+            result = await self.db.execute(query)
+            project = result.scalar_one_or_none()
+            
+            if not project:
+                raise TodoPermissionError("Project not found or access denied")
 
     async def _generate_ai_subtasks(self, todo: Todo) -> None:
         """Generate AI subtasks for a todo."""

@@ -1,13 +1,12 @@
 """Project schemas for request/response serialization."""
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, List
 from uuid import UUID
 from pydantic import Field, ConfigDict
 from .base import BaseSchema, BaseModelSchema
-
-if TYPE_CHECKING:
-    from .todo import TodoResponse
 
 
 class ProjectBase(BaseSchema):
@@ -42,7 +41,7 @@ class ProjectResponse(BaseModelSchema):
 
 class ProjectWithTodos(ProjectResponse):
     """Schema for project with todos."""
-    todos: List["TodoResponse"] = []
+    todos: List[TodoResponse] = []
 
 
 class ProjectFilter(BaseSchema):
@@ -65,3 +64,10 @@ class ProjectStats(BaseSchema):
     total_projects: int
     projects_with_todos: int
     average_todos_per_project: float
+
+
+# Import TodoResponse at the end to avoid circular imports
+from .todo import TodoResponse
+
+# Rebuild the model to resolve forward references
+ProjectWithTodos.model_rebuild()

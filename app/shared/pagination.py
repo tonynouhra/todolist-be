@@ -28,37 +28,36 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 
 async def paginate(
-    query: Select,
     db: AsyncSession,
-    page: int = 1,
-    size: int = 20
+    query: Select,
+    pagination: PaginationParams
 ) -> Dict[str, Any]:
     """
     Paginate a SQLAlchemy query.
     
     Args:
-        query: SQLAlchemy select query
         db: Database session
-        page: Page number (1-based)
-        size: Page size
+        query: SQLAlchemy select query
+        pagination: Pagination parameters
         
     Returns:
         Dictionary with pagination info and items
     """
     
-    # Get total count
-    count_query = select(func.count()).select_from(query.alias())
+    # Get total count by creating a count query from the original query's subquery
+    subquery = query.subquery()
+    count_query = select(func.count()).select_from(subquery)
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0
     
     # Calculate pagination info
-    total_pages = (total + size - 1) // size  # Ceiling division
-    has_next = page < total_pages
-    has_prev = page > 1
+    total_pages = (total + pagination.size - 1) // pagination.size  # Ceiling division
+    has_next = pagination.page < total_pages
+    has_prev = pagination.page > 1
     
     # Apply pagination to query
-    offset = (page - 1) * size
-    paginated_query = query.offset(offset).limit(size)
+    offset = (pagination.page - 1) * pagination.size
+    paginated_query = query.offset(offset).limit(pagination.size)
     
     # Execute query
     result = await db.execute(paginated_query)
@@ -67,8 +66,8 @@ async def paginate(
     return {
         "items": items,
         "total": total,
-        "page": page,
-        "size": size,
+        "page": pagination.page,
+        "size": pagination.size,
         "has_next": has_next,
         "has_prev": has_prev,
         "total_pages": total_pages

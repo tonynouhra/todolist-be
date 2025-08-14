@@ -17,6 +17,8 @@ from app.schemas.project import (
     ProjectListResponse,
     ProjectStats
 )
+# Import schemas to ensure model rebuilding happens
+import app.schemas
 from app.schemas.base import ResponseSchema
 from app.shared.pagination import PaginationParams
 from models.user import User

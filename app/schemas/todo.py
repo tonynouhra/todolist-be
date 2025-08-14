@@ -1,5 +1,7 @@
 """Todo schemas for request/response serialization."""
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
@@ -32,6 +34,7 @@ class TodoUpdate(BaseSchema):
     priority: Optional[int] = Field(None, ge=1, le=5)
     due_date: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    project_id: Optional[UUID] = None
 
 
 class TodoResponse(BaseModelSchema):
