@@ -64,7 +64,7 @@ class Todo(BaseModel):
         backref=backref("parent", remote_side="Todo.id"),
         foreign_keys=[parent_todo_id],
     )
-    files = relationship("File", back_populates="todo")
+    # Note: files relationship removed due to partitioned structure migration
 
     def __repr__(self) -> str:
         """String representation of the Todo."""

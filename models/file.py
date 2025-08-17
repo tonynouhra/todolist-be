@@ -15,7 +15,9 @@ class File(BaseModel):
     __tablename__ = "files"
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    todo_id = Column(UUID(as_uuid=True), ForeignKey("todos.id"))
+    # Note: todo_id is not a direct foreign key anymore due to partitioning
+    # We'll handle the relationship through application logic
+    todo_id = Column(UUID(as_uuid=True))  # Removed ForeignKey constraint
     filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)
     file_size = Column(Integer)
@@ -24,4 +26,6 @@ class File(BaseModel):
 
     # Relationships
     user = relationship("User", back_populates="files")
-    todo = relationship("Todo", back_populates="files")
+    
+    # Note: todo relationship removed due to partitioned structure
+    # Files are now linked to active todos through application logic

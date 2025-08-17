@@ -61,6 +61,14 @@ class User(BaseModel):
     is_active = Column(Boolean, default=True)
 
     # Relationships
+    # Keep original todos relationship for backward compatibility during migration
     todos = relationship("Todo", back_populates="user", cascade="all, delete-orphan")
+    
+    # New partitioned relationships
+    active_todos = relationship("TodoActive", back_populates="user", cascade="all, delete-orphan")
+    archived_todos = relationship("TodoArchived", back_populates="user", cascade="all, delete-orphan")
+    ai_interactions = relationship("AITodoInteraction", back_populates="user", cascade="all, delete-orphan")
+    
+    # Other relationships
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     files = relationship("File", back_populates="user", cascade="all, delete-orphan")

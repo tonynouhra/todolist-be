@@ -9,4 +9,12 @@ from .todo import Todo
 from .file import File
 from .ai_interaction import AIInteraction
 
-__all__ = ["Base", "BaseModel", "User", "Project", "Todo", "File", "AIInteraction"]
+# New partitioned models
+from .todo_partitioned import TodoActive, TodoArchived, AITodoInteraction
+
+__all__ = [
+    "Base", "BaseModel", 
+    "User", "Project", "Todo", "File", "AIInteraction",
+    # Partitioned models
+    "TodoActive", "TodoArchived", "AITodoInteraction"
+]
