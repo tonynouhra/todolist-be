@@ -1,0 +1,242 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  test:
+    name: Run Full Test Suite
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_ai_todo
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-cov
+
+      - name: Set up environment variables
+        run: |
+          echo "TESTING=true" >> $GITHUB_ENV
+          echo "TEST_DATABASE_URL=postgresql+asyncpg://test:test@localhost:5432/test_ai_todo" >> $GITHUB_ENV
+          echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
+
+      - name: Run all tests
+        run: |
+          python run_tests.py --all --verbose
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety pip-audit
+
+      - name: Run security scans
+        run: |
+          bandit -r app/ -f json -o bandit-report.json
+          safety check --json --output safety-report.json
+          pip-audit --format=json --output=pip-audit-report.json
+
+      - name: Upload security artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports-${{ github.ref_name }}
+          path: |
+            bandit-report.json
+            safety-report.json
+            pip-audit-report.json
+
+  build:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip build
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-package-${{ github.ref_name }}
+          path: dist/
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: contains(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [test, security-scan, build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-${{ github.ref_name }}
+          path: dist/
+
+      - name: Download security reports
+        uses: actions/download-artifact@v3
+        with:
+          name: security-reports-${{ github.ref_name }}
+          path: security-reports/
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Extract tag name
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          
+          # Generate changelog (you can enhance this with a proper changelog generator)
+          echo "# Changes in $TAG_NAME" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 $TAG_NAME^ 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            echo "## Commits since $LAST_TAG:" >> CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" $LAST_TAG..$TAG_NAME >> CHANGELOG.md
+          else
+            echo "## All commits:" >> CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" $TAG_NAME >> CHANGELOG.md
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag_name }}
+          name: Release ${{ steps.changelog.outputs.tag_name }}
+          body_path: CHANGELOG.md
+          files: |
+            dist/*
+            security-reports/*
+          draft: false
+          prerelease: ${{ contains(steps.changelog.outputs.tag_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify Teams
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: always()
+    
+    steps:
+      - name: Notify success
+        if: needs.release.result == 'success'
+        run: |
+          echo "🎉 Release ${{ github.ref_name }} completed successfully!"
+          # Add Slack/Discord/email notification here if needed
+      
+      - name: Notify failure
+        if: needs.release.result == 'failure'
+        run: |
+          echo "❌ Release ${{ github.ref_name }} failed!"
+          # Add failure notification here if needed

@@ -1,0 +1,156 @@
+name: PR Quality Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-quality:
+    name: PR Quality Assessment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper diff
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black isort
+
+      - name: Check PR size
+        run: |
+          # Count changed lines
+          CHANGED_LINES=$(git diff --shortstat origin/${{ github.base_ref }}..HEAD | grep -oE '[0-9]+ insertions|[0-9]+ deletions' | grep -oE '[0-9]+' | awk '{sum += $1} END {print sum}')
+          echo "Changed lines: $CHANGED_LINES"
+          
+          if [ "$CHANGED_LINES" -gt 1000 ]; then
+            echo "⚠️ Large PR detected ($CHANGED_LINES lines changed). Consider breaking into smaller PRs."
+            echo "large-pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ PR size is reasonable ($CHANGED_LINES lines changed)"
+            echo "large-pr=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for breaking changes
+        run: |
+          # Check for potential breaking changes in API
+          BREAKING_PATTERNS="removed|deleted|deprecated|breaking"
+          if git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -E "(controller|schema|model)" | xargs git diff origin/${{ github.base_ref }}..HEAD | grep -iE "$BREAKING_PATTERNS"; then
+            echo "⚠️ Potential breaking changes detected. Please review carefully."
+          else
+            echo "✅ No obvious breaking changes detected"
+          fi
+
+      - name: Check code formatting
+        run: |
+          # Check if code needs formatting
+          echo "Checking code formatting..."
+          if ! black --check app/ tests/; then
+            echo "❌ Code formatting issues found. Run 'black app/ tests/' to fix."
+            exit 1
+          fi
+          
+          if ! isort --check-only app/ tests/; then
+            echo "❌ Import sorting issues found. Run 'isort app/ tests/' to fix."
+            exit 1
+          fi
+          
+          echo "✅ Code formatting looks good"
+
+      - name: Quick lint check
+        run: |
+          echo "Running quick lint check..."
+          ruff check app/ tests/ --exit-zero --format=github
+
+      - name: Check for TODO/FIXME comments
+        run: |
+          echo "Checking for TODO/FIXME comments..."
+          TODO_COUNT=$(grep -r "TODO\|FIXME\|XXX\|HACK" app/ tests/ --include="*.py" || true | wc -l)
+          if [ "$TODO_COUNT" -gt 0 ]; then
+            echo "⚠️ Found $TODO_COUNT TODO/FIXME comments:"
+            grep -r "TODO\|FIXME\|XXX\|HACK" app/ tests/ --include="*.py" || true
+          else
+            echo "✅ No TODO/FIXME comments found"
+          fi
+
+      - name: Check test coverage for new files
+        run: |
+          echo "Checking if new Python files have corresponding tests..."
+          NEW_PY_FILES=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}..HEAD | grep "\.py$" | grep -E "^app/" || true)
+          
+          if [ -n "$NEW_PY_FILES" ]; then
+            echo "New Python files detected:"
+            echo "$NEW_PY_FILES"
+            
+            MISSING_TESTS=""
+            for file in $NEW_PY_FILES; do
+              # Skip __init__.py and main.py files
+              if [[ "$file" == *"__init__.py"* ]] || [[ "$file" == *"main.py"* ]]; then
+                continue
+              fi
+              
+              # Convert app/path/file.py to tests/path/test_file.py
+              TEST_FILE=$(echo "$file" | sed 's|^app/|tests/|' | sed 's|\.py$|.py|' | sed 's|/\([^/]*\)\.py$|/test_\1.py|')
+              
+              if [ ! -f "$TEST_FILE" ]; then
+                MISSING_TESTS="$MISSING_TESTS\n- $file (expected test: $TEST_FILE)"
+              fi
+            done
+            
+            if [ -n "$MISSING_TESTS" ]; then
+              echo "⚠️ New files without corresponding tests:"
+              echo -e "$MISSING_TESTS"
+            else
+              echo "✅ All new files have corresponding tests"
+            fi
+          else
+            echo "✅ No new Python files detected"
+          fi
+
+  comment-pr:
+    name: Comment on PR
+    runs-on: ubuntu-latest
+    needs: pr-quality
+    if: always() && github.event_name == 'pull_request'
+    
+    steps:
+      - name: Find Comment
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: "<!-- PR Quality Check -->"
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            <!-- PR Quality Check -->
+            ## 🔍 PR Quality Check Results
+            
+            **Status**: ${{ needs.pr-quality.result == 'success' && '✅ Passed' || '❌ Failed' }}
+            
+            ### Quick Checklist
+            - [ ] Code is properly formatted (Black + isort)
+            - [ ] No linting errors (Ruff)
+            - [ ] Tests added for new functionality
+            - [ ] No breaking changes (or properly documented)
+            - [ ] PR size is reasonable (< 1000 lines)
+            
+            ### Next Steps
+            ${{ needs.pr-quality.result == 'success' && '🎉 Your PR looks good! The CI pipeline will run full tests.' || '⚠️ Please address the issues above before merging.' }}
+            
+            ---
+            *This comment is automatically updated on each push.*
