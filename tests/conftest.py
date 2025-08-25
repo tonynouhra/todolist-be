@@ -211,11 +211,11 @@ async def test_todo_with_subtasks(test_db, test_user, test_project):
 
     test_db.add_all([subtask1, subtask2])
     await test_db.commit()
-    
+
     # Load parent todo with subtasks to avoid lazy loading issues
-    from sqlalchemy.orm import selectinload
     from sqlalchemy.future import select
-    
+    from sqlalchemy.orm import selectinload
+
     query = select(Todo).options(selectinload(Todo.subtasks)).where(Todo.id == parent_todo.id)
     result = await test_db.execute(query)
     parent_with_subtasks = result.scalar_one()
