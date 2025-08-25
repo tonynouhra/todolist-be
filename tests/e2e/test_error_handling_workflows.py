@@ -478,3 +478,4 @@ class TestErrorHandlingWorkflows:
 
         # Should reflect the actual remaining todos
         assert stats["total_todos"] >= 2  # At least the 2 remaining todos
+

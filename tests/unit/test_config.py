@@ -36,7 +36,7 @@ class TestSettings:
         assert test_settings.access_token_expire_minutes == 30
         assert test_settings.db_pool_size == 20
         assert test_settings.db_max_overflow == 0
-        assert test_settings.gemini_model == "gemini-pro"
+        assert test_settings.gemini_model == "gemini-1.5-flash"
         assert test_settings.gemini_max_tokens == 1000
         assert test_settings.ai_request_timeout == 30
 
