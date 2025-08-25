@@ -78,9 +78,7 @@ class TestUserService:
         service = UserService(test_db)
 
         # Mock database error
-        with patch.object(
-            test_db, "commit", side_effect=SQLAlchemyError("Database error")
-        ):
+        with patch.object(test_db, "commit", side_effect=SQLAlchemyError("Database error")):
             with patch.object(test_db, "rollback") as mock_rollback:
                 with pytest.raises(SQLAlchemyError):
                     await service.create_user(
@@ -97,9 +95,7 @@ class TestUserService:
             "username": "different_username",
         }
 
-        result = await service.get_or_create_user(
-            test_user.clerk_user_id, clerk_payload
-        )
+        result = await service.get_or_create_user(test_user.clerk_user_id, clerk_payload)
 
         # Should return existing user, not create new one
         assert result.id == test_user.id
@@ -174,9 +170,7 @@ class TestUserService:
         service = UserService(test_db)
         fake_user_id = uuid.uuid4()
 
-        result = await service.update_user(
-            user_id=fake_user_id, username="new_username"
-        )
+        result = await service.update_user(user_id=fake_user_id, username="new_username")
 
         assert result is None
 
@@ -185,14 +179,10 @@ class TestUserService:
         """Test user update with database error."""
         service = UserService(test_db)
 
-        with patch.object(
-            test_db, "commit", side_effect=SQLAlchemyError("Database error")
-        ):
+        with patch.object(test_db, "commit", side_effect=SQLAlchemyError("Database error")):
             with patch.object(test_db, "rollback") as mock_rollback:
                 with pytest.raises(SQLAlchemyError):
-                    await service.update_user(
-                        user_id=test_user.id, username="error_username"
-                    )
+                    await service.update_user(user_id=test_user.id, username="error_username")
                 mock_rollback.assert_called_once()
 
     @pytest.mark.asyncio
@@ -278,9 +268,7 @@ class TestUserService:
         assert success is False
 
     @pytest.mark.asyncio
-    async def test_delete_user_with_cascade(
-        self, test_db, test_user, test_todo, test_project
-    ):
+    async def test_delete_user_with_cascade(self, test_db, test_user, test_todo, test_project):
         """Test user deletion cascades to related objects."""
         service = UserService(test_db)
         user_id = test_user.id

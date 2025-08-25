@@ -185,9 +185,7 @@ async def analyze_file(
 
     try:
         service = AIService(db)
-        result = await service.analyze_file(
-            request=analysis_request, user_id=current_user.id
-        )
+        result = await service.analyze_file(request=analysis_request, user_id=current_user.id)
 
         return ResponseSchema(
             status="success",

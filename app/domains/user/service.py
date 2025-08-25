@@ -13,14 +13,10 @@ class UserService:
 
     async def get_user_by_clerk_id(self, clerk_user_id: str) -> Optional[User]:
         """Get a user by Clerk user ID."""
-        result = await self.db.execute(
-            select(User).where(User.clerk_user_id == clerk_user_id)
-        )
+        result = await self.db.execute(select(User).where(User.clerk_user_id == clerk_user_id))
         return result.scalar_one_or_none()
 
-    async def create_user(
-        self, clerk_user_id: str, email: str, username: str = None
-    ) -> User:
+    async def create_user(self, clerk_user_id: str, email: str, username: str = None) -> User:
         """Create a new user."""
         user = User(clerk_user_id=clerk_user_id, email=email, username=username)
 

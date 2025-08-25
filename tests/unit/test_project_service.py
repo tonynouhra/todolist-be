@@ -25,9 +25,7 @@ class TestProjectService:
     async def test_create_project_success(self, test_db, test_user):
         """Test successful project creation."""
         service = ProjectService(test_db)
-        project_data = ProjectCreate(
-            name="New Project", description="A new test project"
-        )
+        project_data = ProjectCreate(name="New Project", description="A new test project")
 
         result = await service.create_project(project_data, test_user.id)
 
@@ -50,9 +48,7 @@ class TestProjectService:
         assert result.user_id == test_user.id
 
     @pytest.mark.asyncio
-    async def test_create_project_duplicate_name(
-        self, test_db, test_user, test_project
-    ):
+    async def test_create_project_duplicate_name(self, test_db, test_user, test_project):
         """Test creating project with duplicate name for same user."""
         service = ProjectService(test_db)
         project_data = ProjectCreate(
@@ -60,9 +56,7 @@ class TestProjectService:
             description="Duplicate name",
         )
 
-        with pytest.raises(
-            ValidationError, match="A project with this name already exists"
-        ):
+        with pytest.raises(ValidationError, match="A project with this name already exists"):
             await service.create_project(project_data, test_user.id)
 
     @pytest.mark.asyncio
@@ -104,9 +98,7 @@ class TestProjectService:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_project_by_id_wrong_user(
-        self, test_db, test_user_2, test_project
-    ):
+    async def test_get_project_by_id_wrong_user(self, test_db, test_user_2, test_project):
         """Test getting project belonging to different user."""
         service = ProjectService(test_db)
 
@@ -115,9 +107,7 @@ class TestProjectService:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_project_with_todos(
-        self, test_db, test_user, test_project, test_todo
-    ):
+    async def test_get_project_with_todos(self, test_db, test_user, test_project, test_todo):
         """Test getting project with its todos."""
         service = ProjectService(test_db)
 
@@ -175,9 +165,7 @@ class TestProjectService:
         project_data_1 = ProjectCreate(
             name="Project One", description="This contains special keyword"
         )
-        project_data_2 = ProjectCreate(
-            name="Project Two", description="Regular description"
-        )
+        project_data_2 = ProjectCreate(name="Project Two", description="Regular description")
 
         await service.create_project(project_data_1, test_user.id)
         await service.create_project(project_data_2, test_user.id)
@@ -211,13 +199,9 @@ class TestProjectService:
     async def test_update_project_success(self, test_db, test_user, test_project):
         """Test successful project update."""
         service = ProjectService(test_db)
-        update_data = ProjectUpdate(
-            name="Updated Project Name", description="Updated description"
-        )
+        update_data = ProjectUpdate(name="Updated Project Name", description="Updated description")
 
-        result = await service.update_project(
-            test_project.id, update_data, test_user.id
-        )
+        result = await service.update_project(test_project.id, update_data, test_user.id)
 
         assert result is not None
         assert result.name == "Updated Project Name"
@@ -231,9 +215,7 @@ class TestProjectService:
         original_description = test_project.description
         update_data = ProjectUpdate(name="New Name Only")
 
-        result = await service.update_project(
-            test_project.id, update_data, test_user.id
-        )
+        result = await service.update_project(test_project.id, update_data, test_user.id)
 
         assert result is not None
         assert result.name == "New Name Only"
@@ -257,9 +239,7 @@ class TestProjectService:
         service = ProjectService(test_db)
         update_data = ProjectUpdate(name=test_project_2.name)
 
-        with pytest.raises(
-            ValidationError, match="A project with this name already exists"
-        ):
+        with pytest.raises(ValidationError, match="A project with this name already exists"):
             await service.update_project(test_project.id, update_data, test_user.id)
 
     @pytest.mark.asyncio
@@ -270,9 +250,7 @@ class TestProjectService:
             name=test_project.name, description="Updated description only"  # Same name
         )
 
-        result = await service.update_project(
-            test_project.id, update_data, test_user.id
-        )
+        result = await service.update_project(test_project.id, update_data, test_user.id)
 
         assert result is not None
         assert result.name == test_project.name
@@ -379,23 +357,15 @@ class TestProjectService:
         todo_service = TodoService(test_db)
 
         # Create todos: 2 regular, 1 completed
-        todo_data_1 = TodoCreate(
-            title="Todo 1", project_id=test_project.id, status="todo"
-        )
-        todo_data_2 = TodoCreate(
-            title="Todo 2", project_id=test_project.id, status="in_progress"
-        )
-        todo_data_3 = TodoCreate(
-            title="Todo 3", project_id=test_project.id, status="done"
-        )
+        todo_data_1 = TodoCreate(title="Todo 1", project_id=test_project.id, status="todo")
+        todo_data_2 = TodoCreate(title="Todo 2", project_id=test_project.id, status="in_progress")
+        todo_data_3 = TodoCreate(title="Todo 3", project_id=test_project.id, status="done")
 
         await todo_service.create_todo(todo_data_1, test_user.id)
         await todo_service.create_todo(todo_data_2, test_user.id)
         await todo_service.create_todo(todo_data_3, test_user.id)
 
-        result = await service.get_project_with_todo_counts(
-            test_project.id, test_user.id
-        )
+        result = await service.get_project_with_todo_counts(test_project.id, test_user.id)
 
         assert result is not None
         assert result["id"] == test_project.id
@@ -414,24 +384,18 @@ class TestProjectService:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_project_with_todo_counts_no_todos(
-        self, test_db, test_user, test_project
-    ):
+    async def test_get_project_with_todo_counts_no_todos(self, test_db, test_user, test_project):
         """Test getting todo counts for project with no todos."""
         service = ProjectService(test_db)
 
-        result = await service.get_project_with_todo_counts(
-            test_project.id, test_user.id
-        )
+        result = await service.get_project_with_todo_counts(test_project.id, test_user.id)
 
         assert result is not None
         assert result["todo_count"] == 0
         assert result["completed_todo_count"] == 0
 
     @pytest.mark.asyncio
-    async def test_unassign_todos_from_project(
-        self, test_db, test_user, test_project, test_todo
-    ):
+    async def test_unassign_todos_from_project(self, test_db, test_user, test_project, test_todo):
         """Test unassigning todos from project."""
         service = ProjectService(test_db)
 
@@ -468,9 +432,7 @@ class TestProjectService:
         """Test getting project by name and user."""
         service = ProjectService(test_db)
 
-        result = await service._get_project_by_name_and_user(
-            test_project.name, test_user.id
-        )
+        result = await service._get_project_by_name_and_user(test_project.name, test_user.id)
 
         assert result is not None
         assert result.id == test_project.id
@@ -482,9 +444,7 @@ class TestProjectService:
         """Test getting project by name with different user."""
         service = ProjectService(test_db)
 
-        result = await service._get_project_by_name_and_user(
-            test_project.name, test_user_2.id
-        )
+        result = await service._get_project_by_name_and_user(test_project.name, test_user_2.id)
 
         assert result is None
 
@@ -493,9 +453,7 @@ class TestProjectService:
         """Test project creation with database error."""
         service = ProjectService(test_db)
 
-        with patch.object(
-            test_db, "commit", side_effect=SQLAlchemyError("Database error")
-        ):
+        with patch.object(test_db, "commit", side_effect=SQLAlchemyError("Database error")):
             with patch.object(test_db, "rollback") as mock_rollback:
                 with pytest.raises(ValidationError):
                     project_data = ProjectCreate(name="Error Project")
@@ -503,33 +461,23 @@ class TestProjectService:
                 mock_rollback.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_project_database_error(
-        self, test_db, test_user, test_project
-    ):
+    async def test_update_project_database_error(self, test_db, test_user, test_project):
         """Test project update with database error."""
         service = ProjectService(test_db)
 
-        with patch.object(
-            test_db, "commit", side_effect=SQLAlchemyError("Database error")
-        ):
+        with patch.object(test_db, "commit", side_effect=SQLAlchemyError("Database error")):
             with patch.object(test_db, "rollback") as mock_rollback:
                 with pytest.raises(ValidationError):
                     update_data = ProjectUpdate(name="Error Update")
-                    await service.update_project(
-                        test_project.id, update_data, test_user.id
-                    )
+                    await service.update_project(test_project.id, update_data, test_user.id)
                 mock_rollback.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_delete_project_database_error(
-        self, test_db, test_user, test_project
-    ):
+    async def test_delete_project_database_error(self, test_db, test_user, test_project):
         """Test project deletion with database error."""
         service = ProjectService(test_db)
 
-        with patch.object(
-            test_db, "commit", side_effect=SQLAlchemyError("Database error")
-        ):
+        with patch.object(test_db, "commit", side_effect=SQLAlchemyError("Database error")):
             with patch.object(test_db, "rollback") as mock_rollback:
                 with pytest.raises(ValidationError):
                     await service.delete_project(test_project.id, test_user.id)

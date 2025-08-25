@@ -12,9 +12,7 @@ from .base import BaseSchema, BaseModelSchema
 class SubtaskGenerationRequest(BaseSchema):
     """Schema for requesting AI subtask generation for an existing todo."""
 
-    todo_id: UUID = Field(
-        ..., description="ID of the existing todo to generate subtasks for"
-    )
+    todo_id: UUID = Field(..., description="ID of the existing todo to generate subtasks for")
     max_subtasks: int = Field(
         default=5, ge=3, le=7, description="Maximum number of subtasks to generate"
     )
@@ -46,9 +44,7 @@ class FileAnalysisRequest(BaseSchema):
     """Schema for requesting AI file analysis."""
 
     file_id: UUID
-    analysis_type: str = Field(
-        default="general", pattern="^(general|task_extraction|summary)$"
-    )
+    analysis_type: str = Field(default="general", pattern="^(general|task_extraction|summary)$")
     context: Optional[str] = Field(None, description="Additional context for analysis")
 
 
@@ -60,9 +56,7 @@ class FileAnalysisResponse(BaseSchema):
     summary: str
     key_points: List[str] = []
     suggested_tasks: List[str] = []
-    confidence_score: float = Field(
-        ..., ge=0.0, le=1.0, description="AI confidence in analysis"
-    )
+    confidence_score: float = Field(..., ge=0.0, le=1.0, description="AI confidence in analysis")
     analysis_timestamp: datetime
     ai_model: str = Field(default="gemini-1.5-flash", alias="model_used")
 
@@ -97,9 +91,7 @@ class AIServiceStatus(BaseSchema):
     model_name: str
     last_request_timestamp: Optional[datetime] = None
     requests_today: int = Field(default=0, description="Number of requests made today")
-    quota_remaining: Optional[int] = Field(
-        None, description="Remaining API quota if available"
-    )
+    quota_remaining: Optional[int] = Field(None, description="Remaining API quota if available")
 
 
 class AIErrorResponse(BaseSchema):
@@ -107,9 +99,7 @@ class AIErrorResponse(BaseSchema):
 
     error_code: str
     error_message: str
-    retry_after: Optional[int] = Field(
-        None, description="Seconds to wait before retrying"
-    )
+    retry_after: Optional[int] = Field(None, description="Seconds to wait before retrying")
     suggestions: List[str] = []
 
 

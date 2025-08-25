@@ -53,9 +53,7 @@ async def create_project(
     """Create a new project."""
 
     service = ProjectService(db)
-    project = await service.create_project(
-        project_data=project_data, user_id=current_user.id
-    )
+    project = await service.create_project(project_data=project_data, user_id=current_user.id)
 
     return ResponseSchema(
         status="success",
@@ -124,9 +122,7 @@ async def get_project(
             project_data = None
     else:
         # Get project with todo counts
-        project_dict = await service.get_project_with_todo_counts(
-            project_id, current_user.id
-        )
+        project_dict = await service.get_project_with_todo_counts(project_id, current_user.id)
         if project_dict:
             project_data = ProjectResponse.model_validate(project_dict)
         else:
@@ -156,9 +152,7 @@ async def update_project(
     project = await service.update_project(project_id, project_data, current_user.id)
 
     # Get updated project with todo counts
-    project_dict = await service.get_project_with_todo_counts(
-        project_id, current_user.id
-    )
+    project_dict = await service.get_project_with_todo_counts(project_id, current_user.id)
     if project_dict:
         project_response = ProjectResponse.model_validate(project_dict)
     else:
@@ -185,9 +179,7 @@ async def delete_project(
 
     return ResponseSchema(
         status="success" if success else "error",
-        message="Project deleted successfully"
-        if success
-        else "Failed to delete project",
+        message="Project deleted successfully" if success else "Failed to delete project",
         data=None,
     )
 
@@ -227,9 +219,7 @@ async def get_project_todos(
         return ResponseSchema(status="error", message="Project not found", data=None)
 
     # Get project with todos
-    project_with_todos = await service.get_project_with_todos(
-        project_id, current_user.id
-    )
+    project_with_todos = await service.get_project_with_todos(project_id, current_user.id)
 
     if not project_with_todos:
         return ResponseSchema(status="error", message="Project not found", data=None)

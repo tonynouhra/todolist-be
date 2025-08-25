@@ -113,9 +113,7 @@ def setup_exception_handlers(app: FastAPI):
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
-    ):
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
         return JSONResponse(
             status_code=422,
             content={
@@ -158,17 +156,16 @@ def setup_routers(app: FastAPI):
 
                     ai_service = AIService(next(get_db()))
                     status_info = await ai_service.get_service_status()
-                    ai_status = (
-                        "healthy" if status_info.service_available else "unhealthy"
-                    )
+                    ai_status = "healthy" if status_info.service_available else "unhealthy"
                 except Exception:
                     ai_status = "unhealthy"
 
             return {
-                "status": "healthy"
-                if db_status == "healthy"
-                and (ai_status in ["healthy", "not_configured"])
-                else "degraded",
+                "status": (
+                    "healthy"
+                    if db_status == "healthy" and (ai_status in ["healthy", "not_configured"])
+                    else "degraded"
+                ),
                 "version": "1.0.0",
                 "environment": settings.environment,
                 "timestamp": datetime.utcnow().isoformat(),

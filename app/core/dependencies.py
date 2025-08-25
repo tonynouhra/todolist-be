@@ -84,9 +84,7 @@ async def get_current_user(
         user = await user_service.get_or_create_user(clerk_user_id, payload)
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         if not user.is_active:
             raise HTTPException(

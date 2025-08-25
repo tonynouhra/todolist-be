@@ -62,9 +62,7 @@ class TestServiceIntegration:
         assert todo.project_id == project.id
 
         # Get project with todos
-        project_with_todos = await project_service.get_project_with_todos(
-            project.id, user.id
-        )
+        project_with_todos = await project_service.get_project_with_todos(project.id, user.id)
         assert len(project_with_todos.todos) == 1
         assert project_with_todos.todos[0].id == todo.id
 
@@ -273,9 +271,7 @@ class TestServiceIntegration:
             assert todo.project_id is None  # But unassigned from project
 
         # Verify independent todo is unaffected
-        independent_todo = await todo_service.get_todo_by_id(
-            other_todo.id, test_user.id
-        )
+        independent_todo = await todo_service.get_todo_by_id(other_todo.id, test_user.id)
         assert independent_todo is not None
         assert independent_todo.project_id is None  # Was already None
 
@@ -381,16 +377,12 @@ class TestServiceIntegration:
         # Create todos
         todo_ids = []
         for i in range(5):
-            todo_data = TodoCreate(
-                title=f"Dynamic Todo {i}", project_id=project.id, status="todo"
-            )
+            todo_data = TodoCreate(title=f"Dynamic Todo {i}", project_id=project.id, status="todo")
             todo = await todo_service.create_todo(todo_data, test_user.id)
             todo_ids.append(todo.id)
 
         # Initial statistics
-        initial_stats = await project_service.get_project_with_todo_counts(
-            project.id, test_user.id
-        )
+        initial_stats = await project_service.get_project_with_todo_counts(project.id, test_user.id)
         assert initial_stats["todo_count"] == 5
         assert initial_stats["completed_todo_count"] == 0
 
@@ -400,9 +392,7 @@ class TestServiceIntegration:
             await todo_service.update_todo(todo_id, update_data, test_user.id)
 
         # Updated statistics
-        updated_stats = await project_service.get_project_with_todo_counts(
-            project.id, test_user.id
-        )
+        updated_stats = await project_service.get_project_with_todo_counts(project.id, test_user.id)
         assert updated_stats["todo_count"] == 5  # Total count unchanged
         assert updated_stats["completed_todo_count"] == 3  # 3 completed
 
@@ -412,9 +402,7 @@ class TestServiceIntegration:
             await todo_service.update_todo(todo_id, update_data, test_user.id)
 
         # Final statistics
-        final_stats = await project_service.get_project_with_todo_counts(
-            project.id, test_user.id
-        )
+        final_stats = await project_service.get_project_with_todo_counts(project.id, test_user.id)
         assert final_stats["todo_count"] == 5
         assert final_stats["completed_todo_count"] == 5
 
@@ -482,8 +470,6 @@ class TestServiceIntegration:
         assert all(todo.status == "done" for todo in updated_todos)
 
         # Verify final project statistics
-        final_stats = await project_service.get_project_with_todo_counts(
-            project.id, test_user.id
-        )
+        final_stats = await project_service.get_project_with_todo_counts(project.id, test_user.id)
         assert final_stats["todo_count"] == 10
         assert final_stats["completed_todo_count"] == 5

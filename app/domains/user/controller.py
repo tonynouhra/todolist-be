@@ -20,9 +20,7 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 auth = ClerkAuthenticator()
 
 
-@router.post(
-    "/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 async def signup(signup_data: UserSignupRequest, db: AsyncSession = Depends(get_db)):
     """
     Register a new user with Clerk authentication.
@@ -35,9 +33,7 @@ async def signup(signup_data: UserSignupRequest, db: AsyncSession = Depends(get_
     # Check if user already exists
     existing_user = await user_service.get_user_by_clerk_id(signup_data.clerk_user_id)
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
 
     # Create new user
     try:
@@ -79,9 +75,7 @@ async def login(login_data: UserLoginRequest, db: AsyncSession = Depends(get_db)
         user_service = UserService(db)
         user = await user_service.get_or_create_user(clerk_user_id, payload)
 
-        return AuthResponse(
-            user=UserResponse.model_validate(user), message="Login successful"
-        )
+        return AuthResponse(user=UserResponse.model_validate(user), message="Login successful")
 
     except HTTPException:
         raise

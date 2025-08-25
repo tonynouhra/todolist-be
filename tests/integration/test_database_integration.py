@@ -71,9 +71,7 @@ class TestDatabaseIntegration:
         """Test that Clerk user ID uniqueness is enforced."""
         clerk_id = f"clerk_user_{uuid.uuid4()}"
 
-        user1 = User(
-            clerk_user_id=clerk_id, email="user1@example.com", username="user1"
-        )
+        user1 = User(clerk_user_id=clerk_id, email="user1@example.com", username="user1")
 
         user2 = User(
             clerk_user_id=clerk_id,  # Same clerk_user_id
@@ -183,9 +181,7 @@ class TestDatabaseIntegration:
         test_db.add(project)
         await test_db.flush()
 
-        todo = Todo(
-            user_id=user.id, project_id=project.id, title="Cascade Todo", status="todo"
-        )
+        todo = Todo(user_id=user.id, project_id=project.id, title="Cascade Todo", status="todo")
         test_db.add(todo)
 
         ai_interaction = AIInteraction(
@@ -232,18 +228,14 @@ class TestDatabaseIntegration:
 
         # Mark as completed
         update_data = TodoUpdate(status="done")
-        updated_todo = await todo_service.update_todo(
-            todo.id, update_data, test_user.id
-        )
+        updated_todo = await todo_service.update_todo(todo.id, update_data, test_user.id)
 
         assert updated_todo.completed_at is not None
         assert updated_todo.status == "done"
 
         # Mark as not completed
         update_data = TodoUpdate(status="todo")
-        uncompleted_todo = await todo_service.update_todo(
-            todo.id, update_data, test_user.id
-        )
+        uncompleted_todo = await todo_service.update_todo(todo.id, update_data, test_user.id)
 
         assert uncompleted_todo.completed_at is None
         assert uncompleted_todo.status == "todo"
@@ -256,7 +248,7 @@ class TestDatabaseIntegration:
         # User without email should fail
         invalid_user = User(
             clerk_user_id=f"clerk_user_{uuid.uuid4()}",
-            username="noemailtuser"
+            username="noemailtuser",
             # Missing required email
         )
 
@@ -514,9 +506,7 @@ class TestDatabaseIntegration:
             subtask_ids.append(subtask.id)
 
         # Verify complete structure
-        project_with_todos = await project_service.get_project_with_todos(
-            project.id, test_user.id
-        )
+        project_with_todos = await project_service.get_project_with_todos(project.id, test_user.id)
 
         assert project_with_todos is not None
         assert len(project_with_todos.todos) == 4  # 1 parent + 3 subtasks
@@ -535,13 +525,9 @@ class TestDatabaseIntegration:
 
         # Verify subtasks are deleted
         for subtask_id in subtask_ids:
-            deleted_subtask = await todo_service.get_todo_by_id(
-                subtask_id, test_user.id
-            )
+            deleted_subtask = await todo_service.get_todo_by_id(subtask_id, test_user.id)
             assert deleted_subtask is None
 
         # Project should still exist
-        remaining_project = await project_service.get_project_by_id(
-            project.id, test_user.id
-        )
+        remaining_project = await project_service.get_project_by_id(project.id, test_user.id)
         assert remaining_project is not None

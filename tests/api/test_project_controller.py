@@ -89,9 +89,7 @@ class TestProjectController:
         assert len(data["projects"]) >= 3
 
     @pytest.mark.asyncio
-    async def test_get_projects_list_with_search(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_projects_list_with_search(self, authenticated_client: AsyncClient):
         """Test projects list with search filter."""
         await authenticated_client.post(
             "/api/projects/",
@@ -109,15 +107,11 @@ class TestProjectController:
         assert any("Important" in project["name"] for project in data["projects"])
 
     @pytest.mark.asyncio
-    async def test_get_projects_list_pagination(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_projects_list_pagination(self, authenticated_client: AsyncClient):
         """Test projects list pagination."""
         # Create multiple projects
         for i in range(15):
-            await authenticated_client.post(
-                "/api/projects/", json={"name": f"Page Project {i}"}
-            )
+            await authenticated_client.post("/api/projects/", json={"name": f"Page Project {i}"})
 
         # Test first page
         response = await authenticated_client.get("/api/projects/?page=1&size=10")
@@ -130,9 +124,7 @@ class TestProjectController:
         assert data["has_next"] is True
 
     @pytest.mark.asyncio
-    async def test_get_projects_list_with_todo_counts(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_projects_list_with_todo_counts(self, authenticated_client: AsyncClient):
         """Test that projects list includes todo counts."""
         # Create project
         project_response = await authenticated_client.post(
@@ -162,9 +154,7 @@ class TestProjectController:
         assert project["completed_todo_count"] == 1
 
     @pytest.mark.asyncio
-    async def test_get_project_by_id_success(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_get_project_by_id_success(self, authenticated_client: AsyncClient, test_project):
         """Test getting project by ID."""
         response = await authenticated_client.get(f"/api/projects/{test_project.id}")
 
@@ -197,9 +187,7 @@ class TestProjectController:
         assert len(data["data"]["todos"]) == 2
 
     @pytest.mark.asyncio
-    async def test_get_project_by_id_nonexistent(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_project_by_id_nonexistent(self, authenticated_client: AsyncClient):
         """Test getting non-existent project."""
         fake_id = str(uuid.uuid4())
         response = await authenticated_client.get(f"/api/projects/{fake_id}")
@@ -210,18 +198,14 @@ class TestProjectController:
         assert data["message"] == "Project not found"
 
     @pytest.mark.asyncio
-    async def test_get_project_by_id_invalid_uuid(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_project_by_id_invalid_uuid(self, authenticated_client: AsyncClient):
         """Test getting project with invalid UUID."""
         response = await authenticated_client.get("/api/projects/invalid-uuid")
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_update_project_success(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_update_project_success(self, authenticated_client: AsyncClient, test_project):
         """Test successful project update."""
         update_data = {
             "name": "Updated Project Name",
@@ -239,9 +223,7 @@ class TestProjectController:
         assert data["data"]["description"] == "Updated description"
 
     @pytest.mark.asyncio
-    async def test_update_project_partial(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_update_project_partial(self, authenticated_client: AsyncClient, test_project):
         """Test partial project update."""
         original_description = test_project.description
         update_data = {"name": "New Name Only"}
@@ -269,9 +251,7 @@ class TestProjectController:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.asyncio
-    async def test_update_project_same_name(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_update_project_same_name(self, authenticated_client: AsyncClient, test_project):
         """Test updating project with same name (should succeed)."""
         update_data = {
             "name": test_project.name,
@@ -293,16 +273,12 @@ class TestProjectController:
         fake_id = str(uuid.uuid4())
         update_data = {"name": "Should Fail"}
 
-        response = await authenticated_client.put(
-            f"/api/projects/{fake_id}", json=update_data
-        )
+        response = await authenticated_client.put(f"/api/projects/{fake_id}", json=update_data)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio
-    async def test_delete_project_success(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_delete_project_success(self, authenticated_client: AsyncClient, test_project):
         """Test successful project deletion."""
         project_id = str(test_project.id)
 
@@ -319,9 +295,7 @@ class TestProjectController:
         assert get_data["status"] == "error"
 
     @pytest.mark.asyncio
-    async def test_delete_project_with_todos(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_delete_project_with_todos(self, authenticated_client: AsyncClient, test_project):
         """Test deleting project that has todos (should unassign them)."""
         # Add todos to the project
         todo_responses = []
@@ -366,9 +340,7 @@ class TestProjectController:
         )
         project1_id = project1_response.json()["data"]["id"]
 
-        await authenticated_client.post(
-            "/api/projects/", json={"name": "Empty project"}
-        )
+        await authenticated_client.post("/api/projects/", json={"name": "Empty project"})
 
         # Add todos to first project
         for i in range(3):
@@ -390,9 +362,7 @@ class TestProjectController:
         assert stats["projects_with_todos"] >= 1
 
     @pytest.mark.asyncio
-    async def test_get_project_todos(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_get_project_todos(self, authenticated_client: AsyncClient, test_project):
         """Test getting all todos for a project."""
         # Add todos to the project
         todo_ids = []
@@ -403,9 +373,7 @@ class TestProjectController:
             )
             todo_ids.append(todo_response.json()["data"]["id"])
 
-        response = await authenticated_client.get(
-            f"/api/projects/{test_project.id}/todos"
-        )
+        response = await authenticated_client.get(f"/api/projects/{test_project.id}/todos")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -420,9 +388,7 @@ class TestProjectController:
             assert todo["id"] in todo_ids
 
     @pytest.mark.asyncio
-    async def test_get_project_todos_nonexistent_project(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_project_todos_nonexistent_project(self, authenticated_client: AsyncClient):
         """Test getting todos for non-existent project."""
         fake_id = str(uuid.uuid4())
 
@@ -438,9 +404,7 @@ class TestProjectController:
         self, authenticated_client: AsyncClient, test_project
     ):
         """Test getting todos for project with no todos."""
-        response = await authenticated_client.get(
-            f"/api/projects/{test_project.id}/todos"
-        )
+        response = await authenticated_client.get(f"/api/projects/{test_project.id}/todos")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -448,9 +412,7 @@ class TestProjectController:
         assert len(data["data"]["todos"]) == 0
 
     @pytest.mark.asyncio
-    async def test_projects_unauthorized_access(
-        self, client: AsyncClient, test_project
-    ):
+    async def test_projects_unauthorized_access(self, client: AsyncClient, test_project):
         """Test accessing project endpoints without authentication."""
         endpoints = [
             ("GET", "/api/projects/"),
@@ -504,9 +466,7 @@ class TestProjectController:
         app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_project_validation_comprehensive(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_project_validation_comprehensive(self, authenticated_client: AsyncClient):
         """Test comprehensive validation for project creation."""
         invalid_cases = [
             # Name too long (assuming 255 char limit)
@@ -517,9 +477,7 @@ class TestProjectController:
         ]
 
         for invalid_data in invalid_cases:
-            response = await authenticated_client.post(
-                "/api/projects/", json=invalid_data
-            )
+            response = await authenticated_client.post("/api/projects/", json=invalid_data)
             assert response.status_code in [
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 status.HTTP_400_BAD_REQUEST,
@@ -544,9 +502,7 @@ class TestProjectController:
         data = response.json()
 
         # Should be ordered by updated_at descending (newest first)
-        project_names_returned = [
-            p["name"] for p in data["projects"] if p["name"] in project_names
-        ]
+        project_names_returned = [p["name"] for p in data["projects"] if p["name"] in project_names]
         assert project_names_returned == [
             "Third Project",
             "Second Project",

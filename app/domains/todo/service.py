@@ -35,18 +35,14 @@ class TodoService:
 
         # Validate parent todo exists and belongs to user
         if todo_data.parent_todo_id:
-            parent_todo = await self._get_todo_by_id_and_user(
-                todo_data.parent_todo_id, user_id
-            )
+            parent_todo = await self._get_todo_by_id_and_user(todo_data.parent_todo_id, user_id)
             if not parent_todo:
                 raise TodoNotFoundError("Parent todo not found")
             depth = await self._get_todo_depth(parent_todo)
             if depth >= 5:
                 raise MaxTodoDepthExceededError("Maximum todo nesting depth exceeded")
 
-        due_date = (
-            self._normalize_datetime(todo_data.due_date) if todo_data.due_date else None
-        )
+        due_date = self._normalize_datetime(todo_data.due_date) if todo_data.due_date else None
 
         # Create todo instance
         todo = Todo(
@@ -122,9 +118,7 @@ class TodoService:
 
         return await paginate(self.db, query, pagination)
 
-    async def get_todo_with_subtasks(
-        self, todo_id: UUID, user_id: UUID
-    ) -> Optional[Todo]:
+    async def get_todo_with_subtasks(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
         """Get todo with all its subtasks."""
         query = (
             select(Todo)
@@ -221,9 +215,7 @@ class TodoService:
         total_todos = len(total_result.scalars().all())
 
         # Completed todos
-        completed_query = select(Todo).where(
-            and_(Todo.user_id == user_id, Todo.status == "done")
-        )
+        completed_query = select(Todo).where(and_(Todo.user_id == user_id, Todo.status == "done"))
         completed_result = await self.db.execute(completed_query)
         completed_todos = len(completed_result.scalars().all())
 
@@ -248,16 +240,12 @@ class TodoService:
             "in_progress_todos": in_progress_todos,
             "pending_todos": total_todos - completed_todos - in_progress_todos,
             "overdue_todos": overdue_todos,
-            "completion_rate": (completed_todos / total_todos * 100)
-            if total_todos > 0
-            else 0,
+            "completion_rate": (completed_todos / total_todos * 100) if total_todos > 0 else 0,
         }
 
     # Private helper methods
 
-    async def _get_todo_by_id_and_user(
-        self, todo_id: UUID, user_id: UUID
-    ) -> Optional[Todo]:
+    async def _get_todo_by_id_and_user(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
         """Get todo by ID and user ID."""
         query = select(Todo).where(and_(Todo.id == todo_id, Todo.user_id == user_id))
         result = await self.db.execute(query)
@@ -291,9 +279,7 @@ class TodoService:
         # If datetime is timezone-aware, convert to UTC
         return dt.astimezone(timezone.utc)
 
-    async def _validate_project_ownership(
-        self, project_id: UUID, user_id: UUID
-    ) -> None:
+    async def _validate_project_ownership(self, project_id: UUID, user_id: UUID) -> None:
         """Validate that a project belongs to the user."""
         if project_id:  # Allow None/null values for removing project assignment
             query = select(Project).where(
@@ -351,9 +337,7 @@ class TodoService:
             )
 
         except Exception as e:
-            logger.warning(
-                f"Failed to generate AI subtasks for todo {todo.id}: {str(e)}"
-            )
+            logger.warning(f"Failed to generate AI subtasks for todo {todo.id}: {str(e)}")
             # Don't fail the main todo creation if AI generation fails
             await self.db.rollback()
             pass

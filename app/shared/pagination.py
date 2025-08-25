@@ -29,9 +29,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     total_pages: int
 
 
-async def paginate(
-    db: AsyncSession, query: Select, pagination: PaginationParams
-) -> Dict[str, Any]:
+async def paginate(db: AsyncSession, query: Select, pagination: PaginationParams) -> Dict[str, Any]:
     """
     Paginate a SQLAlchemy query.
 

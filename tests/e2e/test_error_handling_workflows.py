@@ -132,9 +132,7 @@ class TestErrorHandlingWorkflows:
         # Step 2: Try to create todos with non-existent project
         invalid_todo_data = {"title": "Invalid Project Todo", "project_id": fake_ids[2]}
 
-        response = await authenticated_client.post(
-            "/api/todos/", json=invalid_todo_data
-        )
+        response = await authenticated_client.post("/api/todos/", json=invalid_todo_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
         # Step 3: Try to create subtask with non-existent parent
@@ -143,9 +141,7 @@ class TestErrorHandlingWorkflows:
             "parent_todo_id": fake_ids[3],
         }
 
-        response = await authenticated_client.post(
-            "/api/todos/", json=invalid_subtask_data
-        )
+        response = await authenticated_client.post("/api/todos/", json=invalid_subtask_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.asyncio
@@ -160,9 +156,7 @@ class TestErrorHandlingWorkflows:
         ]
 
         for invalid_data in invalid_project_cases:
-            response = await authenticated_client.post(
-                "/api/projects/", json=invalid_data
-            )
+            response = await authenticated_client.post("/api/projects/", json=invalid_data)
             assert response.status_code in [
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 status.HTTP_400_BAD_REQUEST,
@@ -184,15 +178,11 @@ class TestErrorHandlingWorkflows:
 
         # Step 3: Test duplicate project name
         project_data = {"name": "Unique Project Name"}
-        first_response = await authenticated_client.post(
-            "/api/projects/", json=project_data
-        )
+        first_response = await authenticated_client.post("/api/projects/", json=project_data)
         assert first_response.status_code == status.HTTP_201_CREATED
 
         # Try to create another project with same name
-        second_response = await authenticated_client.post(
-            "/api/projects/", json=project_data
-        )
+        second_response = await authenticated_client.post("/api/projects/", json=project_data)
         assert second_response.status_code == status.HTTP_400_BAD_REQUEST
 
         # Step 4: Test invalid query parameters
@@ -210,9 +200,7 @@ class TestErrorHandlingWorkflows:
             assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_ai_service_error_workflow(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_ai_service_error_workflow(self, authenticated_client: AsyncClient, test_todo):
         """Test workflow with AI service errors."""
 
         ai_request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
@@ -294,9 +282,7 @@ class TestErrorHandlingWorkflows:
 
         # Step 1: Create project and todos
         project_data = {"name": "Consistency Test Project"}
-        project_response = await authenticated_client.post(
-            "/api/projects/", json=project_data
-        )
+        project_response = await authenticated_client.post("/api/projects/", json=project_data)
         project_id = project_response.json()["data"]["id"]
 
         todo_data = {"title": "Parent Todo", "project_id": project_id, "status": "todo"}
@@ -330,9 +316,7 @@ class TestErrorHandlingWorkflows:
         parent_with_subtasks_response = await authenticated_client.get(
             f"/api/todos/{parent_todo_id}?include_subtasks=true"
         )
-        initial_subtasks_count = len(
-            parent_with_subtasks_response.json()["data"]["subtasks"]
-        )
+        initial_subtasks_count = len(parent_with_subtasks_response.json()["data"]["subtasks"])
 
         # Try to update parent with invalid project ID
         invalid_update_data = {
@@ -362,16 +346,12 @@ class TestErrorHandlingWorkflows:
 
         # Step 1: Create a project that will be accessed concurrently
         project_data = {"name": "Concurrent Test Project"}
-        project_response = await authenticated_client.post(
-            "/api/projects/", json=project_data
-        )
+        project_response = await authenticated_client.post("/api/projects/", json=project_data)
         project_id = project_response.json()["data"]["id"]
 
         # Step 2: Simulate concurrent todo creation
         async def create_todo_with_delay(index):
-            await asyncio.sleep(
-                0.01 * index
-            )  # Small delay to simulate timing differences
+            await asyncio.sleep(0.01 * index)  # Small delay to simulate timing differences
             todo_data = {
                 "title": f"Concurrent Todo {index}",
                 "project_id": project_id,
@@ -398,18 +378,14 @@ class TestErrorHandlingWorkflows:
             "status": "todo",
             "priority": 3,
         }
-        base_todo_response = await authenticated_client.post(
-            "/api/todos/", json=base_todo_data
-        )
+        base_todo_response = await authenticated_client.post("/api/todos/", json=base_todo_data)
         todo_id = base_todo_response.json()["data"]["id"]
 
         # Concurrent updates
         async def update_todo(field, value):
             await asyncio.sleep(0.01)  # Small delay
             update_data = {field: value}
-            return await authenticated_client.put(
-                f"/api/todos/{todo_id}", json=update_data
-            )
+            return await authenticated_client.put(f"/api/todos/{todo_id}", json=update_data)
 
         # Multiple concurrent updates
         update_tasks = [
@@ -435,23 +411,17 @@ class TestErrorHandlingWorkflows:
         assert final_todo["project_id"] == project_id
 
     @pytest.mark.asyncio
-    async def test_resource_cleanup_error_workflow(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_resource_cleanup_error_workflow(self, authenticated_client: AsyncClient):
         """Test proper resource cleanup during error scenarios."""
 
         # Step 1: Create resources that will need cleanup
         project_data = {"name": "Cleanup Test Project"}
-        project_response = await authenticated_client.post(
-            "/api/projects/", json=project_data
-        )
+        project_response = await authenticated_client.post("/api/projects/", json=project_data)
         project_id = project_response.json()["data"]["id"]
 
         # Create parent todo
         parent_data = {"title": "Cleanup Parent Todo", "project_id": project_id}
-        parent_response = await authenticated_client.post(
-            "/api/todos/", json=parent_data
-        )
+        parent_response = await authenticated_client.post("/api/todos/", json=parent_data)
         parent_id = parent_response.json()["data"]["id"]
 
         # Create subtasks
@@ -462,9 +432,7 @@ class TestErrorHandlingWorkflows:
                 "parent_todo_id": parent_id,
                 "project_id": project_id,
             }
-            subtask_response = await authenticated_client.post(
-                "/api/todos/", json=subtask_data
-            )
+            subtask_response = await authenticated_client.post("/api/todos/", json=subtask_data)
             subtask_ids.append(subtask_response.json()["data"]["id"])
 
         # Step 2: Delete parent todo and verify cascade deletion
@@ -485,15 +453,11 @@ class TestErrorHandlingWorkflows:
         remaining_todo_ids = []
         for i in range(2):
             todo_data = {"title": f"Remaining Todo {i}", "project_id": project_id}
-            todo_response = await authenticated_client.post(
-                "/api/todos/", json=todo_data
-            )
+            todo_response = await authenticated_client.post("/api/todos/", json=todo_data)
             remaining_todo_ids.append(todo_response.json()["data"]["id"])
 
         # Delete project
-        project_delete_response = await authenticated_client.delete(
-            f"/api/projects/{project_id}"
-        )
+        project_delete_response = await authenticated_client.delete(f"/api/projects/{project_id}")
         assert project_delete_response.status_code == status.HTTP_200_OK
 
         # Verify project is deleted

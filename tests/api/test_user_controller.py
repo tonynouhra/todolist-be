@@ -130,9 +130,7 @@ class TestUserAuthController:
         """Test login with token missing subject."""
         login_data = {"token": "token_without_sub"}
 
-        mock_clerk_auth.verify_token.return_value = {
-            "email": "test@example.com"
-        }  # Missing 'sub'
+        mock_clerk_auth.verify_token.return_value = {"email": "test@example.com"}  # Missing 'sub'
 
         with patch("app.domains.user.controller.auth", mock_clerk_auth):
             response = await client.post("/api/auth/login", json=login_data)
@@ -171,9 +169,7 @@ class TestUserAuthController:
         assert data["message"] == "Logout successful"
 
     @pytest.mark.asyncio
-    async def test_get_current_user_success(
-        self, authenticated_client: AsyncClient, test_user
-    ):
+    async def test_get_current_user_success(self, authenticated_client: AsyncClient, test_user):
         """Test getting current user information."""
         response = await authenticated_client.get("/api/auth/me")
 
@@ -191,9 +187,7 @@ class TestUserAuthController:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.asyncio
-    async def test_update_current_user_success(
-        self, authenticated_client: AsyncClient, test_user
-    ):
+    async def test_update_current_user_success(self, authenticated_client: AsyncClient, test_user):
         """Test updating current user information."""
         update_data = {"username": "updated_username", "email": "updated@example.com"}
 
@@ -205,9 +199,7 @@ class TestUserAuthController:
         assert data["email"] == "updated@example.com"
 
     @pytest.mark.asyncio
-    async def test_update_current_user_partial(
-        self, authenticated_client: AsyncClient, test_user
-    ):
+    async def test_update_current_user_partial(self, authenticated_client: AsyncClient, test_user):
         """Test partial update of current user."""
         original_email = test_user.email
         update_data = {"username": "new_username_only"}
@@ -220,9 +212,7 @@ class TestUserAuthController:
         assert data["email"] == original_email
 
     @pytest.mark.asyncio
-    async def test_update_current_user_invalid_email(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_update_current_user_invalid_email(self, authenticated_client: AsyncClient):
         """Test updating user with invalid email."""
         update_data = {"email": "invalid-email-format"}
 
@@ -281,9 +271,7 @@ class TestUserAuthController:
         assert response.headers["x-request-id"] is not None
 
     @pytest.mark.asyncio
-    async def test_login_creates_interaction_log(
-        self, client: AsyncClient, mock_clerk_auth
-    ):
+    async def test_login_creates_interaction_log(self, client: AsyncClient, mock_clerk_auth):
         """Test that login creates appropriate logs/interactions."""
         login_data = {"token": "logging_test_token"}
 

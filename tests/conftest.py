@@ -4,7 +4,11 @@ import os
 # Set up test environment variables BEFORE any other imports
 os.environ.setdefault("TESTING", "true")
 # Use SQLite for local testing, PostgreSQL for CI
-default_test_url = "sqlite+aiosqlite:///./test.db" if os.getenv("CI") != "true" else "postgresql+asyncpg://test:test@localhost:5432/test_ai_todo"
+default_test_url = (
+    "sqlite+aiosqlite:///./test.db"
+    if os.getenv("CI") != "true"
+    else "postgresql+asyncpg://test:test@localhost:5432/test_ai_todo"
+)
 os.environ.setdefault("TEST_DATABASE_URL", default_test_url)
 os.environ.setdefault("DATABASE_URL", os.environ.get("TEST_DATABASE_URL", default_test_url))
 os.environ.setdefault("GEMINI_API_KEY", "")

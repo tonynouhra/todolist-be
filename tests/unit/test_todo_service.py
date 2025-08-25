@@ -68,14 +68,10 @@ class TestTodoService:
         assert result.parent_todo_id is None
 
     @pytest.mark.asyncio
-    async def test_create_subtask_success(
-        self, test_db, test_user, test_project, test_todo
-    ):
+    async def test_create_subtask_success(self, test_db, test_user, test_project, test_todo):
         """Test creating a subtask."""
         service = TodoService(test_db)
-        subtask_data = TodoCreate(
-            title="Subtask", parent_todo_id=test_todo.id, priority=2
-        )
+        subtask_data = TodoCreate(title="Subtask", parent_todo_id=test_todo.id, priority=2)
 
         result = await service.create_todo(subtask_data, test_user.id)
 
@@ -123,9 +119,7 @@ class TestTodoService:
 
             todo_data = TodoCreate(title="AI Enhanced Todo", generate_ai_subtasks=True)
 
-            result = await service.create_todo(
-                todo_data, test_user.id, generate_ai_subtasks=True
-            )
+            result = await service.create_todo(todo_data, test_user.id, generate_ai_subtasks=True)
 
             assert result is not None
             mock_ai.assert_called_once_with(result)
@@ -161,15 +155,11 @@ class TestTodoService:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_todo_with_subtasks(
-        self, test_db, test_user, test_todo_with_subtasks
-    ):
+    async def test_get_todo_with_subtasks(self, test_db, test_user, test_todo_with_subtasks):
         """Test getting todo with its subtasks."""
         service = TodoService(test_db)
 
-        result = await service.get_todo_with_subtasks(
-            test_todo_with_subtasks.id, test_user.id
-        )
+        result = await service.get_todo_with_subtasks(test_todo_with_subtasks.id, test_user.id)
 
         assert result is not None
         assert result.id == test_todo_with_subtasks.id
@@ -232,9 +222,7 @@ class TestTodoService:
         assert result["items"][0].priority == 5
 
     @pytest.mark.asyncio
-    async def test_get_todos_list_with_project_filter(
-        self, test_db, test_user, test_project
-    ):
+    async def test_get_todos_list_with_project_filter(self, test_db, test_user, test_project):
         """Test todos list with project filter."""
         service = TodoService(test_db)
 
@@ -258,9 +246,7 @@ class TestTodoService:
         """Test todos list with search filter."""
         service = TodoService(test_db)
 
-        todo_data_1 = TodoCreate(
-            title="Important Meeting", description="Discuss project progress"
-        )
+        todo_data_1 = TodoCreate(title="Important Meeting", description="Discuss project progress")
         todo_data_2 = TodoCreate(title="Code Review", description="Review pull request")
 
         await service.create_todo(todo_data_1, test_user.id)
@@ -278,9 +264,7 @@ class TestTodoService:
     async def test_update_todo_success(self, test_db, test_user, test_todo):
         """Test successful todo update."""
         service = TodoService(test_db)
-        update_data = TodoUpdate(
-            title="Updated Title", status="in_progress", priority=5
-        )
+        update_data = TodoUpdate(title="Updated Title", status="in_progress", priority=5)
 
         result = await service.update_todo(test_todo.id, update_data, test_user.id)
 
@@ -302,9 +286,7 @@ class TestTodoService:
         assert result.completed_at is not None
 
     @pytest.mark.asyncio
-    async def test_update_todo_unmark_completed(
-        self, test_db, test_user, completed_todo
-    ):
+    async def test_update_todo_unmark_completed(self, test_db, test_user, completed_todo):
         """Test unmarking completed todo clears completed_at."""
         service = TodoService(test_db)
         update_data = TodoUpdate(status="todo")
@@ -340,9 +322,7 @@ class TestTodoService:
         assert deleted_todo is None
 
     @pytest.mark.asyncio
-    async def test_delete_todo_with_subtasks(
-        self, test_db, test_user, test_todo_with_subtasks
-    ):
+    async def test_delete_todo_with_subtasks(self, test_db, test_user, test_todo_with_subtasks):
         """Test deleting todo cascades to subtasks."""
         service = TodoService(test_db)
         parent_id = test_todo_with_subtasks.id
@@ -500,9 +480,7 @@ class TestTodoService:
         assert depth == 1
 
     @pytest.mark.asyncio
-    async def test_validate_project_ownership_success(
-        self, test_db, test_user, test_project
-    ):
+    async def test_validate_project_ownership_success(self, test_db, test_user, test_project):
         """Test project ownership validation success."""
         service = TodoService(test_db)
 
@@ -510,9 +488,7 @@ class TestTodoService:
         await service._validate_project_ownership(test_project.id, test_user.id)
 
     @pytest.mark.asyncio
-    async def test_validate_project_ownership_failure(
-        self, test_db, test_user_2, test_project
-    ):
+    async def test_validate_project_ownership_failure(self, test_db, test_user_2, test_project):
         """Test project ownership validation failure."""
         service = TodoService(test_db)
 

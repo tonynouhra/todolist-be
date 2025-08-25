@@ -55,60 +55,34 @@ class Settings(BaseSettings):
         description="Secret key for JWT encoding",
     )
     algorithm: str = Field(default="HS256", description="JWT algorithm")
-    access_token_expire_minutes: int = Field(
-        default=30, description="JWT token expiration time"
-    )
+    access_token_expire_minutes: int = Field(default=30, description="JWT token expiration time")
 
     # ===== Database Settings =====
-    database_url: Optional[str] = Field(
-        default=None, description="Database connection URL"
-    )
+    database_url: Optional[str] = Field(default=None, description="Database connection URL")
     db_pool_size: int = Field(default=20, description="Database connection pool size")
-    db_max_overflow: int = Field(
-        default=0, description="Database max overflow connections"
-    )
+    db_max_overflow: int = Field(default=0, description="Database max overflow connections")
 
     # Test database URL
-    test_database_url: Optional[str] = Field(
-        default=None, description="Test database URL"
-    )
+    test_database_url: Optional[str] = Field(default=None, description="Test database URL")
 
     # ===== Authentication (Clerk) =====
-    clerk_secret_key: Optional[str] = Field(
-        default=None, description="Clerk secret key"
-    )
-    clerk_api_url: AnyHttpUrl = Field(
-        default="https://api.clerk.com", description="Clerk API URL"
-    )
+    clerk_secret_key: Optional[str] = Field(default=None, description="Clerk secret key")
+    clerk_api_url: AnyHttpUrl = Field(default="https://api.clerk.com", description="Clerk API URL")
 
     # ===== AI Service (Gemini) =====
-    gemini_api_key: Optional[str] = Field(
-        default=None, description="Google Gemini API key"
-    )
-    gemini_model: str = Field(
-        default="gemini-1.5-flash", description="Gemini model to use"
-    )
-    gemini_max_tokens: int = Field(
-        default=1000, description="Maximum tokens for Gemini"
-    )
-    ai_request_timeout: int = Field(
-        default=30, description="AI request timeout in seconds"
-    )
+    gemini_api_key: Optional[str] = Field(default=None, description="Google Gemini API key")
+    gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model to use")
+    gemini_max_tokens: int = Field(default=1000, description="Maximum tokens for Gemini")
+    ai_request_timeout: int = Field(default=30, description="AI request timeout in seconds")
 
     # ===== File Storage Settings =====
-    aws_access_key_id: Optional[str] = Field(
-        default=None, description="AWS access key ID"
-    )
-    aws_secret_access_key: Optional[str] = Field(
-        default=None, description="AWS secret access key"
-    )
+    aws_access_key_id: Optional[str] = Field(default=None, description="AWS access key ID")
+    aws_secret_access_key: Optional[str] = Field(default=None, description="AWS secret access key")
     s3_bucket_name: Optional[str] = Field(default=None, description="S3 bucket name")
     s3_region: str = Field(default="us-east-1", description="S3 region")
     s3_endpoint_url: Optional[str] = Field(default=None, description="S3 endpoint URL")
 
-    cloudflare_account_id: Optional[str] = Field(
-        default=None, description="CloudFlare account ID"
-    )
+    cloudflare_account_id: Optional[str] = Field(default=None, description="CloudFlare account ID")
     cloudflare_access_key_id: Optional[str] = Field(
         default=None, description="CloudFlare R2 access key"
     )
@@ -120,30 +94,18 @@ class Settings(BaseSettings):
     )
 
     # ===== Redis Configuration =====
-    redis_url: str = Field(
-        default="redis://localhost:6379/0", description="Redis connection URL"
-    )
+    redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
 
     # ===== Application Limits =====
-    max_file_size: int = Field(
-        default=52428800, description="Maximum file size in bytes (50MB)"
-    )
+    max_file_size: int = Field(default=52428800, description="Maximum file size in bytes (50MB)")
     max_todos_per_user: int = Field(default=1000, description="Maximum todos per user")
-    max_subtasks_depth: int = Field(
-        default=5, description="Maximum subtask nesting depth"
-    )
+    max_subtasks_depth: int = Field(default=5, description="Maximum subtask nesting depth")
     max_files_per_todo: int = Field(default=10, description="Maximum files per todo")
-    file_upload_timeout: int = Field(
-        default=60, description="File upload timeout in seconds"
-    )
+    file_upload_timeout: int = Field(default=60, description="File upload timeout in seconds")
 
     # ===== Rate Limiting =====
-    rate_limit_requests: int = Field(
-        default=100, description="Rate limit requests per period"
-    )
-    rate_limit_period: int = Field(
-        default=60, description="Rate limit period in seconds"
-    )
+    rate_limit_requests: int = Field(default=100, description="Rate limit requests per period")
+    rate_limit_period: int = Field(default=60, description="Rate limit period in seconds")
 
     # ===== CORS Settings =====
     allowed_origins: str = Field(
@@ -155,11 +117,7 @@ class Settings(BaseSettings):
     def ALLOWED_ORIGINS(self) -> List[str]:
         """Parse CORS origins from comma-separated string."""
         if isinstance(self.allowed_origins, str):
-            return [
-                origin.strip()
-                for origin in self.allowed_origins.split(",")
-                if origin.strip()
-            ]
+            return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
         return self.allowed_origins if isinstance(self.allowed_origins, list) else []
 
     # ===== Background Tasks (Celery) =====
@@ -178,15 +136,9 @@ class Settings(BaseSettings):
     email_from: Optional[str] = Field(default=None, description="Email from address")
 
     # ===== Monitoring & Logging =====
-    log_level: LogLevelEnum = Field(
-        default=LogLevelEnum.INFO, description="Logging level"
-    )
-    log_format: LogFormatEnum = Field(
-        default=LogFormatEnum.json, description="Log format"
-    )
-    sentry_dsn: Optional[str] = Field(
-        default=None, description="Sentry DSN for error tracking"
-    )
+    log_level: LogLevelEnum = Field(default=LogLevelEnum.INFO, description="Logging level")
+    log_format: LogFormatEnum = Field(default=LogFormatEnum.json, description="Log format")
+    sentry_dsn: Optional[str] = Field(default=None, description="Sentry DSN for error tracking")
 
     # ===== WebSocket Configuration =====
     websocket_heartbeat_interval: int = Field(
@@ -227,11 +179,7 @@ class Settings(BaseSettings):
     @property
     def has_file_storage(self) -> bool:
         return bool(
-            (
-                self.aws_access_key_id
-                and self.aws_secret_access_key
-                and self.s3_bucket_name
-            )
+            (self.aws_access_key_id and self.aws_secret_access_key and self.s3_bucket_name)
             or (
                 self.cloudflare_access_key_id
                 and self.cloudflare_secret_access_key
@@ -275,11 +223,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def set_computed_fields(self):
-        if (
-            not self.test_database_url
-            and self.database_url
-            and "neondb" in self.database_url
-        ):
+        if not self.test_database_url and self.database_url and "neondb" in self.database_url:
             self.test_database_url = self.database_url.replace("neondb", "neondb_test")
         return self
 

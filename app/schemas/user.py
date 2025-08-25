@@ -9,9 +9,7 @@ class UserSignupRequest(BaseSchema):
     """Schema for user signup request."""
 
     email: EmailStr = Field(..., description="User's email address")
-    username: Optional[str] = Field(
-        None, max_length=100, description="Optional username"
-    )
+    username: Optional[str] = Field(None, max_length=100, description="Optional username")
     clerk_user_id: str = Field(..., max_length=255, description="Clerk user ID")
 
 
@@ -46,7 +44,5 @@ class LogoutResponse(BaseSchema):
 class UserUpdateRequest(BaseSchema):
     """Schema for updating user information."""
 
-    username: Optional[str] = Field(
-        None, max_length=100, description="Username to update"
-    )
+    username: Optional[str] = Field(None, max_length=100, description="Username to update")
     email: Optional[EmailStr] = Field(None, description="Email to update")

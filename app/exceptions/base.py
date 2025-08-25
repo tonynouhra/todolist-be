@@ -32,9 +32,7 @@ class NotFoundError(BaseAppException):
         message: str = "Resource not found",
         details: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(
-            message=message, status_code=404, error_code="NOT_FOUND", details=details
-        )
+        super().__init__(message=message, status_code=404, error_code="NOT_FOUND", details=details)
 
 
 class PermissionError(BaseAppException):

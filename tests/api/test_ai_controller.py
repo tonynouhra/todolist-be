@@ -70,9 +70,7 @@ class TestAIController:
             assert data["data"]["total_subtasks"] == 3
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_nonexistent_todo(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_generate_subtasks_nonexistent_todo(self, authenticated_client: AsyncClient):
         """Test subtask generation for non-existent todo."""
         fake_todo_id = str(uuid.uuid4())
         request_data = {"todo_id": fake_todo_id, "max_subtasks": 3}
@@ -132,9 +130,7 @@ class TestAIController:
             assert "AI_QUOTA_EXCEEDED" in data["data"]["error_code"]
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_rate_limit(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_generate_subtasks_rate_limit(self, authenticated_client: AsyncClient, test_todo):
         """Test subtask generation with rate limit."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
@@ -158,9 +154,7 @@ class TestAIController:
             assert data["message"] == "Rate limit exceeded"
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_timeout(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_generate_subtasks_timeout(self, authenticated_client: AsyncClient, test_todo):
         """Test subtask generation with timeout."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
@@ -239,9 +233,7 @@ class TestAIController:
             assert data["message"] == "An unexpected error occurred"
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_invalid_request_data(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_generate_subtasks_invalid_request_data(self, authenticated_client: AsyncClient):
         """Test subtask generation with invalid request data."""
         invalid_cases = [
             # Missing todo_id
@@ -282,12 +274,8 @@ class TestAIController:
             ai_model="gemini-pro",
         )
 
-        with patch(
-            "app.domains.ai.service.AIService.analyze_file", return_value=mock_response
-        ):
-            response = await authenticated_client.post(
-                "/api/ai/analyze-file", json=request_data
-            )
+        with patch("app.domains.ai.service.AIService.analyze_file", return_value=mock_response):
+            response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_201_CREATED
             data = response.json()
@@ -308,16 +296,12 @@ class TestAIController:
             "app.domains.ai.service.AIService.analyze_file",
             side_effect=AIInvalidRequestError("File not found"),
         ):
-            response = await authenticated_client.post(
-                "/api/ai/analyze-file", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.asyncio
-    async def test_analyze_file_different_analysis_types(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_analyze_file_different_analysis_types(self, authenticated_client: AsyncClient):
         """Test file analysis with different analysis types."""
         file_id = str(uuid.uuid4())
         analysis_types = ["summary", "task_extraction", "general"]
@@ -369,21 +353,15 @@ class TestAIController:
             ai_model="gemini-pro",
         )
 
-        with patch(
-            "app.domains.ai.service.AIService.analyze_file", return_value=mock_response
-        ):
-            response = await authenticated_client.post(
-                "/api/ai/analyze-file", json=request_data
-            )
+        with patch("app.domains.ai.service.AIService.analyze_file", return_value=mock_response):
+            response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_201_CREATED
             data = response.json()
             assert data["data"]["confidence_score"] == 0.9
 
     @pytest.mark.asyncio
-    async def test_analyze_file_ai_service_error(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_analyze_file_ai_service_error(self, authenticated_client: AsyncClient):
         """Test file analysis with AI service error."""
         file_id = str(uuid.uuid4())
         request_data = {"file_id": file_id, "analysis_type": "summary"}
@@ -392,21 +370,15 @@ class TestAIController:
             "app.domains.ai.service.AIService.analyze_file",
             side_effect=AIServiceError("Analysis failed"),
         ):
-            response = await authenticated_client.post(
-                "/api/ai/analyze-file", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
             assert data["status"] == "error"
-            assert (
-                "An unexpected error occurred during file analysis" in data["message"]
-            )
+            assert "An unexpected error occurred during file analysis" in data["message"]
 
     @pytest.mark.asyncio
-    async def test_get_ai_service_status_healthy(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_ai_service_status_healthy(self, authenticated_client: AsyncClient):
         """Test getting healthy AI service status."""
         from app.schemas.ai import AIServiceStatus
         from datetime import datetime, timezone
@@ -433,9 +405,7 @@ class TestAIController:
             assert data["data"]["requests_today"] == 42
 
     @pytest.mark.asyncio
-    async def test_get_ai_service_status_unhealthy(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_get_ai_service_status_unhealthy(self, authenticated_client: AsyncClient):
         """Test getting unhealthy AI service status."""
         from app.schemas.ai import AIServiceStatus
 
@@ -472,9 +442,7 @@ class TestAIController:
             assert data["data"]["service_available"] is False
 
     @pytest.mark.asyncio
-    async def test_ai_endpoints_unauthorized_access(
-        self, client: AsyncClient, test_todo
-    ):
+    async def test_ai_endpoints_unauthorized_access(self, client: AsyncClient, test_todo):
         """Test accessing AI endpoints without authentication."""
         endpoints_data = [
             (
@@ -499,9 +467,7 @@ class TestAIController:
             assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.asyncio
-    async def test_ai_request_validation_comprehensive(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_ai_request_validation_comprehensive(self, authenticated_client: AsyncClient):
         """Test comprehensive validation for AI requests."""
         # Test subtask generation validation
         invalid_subtask_cases = [
@@ -531,15 +497,11 @@ class TestAIController:
         ]
 
         for invalid_data in invalid_file_cases:
-            response = await authenticated_client.post(
-                "/api/ai/analyze-file", json=invalid_data
-            )
+            response = await authenticated_client.post("/api/ai/analyze-file", json=invalid_data)
             assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_ai_error_response_format(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_ai_error_response_format(self, authenticated_client: AsyncClient, test_todo):
         """Test that AI error responses follow consistent format."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 

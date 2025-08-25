@@ -22,9 +22,7 @@ class ProjectService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_project(
-        self, project_data: ProjectCreate, user_id: UUID
-    ) -> Project:
+    async def create_project(self, project_data: ProjectCreate, user_id: UUID) -> Project:
         """Create a new project."""
 
         # Check if project name already exists for this user
@@ -47,15 +45,11 @@ class ProjectService:
             await self.db.rollback()
             raise ValidationError(f"Failed to create project: {str(e)}")
 
-    async def get_project_by_id(
-        self, project_id: UUID, user_id: UUID
-    ) -> Optional[Project]:
+    async def get_project_by_id(self, project_id: UUID, user_id: UUID) -> Optional[Project]:
         """Get a project by ID, ensuring it belongs to the user."""
         return await self._get_project_by_id_and_user(project_id, user_id)
 
-    async def get_project_with_todos(
-        self, project_id: UUID, user_id: UUID
-    ) -> Optional[Project]:
+    async def get_project_with_todos(self, project_id: UUID, user_id: UUID) -> Optional[Project]:
         """Get a project with its todos."""
 
         stmt = (
@@ -118,9 +112,7 @@ class ProjectService:
 
         # Check if new name conflicts with existing project
         if project_data.name and project_data.name != project.name:
-            existing = await self._get_project_by_name_and_user(
-                project_data.name, user_id
-            )
+            existing = await self._get_project_by_name_and_user(project_data.name, user_id)
             if existing:
                 raise ValidationError("A project with this name already exists")
 
@@ -180,9 +172,7 @@ class ProjectService:
 
         # Average todos per project - using subquery to avoid nested aggregates
         todo_counts_subquery = (
-            select(
-                Project.id.label("project_id"), func.count(Todo.id).label("todo_count")
-            )
+            select(Project.id.label("project_id"), func.count(Todo.id).label("todo_count"))
             .select_from(Project)
             .join(Todo, Project.id == Todo.project_id, isouter=True)
             .where(Project.user_id == user_id)
@@ -243,19 +233,13 @@ class ProjectService:
         self, project_id: UUID, user_id: UUID
     ) -> Optional[Project]:
         """Get project by ID and user ID."""
-        stmt = select(Project).where(
-            and_(Project.id == project_id, Project.user_id == user_id)
-        )
+        stmt = select(Project).where(and_(Project.id == project_id, Project.user_id == user_id))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def _get_project_by_name_and_user(
-        self, name: str, user_id: UUID
-    ) -> Optional[Project]:
+    async def _get_project_by_name_and_user(self, name: str, user_id: UUID) -> Optional[Project]:
         """Get project by name and user ID."""
-        stmt = select(Project).where(
-            and_(Project.name == name, Project.user_id == user_id)
-        )
+        stmt = select(Project).where(and_(Project.name == name, Project.user_id == user_id))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

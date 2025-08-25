@@ -53,9 +53,7 @@ class TodoFactory(SQLAlchemyModelFactory):
     description = factory.Faker("text", max_nb_chars=500)
     status = factory.Iterator(["todo", "in_progress", "done"])
     priority = factory.Faker("random_int", min=1, max=5)
-    due_date = factory.LazyFunction(
-        lambda: datetime.now(timezone.utc) + timedelta(days=7)
-    )
+    due_date = factory.LazyFunction(lambda: datetime.now(timezone.utc) + timedelta(days=7))
     ai_generated = False
     # user_id, project_id, parent_todo_id will be passed when creating
 
@@ -138,9 +136,7 @@ async def create_todo_with_subtasks(
     TodoFactory._meta.sqlalchemy_session = session
     SubtaskFactory._meta.sqlalchemy_session = session
 
-    parent_todo = TodoFactory.create(
-        user_id=user_id, project_id=project_id, status="in_progress"
-    )
+    parent_todo = TodoFactory.create(user_id=user_id, project_id=project_id, status="in_progress")
 
     subtasks = []
     for i in range(num_subtasks):

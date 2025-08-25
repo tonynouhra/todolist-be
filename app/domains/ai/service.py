@@ -77,18 +77,14 @@ class AIService:
                     temperature=0.7,
                 ),
             )
-            logger.info(
-                f"Google Gemini client initialized successfully with model: {model_name}"
-            )
+            logger.info(f"Google Gemini client initialized successfully with model: {model_name}")
 
         except Exception as e:
             logger.error(f"Failed to initialize Gemini client: {str(e)}")
             # Try to list available models for debugging
             try:
                 available_models = list(genai.list_models())
-                logger.info(
-                    f"Available models: {[model.name for model in available_models]}"
-                )
+                logger.info(f"Available models: {[model.name for model in available_models]}")
             except:
                 logger.warning("Could not list available models")
             raise AIConfigurationError(f"Failed to initialize AI service: {str(e)}")
@@ -107,9 +103,7 @@ class AIService:
             raise AIInvalidRequestError("Todo not found or access denied")
 
         # Build the prompt using todo data
-        prompt = self._build_subtask_generation_prompt_from_todo(
-            todo, request.max_subtasks
-        )
+        prompt = self._build_subtask_generation_prompt_from_todo(todo, request.max_subtasks)
 
         try:
             # Make the AI request with timeout
@@ -193,9 +187,7 @@ class AIService:
             raise AIInvalidRequestError("File not found or access denied")
 
         # Build analysis prompt based on file type and content
-        prompt = self._build_file_analysis_prompt(
-            file, request.analysis_type, request.context
-        )
+        prompt = self._build_file_analysis_prompt(file, request.analysis_type, request.context)
 
         try:
             response = await asyncio.wait_for(
@@ -295,9 +287,7 @@ class AIService:
 
     # Private helper methods
 
-    def _build_subtask_generation_prompt_from_todo(
-        self, todo: Todo, max_subtasks: int
-    ) -> str:
+    def _build_subtask_generation_prompt_from_todo(self, todo: Todo, max_subtasks: int) -> str:
         """Build prompt for subtask generation from todo data."""
 
         base_prompt = f"""
@@ -310,9 +300,7 @@ Given the following main task, generate a list of specific, actionable subtasks 
             base_prompt += f"**Description:** {todo.description}\n"
 
         if todo.priority:
-            priority_text = ["very low", "low", "medium", "high", "very high"][
-                todo.priority - 1
-            ]
+            priority_text = ["very low", "low", "medium", "high", "very high"][todo.priority - 1]
             base_prompt += f"**Priority Level:** {priority_text}\n"
 
         if todo.due_date:
@@ -418,9 +406,7 @@ Analyze the following file and provide insights based on the analysis type reque
         try:
             # Run the synchronous Gemini API call in a thread pool
             loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None, lambda: self.model.generate_content(prompt)
-            )
+            response = await loop.run_in_executor(None, lambda: self.model.generate_content(prompt))
 
             if not response or not response.text:
                 raise AIServiceError("Empty response from AI service")
@@ -534,9 +520,7 @@ Analyze the following file and provide insights based on the analysis type reque
             # Try to find the configured model first
             configured_model = settings.gemini_model
             for model_name in model_names:
-                if configured_model in model_name or model_name.endswith(
-                    configured_model
-                ):
+                if configured_model in model_name or model_name.endswith(configured_model):
                     logger.info(f"Using configured model: {model_name}")
                     return model_name
 
@@ -552,9 +536,7 @@ Analyze the following file and provide insights based on the analysis type reque
 
             for preferred in preferred_models:
                 for available in model_names:
-                    if preferred in available or available.endswith(
-                        preferred.split("/")[-1]
-                    ):
+                    if preferred in available or available.endswith(preferred.split("/")[-1]):
                         logger.info(f"Using fallback model: {available}")
                         return available
 
