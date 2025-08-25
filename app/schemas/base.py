@@ -1,9 +1,10 @@
 """Base schemas for the application."""
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
-from uuid import UUID
 from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseSchema(BaseModel):

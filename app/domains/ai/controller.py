@@ -3,31 +3,31 @@
 import logging
 from typing import Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, Body, Request, HTTPException, status
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_db, get_current_user, validate_token
+from app.core.dependencies import get_current_user, get_db, validate_token
 from app.domains.ai.service import AIService
-from app.schemas.ai import (
-    SubtaskGenerationRequest,
-    SubtaskGenerationResponse,
-    FileAnalysisRequest,
-    FileAnalysisResponse,
-    AIServiceStatus,
-    AIErrorResponse,
-)
-from app.schemas.base import ResponseSchema
 from app.exceptions.ai import (
+    AIConfigurationError,
+    AIQuotaExceededError,
+    AIRateLimitError,
     AIServiceError,
     AIServiceUnavailableError,
-    AIQuotaExceededError,
     AITimeoutError,
-    AIConfigurationError,
-    AIRateLimitError,
 )
+from app.schemas.ai import (
+    AIErrorResponse,
+    AIServiceStatus,
+    FileAnalysisRequest,
+    FileAnalysisResponse,
+    SubtaskGenerationRequest,
+    SubtaskGenerationResponse,
+)
+from app.schemas.base import ResponseSchema
 from models.user import User
-
 
 logger = logging.getLogger(__name__)
 

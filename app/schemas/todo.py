@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict
-from .base import BaseSchema, BaseModelSchema
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from .base import BaseModelSchema, BaseSchema
 
 
 class TodoBase(BaseSchema):

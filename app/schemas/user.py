@@ -1,7 +1,9 @@
 """User-related Pydantic schemas for request/response validation."""
 
 from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field
+
 from .base import BaseModelSchema, BaseSchema
 
 

@@ -4,12 +4,12 @@
 Configuration settings for AI Todo List application.
 Uses Pydantic BaseSettings for environment variable management.
 """
-from enum import Enum
 import secrets
+from enum import Enum
 from typing import List, Optional
 
+from pydantic import AnyHttpUrl, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, AnyHttpUrl, field_validator, model_validator
 
 
 class EnvironmentEnum(str, Enum):

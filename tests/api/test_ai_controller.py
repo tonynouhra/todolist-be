@@ -5,25 +5,22 @@ This module contains comprehensive API endpoint tests for the AI controller,
 testing subtask generation, file analysis, and AI service status endpoints.
 """
 
-import pytest
 import uuid
-from unittest.mock import patch, AsyncMock
-from httpx import AsyncClient
-from fastapi import status
+from unittest.mock import AsyncMock, patch
 
-from app.schemas.ai import (
-    SubtaskGenerationResponse,
-    FileAnalysisResponse,
-    GeneratedSubtask,
-)
+import pytest
+from fastapi import status
+from httpx import AsyncClient
+
 from app.exceptions.ai import (
+    AIConfigurationError,
+    AIQuotaExceededError,
+    AIRateLimitError,
     AIServiceError,
     AIServiceUnavailableError,
-    AIQuotaExceededError,
     AITimeoutError,
-    AIConfigurationError,
-    AIRateLimitError,
 )
+from app.schemas.ai import FileAnalysisResponse, GeneratedSubtask, SubtaskGenerationResponse
 
 
 class TestAIController:
@@ -380,8 +377,9 @@ class TestAIController:
     @pytest.mark.asyncio
     async def test_get_ai_service_status_healthy(self, authenticated_client: AsyncClient):
         """Test getting healthy AI service status."""
-        from app.schemas.ai import AIServiceStatus
         from datetime import datetime, timezone
+
+        from app.schemas.ai import AIServiceStatus
 
         mock_status = AIServiceStatus(
             service_available=True,

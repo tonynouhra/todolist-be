@@ -3,36 +3,26 @@
 import logging
 from typing import List, Optional
 from uuid import UUID
-from fastapi import (
-    APIRouter,
-    Depends,
-    Query,
-    Path,
-    Body,
-    Request,
-    HTTPException,
-    status,
-)
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_db, get_current_user, validate_token
-from app.domains.project.service import ProjectService
-from app.schemas.project import (
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
-    ProjectWithTodos,
-    ProjectFilter,
-    ProjectListResponse,
-    ProjectStats,
-)
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Import schemas to ensure model rebuilding happens
 import app.schemas
+from app.core.dependencies import get_current_user, get_db, validate_token
+from app.domains.project.service import ProjectService
 from app.schemas.base import ResponseSchema
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectFilter,
+    ProjectListResponse,
+    ProjectResponse,
+    ProjectStats,
+    ProjectUpdate,
+    ProjectWithTodos,
+)
 from app.shared.pagination import PaginationParams
 from models.user import User
-
 
 logger = logging.getLogger(__name__)
 

@@ -5,11 +5,12 @@ This module contains comprehensive API endpoint tests for the project controller
 testing all CRUD operations, project-todo relationships, and statistics.
 """
 
-import pytest
 import uuid
 from unittest.mock import patch
-from httpx import AsyncClient
+
+import pytest
 from fastapi import status
+from httpx import AsyncClient
 
 
 class TestProjectController:
@@ -448,9 +449,9 @@ class TestProjectController:
         def override_get_current_user_2():
             return test_user_2
 
-        from app.main import app
         from app.core.dependencies import get_current_user
         from app.database import get_db
+        from app.main import app
 
         # Create authenticated client for second user
         app.dependency_overrides[get_current_user] = override_get_current_user_2

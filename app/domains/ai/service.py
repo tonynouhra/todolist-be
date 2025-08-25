@@ -1,44 +1,43 @@
 """AI service layer with Google Gemini integration."""
 
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
-import asyncio
 
 import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google.generativeai.types import HarmBlockThreshold, HarmCategory
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import settings
-from app.schemas.ai import (
-    SubtaskGenerationRequest,
-    SubtaskGenerationResponse,
-    GeneratedSubtask,
-    FileAnalysisRequest,
-    FileAnalysisResponse,
-    AIServiceStatus,
-)
 from app.exceptions.ai import (
-    AIServiceError,
-    AIServiceUnavailableError,
-    AIQuotaExceededError,
-    AIInvalidRequestError,
-    AITimeoutError,
-    AIParsingError,
     AIConfigurationError,
     AIContentFilterError,
+    AIInvalidRequestError,
+    AIParsingError,
+    AIQuotaExceededError,
     AIRateLimitError,
+    AIServiceError,
+    AIServiceUnavailableError,
+    AITimeoutError,
     map_ai_error,
 )
+from app.schemas.ai import (
+    AIServiceStatus,
+    FileAnalysisRequest,
+    FileAnalysisResponse,
+    GeneratedSubtask,
+    SubtaskGenerationRequest,
+    SubtaskGenerationResponse,
+)
 from models.ai_interaction import AIInteraction
-from models.user import User
-from models.todo import Todo
 from models.file import File
-
+from models.todo import Todo
+from models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -160,13 +159,16 @@ class AIService:
         except json.JSONDecodeError as e:
             await self.db.rollback()
             raise AIParsingError(f"Failed to parse AI response: {str(e)}")
+        except AIParsingError:
+            await self.db.rollback()
+            raise
         except Exception as e:
             await self.db.rollback()
             error_msg = str(e).lower()
-            if "quota" in error_msg or "limit" in error_msg:
-                raise AIQuotaExceededError("API quota exceeded")
-            elif "rate" in error_msg:
+            if "rate" in error_msg and "limit" in error_msg:
                 raise AIRateLimitError("Rate limit exceeded")
+            elif "quota" in error_msg:
+                raise AIQuotaExceededError("API quota exceeded")
             elif "safety" in error_msg or "blocked" in error_msg:
                 raise AIContentFilterError("Content blocked by safety filters")
             else:
@@ -219,9 +221,19 @@ class AIService:
 
         except asyncio.TimeoutError:
             raise AITimeoutError("File analysis request timed out")
+        except json.JSONDecodeError as e:
+            raise AIParsingError(f"Failed to parse AI response: {str(e)}")
         except Exception as e:
-            logger.error(f"File analysis error: {str(e)}")
-            raise AIServiceError(f"File analysis failed: {str(e)}")
+            error_msg = str(e).lower()
+            if "rate" in error_msg and "limit" in error_msg:
+                raise AIRateLimitError("Rate limit exceeded")
+            elif "quota" in error_msg:
+                raise AIQuotaExceededError("API quota exceeded")
+            elif "safety" in error_msg or "blocked" in error_msg:
+                raise AIContentFilterError("Content blocked by safety filters")
+            else:
+                logger.error(f"AI service error: {str(e)}")
+                raise AIServiceError(f"AI service error: {str(e)}")
 
     async def get_service_status(self) -> AIServiceStatus:
         """Get AI service status and usage information."""

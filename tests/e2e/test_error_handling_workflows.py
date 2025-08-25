@@ -5,17 +5,18 @@ This module contains comprehensive end-to-end tests that verify proper
 error handling, edge cases, and recovery scenarios in complete workflows.
 """
 
-import pytest
 import uuid
-from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, AsyncMock
-from httpx import AsyncClient
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi import status
+from httpx import AsyncClient
 
 from app.exceptions.ai import (
-    AIServiceError,
     AIConfigurationError,
     AIQuotaExceededError,
+    AIServiceError,
     AITimeoutError,
 )
 

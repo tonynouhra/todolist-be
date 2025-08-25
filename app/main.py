@@ -6,10 +6,9 @@ middleware, routing, and lifecycle management for the AI-powered todo system.
 """
 
 import sys
-
 import uuid
-from datetime import datetime
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 
 # Add the project root to Python path if running directly
@@ -18,9 +17,9 @@ if __name__ == "__main__":
     sys.path.insert(0, str(project_root))
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
@@ -129,10 +128,10 @@ def setup_exception_handlers(app: FastAPI):
 def setup_routers(app: FastAPI):
     """Configure application routers."""
     # Import routers
-    from app.domains.user.controller import router as user_router
-    from app.domains.todo.controller import router as todo_router
-    from app.domains.project.controller import router as project_router
     from app.domains.ai.controller import router as ai_router
+    from app.domains.project.controller import router as project_router
+    from app.domains.todo.controller import router as todo_router
+    from app.domains.user.controller import router as user_router
 
     # Health check endpoint
     @app.get("/health")

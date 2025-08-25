@@ -14,20 +14,21 @@ os.environ.setdefault("DATABASE_URL", os.environ.get("TEST_DATABASE_URL", defaul
 os.environ.setdefault("GEMINI_API_KEY", "")
 os.environ.setdefault("AI_ENABLED", "false")
 
-import pytest
-import pytest_asyncio
 import asyncio
 import uuid
-from datetime import datetime, timezone, timedelta
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from unittest.mock import MagicMock, AsyncMock
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock
 
-from app.main import app
-from app.database import get_db
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
 from app.core.dependencies import get_current_user
-from models import Base, User, Todo, Project, AIInteraction
+from app.database import get_db
+from app.main import app
+from models import AIInteraction, Base, Project, Todo, User
 
 # Test database URL - Use environment variable or default
 TEST_DATABASE_URL = os.getenv(
@@ -210,8 +211,15 @@ async def test_todo_with_subtasks(test_db, test_user, test_project):
 
     test_db.add_all([subtask1, subtask2])
     await test_db.commit()
-    await test_db.refresh(parent_todo)
-    return parent_todo
+    
+    # Load parent todo with subtasks to avoid lazy loading issues
+    from sqlalchemy.orm import selectinload
+    from sqlalchemy.future import select
+    
+    query = select(Todo).options(selectinload(Todo.subtasks)).where(Todo.id == parent_todo.id)
+    result = await test_db.execute(query)
+    parent_with_subtasks = result.scalar_one()
+    return parent_with_subtasks
 
 
 @pytest_asyncio.fixture

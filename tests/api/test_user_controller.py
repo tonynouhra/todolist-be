@@ -5,13 +5,14 @@ This module contains comprehensive API endpoint tests for the user authenticatio
 controller, testing all endpoints with various scenarios and edge cases.
 """
 
-import pytest
 import uuid
-from unittest.mock import patch, AsyncMock
-from httpx import AsyncClient
-from fastapi import status
+from unittest.mock import AsyncMock, patch
 
-from app.schemas.user import UserSignupRequest, UserLoginRequest, UserUpdateRequest
+import pytest
+from fastapi import status
+from httpx import AsyncClient
+
+from app.schemas.user import UserLoginRequest, UserSignupRequest, UserUpdateRequest
 
 
 class TestUserAuthController:

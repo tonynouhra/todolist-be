@@ -5,15 +5,16 @@ This module contains comprehensive unit tests for the ProjectService class,
 testing all business logic methods including project management and todo relationships.
 """
 
-import pytest
 import uuid
 from unittest.mock import patch
+
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.domains.project.service import ProjectService
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectFilter
-from app.shared.pagination import PaginationParams
 from app.exceptions.base import NotFoundError, PermissionError, ValidationError
+from app.schemas.project import ProjectCreate, ProjectFilter, ProjectUpdate
+from app.shared.pagination import PaginationParams
 from models.project import Project
 from models.todo import Todo
 

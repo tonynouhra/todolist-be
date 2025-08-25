@@ -1,19 +1,20 @@
 """Project service layer with business logic."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
-from sqlalchemy import and_, or_, desc, func
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.future import select
-from sqlalchemy.exc import SQLAlchemyError
 
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+
+from app.exceptions.base import NotFoundError, PermissionError, ValidationError
+from app.schemas.project import ProjectCreate, ProjectFilter, ProjectUpdate
+from app.shared.pagination import PaginationParams, paginate
 from models.project import Project
 from models.todo import Todo
 from models.user import User
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectFilter
-from app.exceptions.base import NotFoundError, PermissionError, ValidationError
-from app.shared.pagination import PaginationParams, paginate
 
 
 class ProjectService:

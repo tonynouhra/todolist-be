@@ -1,7 +1,8 @@
 """Base exception classes."""
 
+from typing import Any, Dict, Optional
+
 from fastapi import HTTPException
-from typing import Optional, Dict, Any
 
 
 class BaseAppException(HTTPException):

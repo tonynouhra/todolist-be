@@ -1,6 +1,7 @@
 """AI service exceptions."""
 
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from .base import BaseAppException
 
 

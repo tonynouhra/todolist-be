@@ -1,9 +1,11 @@
 # app/domains/user/service.py
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any, Dict, Optional
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
-from typing import Optional, Dict, Any
-from uuid import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from models import User
 
 

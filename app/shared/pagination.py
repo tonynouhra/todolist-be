@@ -1,11 +1,12 @@
 """Pagination utilities."""
 
-from typing import Dict, Any, TypeVar, Generic
+from typing import Any, Dict, Generic, TypeVar
+
 from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql import Select
-from sqlalchemy import func
 
 T = TypeVar("T")
 

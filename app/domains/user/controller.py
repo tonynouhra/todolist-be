@@ -2,16 +2,17 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
+
 from app.core.dependencies import get_current_user
 from app.core.security import ClerkAuthenticator
+from app.database import get_db
 from app.domains.user.service import UserService
 from app.schemas.user import (
-    UserSignupRequest,
-    UserLoginRequest,
     AuthResponse,
     LogoutResponse,
+    UserLoginRequest,
     UserResponse,
+    UserSignupRequest,
     UserUpdateRequest,
 )
 from models.user import User

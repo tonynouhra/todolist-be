@@ -1,6 +1,7 @@
 """Todo-related exceptions."""
 
 from fastapi import HTTPException
+
 from .base import BaseAppException
 
 

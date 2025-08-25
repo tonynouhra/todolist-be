@@ -6,12 +6,13 @@ with realistic default values and easy customization.
 """
 
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
+
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
-from models import User, Todo, Project, AIInteraction
+from models import AIInteraction, Project, Todo, User
 
 
 class UserFactory(SQLAlchemyModelFactory):

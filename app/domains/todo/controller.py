@@ -3,32 +3,23 @@
 import logging
 from typing import List, Optional
 from uuid import UUID
-from fastapi import (
-    APIRouter,
-    Depends,
-    Query,
-    Path,
-    Body,
-    Request,
-    HTTPException,
-    status,
-)
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_db, get_current_user, validate_token
+from app.core.dependencies import get_current_user, get_db, validate_token
 from app.domains.todo.service import TodoService
+from app.schemas.base import ResponseSchema
 from app.schemas.todo import (
     TodoCreate,
-    TodoUpdate,
-    TodoResponse,
-    TodoWithSubtasks,
     TodoFilter,
     TodoListResponse,
+    TodoResponse,
+    TodoUpdate,
+    TodoWithSubtasks,
 )
-from app.schemas.base import ResponseSchema
 from app.shared.pagination import PaginationParams
 from models.user import User
-
 
 logger = logging.getLogger(__name__)
 

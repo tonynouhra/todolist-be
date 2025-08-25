@@ -5,31 +5,28 @@ This module contains comprehensive unit tests for the AIService class,
 testing AI integration including subtask generation, file analysis, and error handling.
 """
 
-import pytest
-import uuid
-import json
 import asyncio
+import json
+import uuid
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.domains.ai.service import AIService
-from app.schemas.ai import (
-    SubtaskGenerationRequest,
-    FileAnalysisRequest,
-    GeneratedSubtask,
-)
 from app.exceptions.ai import (
-    AIServiceError,
-    AIServiceUnavailableError,
-    AIQuotaExceededError,
-    AIInvalidRequestError,
-    AITimeoutError,
-    AIParsingError,
     AIConfigurationError,
     AIContentFilterError,
+    AIInvalidRequestError,
+    AIParsingError,
+    AIQuotaExceededError,
     AIRateLimitError,
+    AIServiceError,
+    AIServiceUnavailableError,
+    AITimeoutError,
 )
+from app.schemas.ai import FileAnalysisRequest, GeneratedSubtask, SubtaskGenerationRequest
 from models.ai_interaction import AIInteraction
 
 

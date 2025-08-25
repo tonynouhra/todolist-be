@@ -62,6 +62,7 @@ class Todo(BaseModel):
         "Todo",
         backref=backref("parent", remote_side="Todo.id"),
         foreign_keys=[parent_todo_id],
+        cascade="all, delete-orphan",
     )
     # Note: files relationship removed due to partitioned structure migration
 

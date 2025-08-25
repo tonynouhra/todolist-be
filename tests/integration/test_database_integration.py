@@ -5,16 +5,17 @@ This module contains integration tests that verify database operations,
 model relationships, constraints, and data persistence across the application.
 """
 
-import pytest
 import uuid
-from datetime import datetime, timezone, timedelta
-from sqlalchemy import select, func
+from datetime import datetime, timedelta, timezone
+
+import pytest
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from models import User, Todo, Project, AIInteraction
-from app.domains.user.service import UserService
-from app.domains.todo.service import TodoService
 from app.domains.project.service import ProjectService
+from app.domains.todo.service import TodoService
+from app.domains.user.service import UserService
+from models import AIInteraction, Project, Todo, User
 
 
 class TestDatabaseIntegration:

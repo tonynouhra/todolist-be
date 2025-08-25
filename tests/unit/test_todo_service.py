@@ -6,20 +6,21 @@ testing all business logic methods including hierarchical todos, AI integration,
 and various filtering scenarios.
 """
 
-import pytest
 import uuid
-from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock, AsyncMock
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.domains.todo.service import TodoService
-from app.schemas.todo import TodoCreate, TodoUpdate, TodoFilter
-from app.shared.pagination import PaginationParams
 from app.exceptions.todo import (
-    TodoNotFoundError,
-    TodoPermissionError,
     InvalidTodoOperationError,
     MaxTodoDepthExceededError,
+    TodoNotFoundError,
+    TodoPermissionError,
 )
+from app.schemas.todo import TodoCreate, TodoFilter, TodoUpdate
+from app.shared.pagination import PaginationParams
 from models.todo import Todo
 
 

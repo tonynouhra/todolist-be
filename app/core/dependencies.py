@@ -1,13 +1,15 @@
 # app/core/dependencies.py
-from fastapi import Depends, HTTPException, status, Request
+import logging
+from typing import Optional
+
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
+
 from app.core.security import ClerkAuthenticator
+from app.database import get_db
 from app.domains.user.service import UserService
 from models import User
-from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 

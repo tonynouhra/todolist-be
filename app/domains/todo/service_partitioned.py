@@ -10,25 +10,26 @@ The service provides backward compatibility while leveraging the new partitioned
 for optimal performance.
 """
 
-from datetime import datetime, timezone, timedelta
-from typing import Optional, List, Dict, Any, Union
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
-from sqlalchemy import and_, or_, desc, asc, select, func
+
+from sqlalchemy import and_, asc, desc, func, or_, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy.exc import SQLAlchemyError
 
-from models.todo_partitioned import TodoActive, TodoArchived, AITodoInteraction, Todo
-from models.user import User
-from models.project import Project
-from app.schemas.todo import TodoCreate, TodoUpdate, TodoFilter
 from app.exceptions.todo import (
-    TodoNotFoundError,
-    TodoPermissionError,
     InvalidTodoOperationError,
     MaxTodoDepthExceededError,
+    TodoNotFoundError,
+    TodoPermissionError,
 )
+from app.schemas.todo import TodoCreate, TodoFilter, TodoUpdate
 from app.shared.pagination import PaginationParams, paginate
+from models.project import Project
+from models.todo_partitioned import AITodoInteraction, Todo, TodoActive, TodoArchived
+from models.user import User
 
 
 class PartitionedTodoService:

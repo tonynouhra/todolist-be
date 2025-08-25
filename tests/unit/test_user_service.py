@@ -5,9 +5,10 @@ This module contains comprehensive unit tests for the UserService class,
 testing all business logic methods with various scenarios and edge cases.
 """
 
-import pytest
 import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.domains.user.service import UserService

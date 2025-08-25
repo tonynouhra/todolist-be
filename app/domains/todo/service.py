@@ -1,25 +1,30 @@
 """Todo service layer with business logic."""
 
+import logging
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
-from sqlalchemy import and_, or_, desc, asc
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.future import select
-from sqlalchemy.exc import SQLAlchemyError
 
-from models.todo import Todo
-from models.user import User
-from models.project import Project
-from app.schemas.todo import TodoCreate, TodoUpdate, TodoFilter
+from sqlalchemy import and_, asc, desc, or_
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+
+from app.core.config import settings
 from app.exceptions.todo import (
-    TodoNotFoundError,
-    TodoPermissionError,
     InvalidTodoOperationError,
     MaxTodoDepthExceededError,
+    TodoNotFoundError,
+    TodoPermissionError,
 )
+from app.schemas.todo import TodoCreate, TodoFilter, TodoUpdate
 from app.shared.pagination import PaginationParams, paginate
+from models.project import Project
+from models.todo import Todo
+from models.user import User
+
+logger = logging.getLogger(__name__)
 
 
 class TodoService:
@@ -38,8 +43,10 @@ class TodoService:
             parent_todo = await self._get_todo_by_id_and_user(todo_data.parent_todo_id, user_id)
             if not parent_todo:
                 raise TodoNotFoundError("Parent todo not found")
-            depth = await self._get_todo_depth(parent_todo)
-            if depth >= 5:
+            # Calculate what the depth would be for this new child todo
+            parent_depth = await self._get_todo_depth(parent_todo)
+            new_child_depth = parent_depth + 1
+            if new_child_depth >= settings.max_subtasks_depth:
                 raise MaxTodoDepthExceededError("Maximum todo nesting depth exceeded")
 
         due_date = self._normalize_datetime(todo_data.due_date) if todo_data.due_date else None
@@ -145,6 +152,9 @@ class TodoService:
         if "project_id" in update_data and update_data["project_id"] is not None:
             await self._validate_project_ownership(update_data["project_id"], user_id)
 
+        # Store original status before updating
+        original_status = todo.status
+
         for field, value in update_data.items():
             if hasattr(todo, field):
                 # Normalize datetime fields
@@ -155,7 +165,7 @@ class TodoService:
                 setattr(todo, field, value)
 
         # Auto-set completed_at when status changes to 'done'
-        if todo_data.status == "done" and todo.status != "done":
+        if todo_data.status == "done" and original_status != "done":
             todo.completed_at = datetime.now(timezone.utc)
         elif todo_data.status and todo_data.status != "done":
             todo.completed_at = None

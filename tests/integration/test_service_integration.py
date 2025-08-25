@@ -5,23 +5,20 @@ This module contains integration tests that verify how different services
 work together, testing cross-service interactions and workflows.
 """
 
-import pytest
 import uuid
-from unittest.mock import patch, AsyncMock
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, patch
 
-from app.domains.user.service import UserService
-from app.domains.todo.service import TodoService
-from app.domains.project.service import ProjectService
+import pytest
+
 from app.domains.ai.service import AIService
-from app.schemas.todo import TodoCreate, TodoUpdate
+from app.domains.project.service import ProjectService
+from app.domains.todo.service import TodoService
+from app.domains.user.service import UserService
+from app.schemas.ai import GeneratedSubtask, SubtaskGenerationRequest, SubtaskGenerationResponse
 from app.schemas.project import ProjectCreate
-from app.schemas.ai import (
-    SubtaskGenerationRequest,
-    GeneratedSubtask,
-    SubtaskGenerationResponse,
-)
-from models import User, Todo, Project
+from app.schemas.todo import TodoCreate, TodoUpdate
+from models import Project, Todo, User
 
 
 class TestServiceIntegration:
