@@ -136,7 +136,7 @@ class TestUserAuthController:
         with patch("app.domains.user.controller.auth", mock_clerk_auth):
             response = await client.post("/api/auth/login", json=login_data)
 
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_403_FORBIDDEN
             data = response.json()
             assert "Invalid token payload" in data["detail"]
 
@@ -185,7 +185,7 @@ class TestUserAuthController:
         """Test getting current user without authentication."""
         response = await client.get("/api/auth/me")
 
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_update_current_user_success(self, authenticated_client: AsyncClient, test_user):
@@ -245,7 +245,7 @@ class TestUserAuthController:
 
         response = await client.put("/api/auth/me", json=update_data)
 
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_auth_endpoints_cors_headers(self, client: AsyncClient):

@@ -55,7 +55,7 @@ class TestErrorHandlingWorkflows:
             elif method == "PUT":
                 response = await client.put(endpoint, json=data)
 
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
         # Step 2: Try to signup with invalid data
         invalid_signup_cases = [

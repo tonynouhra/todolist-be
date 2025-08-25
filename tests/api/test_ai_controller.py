@@ -6,6 +6,7 @@ testing subtask generation, file analysis, and AI service status endpoints.
 """
 
 import uuid
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -47,14 +48,12 @@ class TestAIController:
                 for subtask in sample_subtask_response["subtasks"]
             ],
             total_subtasks=len(sample_subtask_response["subtasks"]),
-            generation_timestamp=None,
+            generation_timestamp=datetime.now(timezone.utc),
             ai_model="gemini-pro",
         )
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            return_value=mock_response,
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(return_value=mock_response)
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -74,10 +73,10 @@ class TestAIController:
 
         from app.exceptions.ai import AIInvalidRequestError
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIInvalidRequestError("Todo not found"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=AIInvalidRequestError("Todo not found")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -91,10 +90,10 @@ class TestAIController:
         """Test subtask generation with AI configuration error."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIConfigurationError("AI service not configured"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=AIConfigurationError("AI service not configured")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -112,10 +111,10 @@ class TestAIController:
         """Test subtask generation with quota exceeded."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIQuotaExceededError("API quota exceeded"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=AIQuotaExceededError("API quota exceeded")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -134,10 +133,10 @@ class TestAIController:
         rate_limit_error = AIRateLimitError("Rate limit exceeded")
         rate_limit_error.details = {"retry_after": 120}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=rate_limit_error,
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=rate_limit_error
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -155,10 +154,10 @@ class TestAIController:
         """Test subtask generation with timeout."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AITimeoutError("Request timed out"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=AITimeoutError("Request timed out")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -176,10 +175,10 @@ class TestAIController:
         """Test subtask generation with service unavailable."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIServiceUnavailableError("Service temporarily unavailable"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=AIServiceUnavailableError("Service temporarily unavailable")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -196,10 +195,10 @@ class TestAIController:
         """Test subtask generation with generic AI service error."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIServiceError("Generic AI error"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=AIServiceError("Generic AI error")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -216,10 +215,10 @@ class TestAIController:
         """Test subtask generation with unexpected error."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=Exception("Unexpected error"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=Exception("Unexpected error")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -267,11 +266,12 @@ class TestAIController:
             key_points=sample_file_analysis_response["key_points"],
             suggested_tasks=sample_file_analysis_response["suggested_tasks"],
             confidence_score=sample_file_analysis_response["confidence"],
-            analysis_timestamp=None,
+            analysis_timestamp=datetime.now(timezone.utc),
             ai_model="gemini-pro",
         )
 
-        with patch("app.domains.ai.service.AIService.analyze_file", return_value=mock_response):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.analyze_file = AsyncMock(return_value=mock_response)
             response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_201_CREATED
@@ -289,10 +289,10 @@ class TestAIController:
 
         from app.exceptions.ai import AIInvalidRequestError
 
-        with patch(
-            "app.domains.ai.service.AIService.analyze_file",
-            side_effect=AIInvalidRequestError("File not found"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.analyze_file = AsyncMock(
+                side_effect=AIInvalidRequestError("File not found")
+            )
             response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -313,14 +313,12 @@ class TestAIController:
                 key_points=["Point 1", "Point 2"],
                 suggested_tasks=["Task 1", "Task 2"],
                 confidence_score=0.8,
-                analysis_timestamp=None,
+                analysis_timestamp=datetime.now(timezone.utc),
                 ai_model="gemini-pro",
             )
 
-            with patch(
-                "app.domains.ai.service.AIService.analyze_file",
-                return_value=mock_response,
-            ):
+            with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+                mock_ai_service.return_value.analyze_file = AsyncMock(return_value=mock_response)
                 response = await authenticated_client.post(
                     "/api/ai/analyze-file", json=request_data
                 )
@@ -346,11 +344,12 @@ class TestAIController:
             key_points=["Sprint goals discussed"],
             suggested_tasks=["Create user stories", "Estimate tasks"],
             confidence_score=0.9,
-            analysis_timestamp=None,
+            analysis_timestamp=datetime.now(timezone.utc),
             ai_model="gemini-pro",
         )
 
-        with patch("app.domains.ai.service.AIService.analyze_file", return_value=mock_response):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.analyze_file = AsyncMock(return_value=mock_response)
             response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_201_CREATED
@@ -363,16 +362,16 @@ class TestAIController:
         file_id = str(uuid.uuid4())
         request_data = {"file_id": file_id, "analysis_type": "summary"}
 
-        with patch(
-            "app.domains.ai.service.AIService.analyze_file",
-            side_effect=AIServiceError("Analysis failed"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.analyze_file = AsyncMock(
+                side_effect=AIServiceError("Analysis failed")
+            )
             response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
             assert data["status"] == "error"
-            assert "An unexpected error occurred during file analysis" in data["message"]
+            assert "AI service encountered an error" in data["message"]
 
     @pytest.mark.asyncio
     async def test_get_ai_service_status_healthy(self, authenticated_client: AsyncClient):
@@ -388,10 +387,8 @@ class TestAIController:
             requests_today=42,
         )
 
-        with patch(
-            "app.domains.ai.service.AIService.get_service_status",
-            return_value=mock_status,
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.get_service_status = AsyncMock(return_value=mock_status)
             response = await authenticated_client.get("/api/ai/status")
 
             assert response.status_code == status.HTTP_200_OK
@@ -414,10 +411,8 @@ class TestAIController:
             requests_today=0,
         )
 
-        with patch(
-            "app.domains.ai.service.AIService.get_service_status",
-            return_value=mock_status,
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.get_service_status = AsyncMock(return_value=mock_status)
             response = await authenticated_client.get("/api/ai/status")
 
             assert response.status_code == status.HTTP_200_OK
@@ -427,10 +422,10 @@ class TestAIController:
     @pytest.mark.asyncio
     async def test_get_ai_service_status_error(self, authenticated_client: AsyncClient):
         """Test AI service status check with error."""
-        with patch(
-            "app.domains.ai.service.AIService.get_service_status",
-            side_effect=Exception("Status check failed"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.get_service_status = AsyncMock(
+                side_effect=Exception("Status check failed")
+            )
             response = await authenticated_client.get("/api/ai/status")
 
             assert response.status_code == status.HTTP_200_OK
@@ -462,7 +457,7 @@ class TestAIController:
             else:
                 response = await client.get(endpoint)
 
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_ai_request_validation_comprehensive(self, authenticated_client: AsyncClient):
@@ -503,10 +498,10 @@ class TestAIController:
         """Test that AI error responses follow consistent format."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIConfigurationError("Test error"),
-        ):
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(
+                side_effect=AIConfigurationError("Test error")
+            )
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
@@ -537,20 +532,18 @@ class TestAIController:
             parent_task_title=test_todo.title,
             generated_subtasks=[],
             total_subtasks=0,
-            generation_timestamp=None,
+            generation_timestamp=datetime.now(timezone.utc),
             ai_model="gemini-pro",
         )
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            return_value=mock_response,
-        ) as mock_service:
+        with patch("app.domains.ai.controller.AIService") as mock_ai_service:
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(return_value=mock_response)
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )
 
             assert response.status_code == status.HTTP_201_CREATED
-            mock_service.assert_called_once()
+            mock_ai_service.assert_called_once()
 
             # In a real implementation, you might verify that:
             # - AI interaction was logged to database

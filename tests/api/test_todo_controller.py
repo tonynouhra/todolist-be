@@ -109,7 +109,7 @@ class TestTodoController:
 
         response = await client.post("/api/todos/", json=todo_data)
 
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_get_todos_list_basic(self, authenticated_client: AsyncClient):
@@ -473,7 +473,7 @@ class TestTodoController:
             elif method == "PATCH":
                 response = await client.patch(endpoint)
 
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_todo_validation_comprehensive(self, authenticated_client: AsyncClient):

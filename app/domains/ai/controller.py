@@ -12,6 +12,7 @@ from app.core.dependencies import get_current_user, get_db, validate_token
 from app.domains.ai.service import AIService
 from app.exceptions.ai import (
     AIConfigurationError,
+    AIInvalidRequestError,
     AIQuotaExceededError,
     AIRateLimitError,
     AIServiceError,
@@ -73,6 +74,21 @@ async def generate_subtasks(
                         "Check AI service configuration",
                         "Contact administrator",
                     ],
+                ).model_dump(),
+            ).model_dump(),
+        )
+
+    except AIInvalidRequestError as e:
+        logger.warning(f"AI invalid request: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ResponseSchema(
+                status="error",
+                message="Invalid request",
+                data=AIErrorResponse(
+                    error_code="AI_INVALID_REQUEST",
+                    error_message=str(e),
+                    suggestions=["Check request parameters", "Verify todo ID exists"],
                 ).model_dump(),
             ).model_dump(),
         )
@@ -191,6 +207,21 @@ async def analyze_file(
             status="success",
             message="File analyzed successfully",
             data=result.model_dump(),
+        )
+
+    except AIInvalidRequestError as e:
+        logger.warning(f"AI invalid request: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ResponseSchema(
+                status="error",
+                message="Invalid request",
+                data=AIErrorResponse(
+                    error_code="AI_INVALID_REQUEST",
+                    error_message=str(e),
+                    suggestions=["Check request parameters", "Verify file ID exists"],
+                ).model_dump(),
+            ).model_dump(),
         )
 
     except AIServiceError as e:

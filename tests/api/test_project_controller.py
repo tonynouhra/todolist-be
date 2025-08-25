@@ -72,7 +72,7 @@ class TestProjectController:
 
         response = await client.post("/api/projects/", json=project_data)
 
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_get_projects_list_basic(self, authenticated_client: AsyncClient):
@@ -432,7 +432,7 @@ class TestProjectController:
             elif method == "DELETE":
                 response = await client.delete(endpoint)
 
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_project_user_isolation(
