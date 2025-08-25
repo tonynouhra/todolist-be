@@ -66,7 +66,7 @@ async def test_db():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(test_db):
     """Create a test client with database dependency override."""
     app.dependency_overrides[get_db] = lambda: test_db
@@ -75,7 +75,7 @@ async def client(test_db):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def authenticated_client(test_db, test_user):
     """Create an authenticated test client."""
 
@@ -92,7 +92,7 @@ async def authenticated_client(test_db, test_user):
 
 
 # User fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(test_db):
     """Create a test user."""
     user = User(
@@ -107,7 +107,7 @@ async def test_user(test_db):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user_2(test_db):
     """Create a second test user."""
     user = User(
@@ -123,7 +123,7 @@ async def test_user_2(test_db):
 
 
 # Project fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_project(test_db, test_user):
     """Create a test project."""
     project = Project(
@@ -137,7 +137,7 @@ async def test_project(test_db, test_user):
     return project
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_project_2(test_db, test_user):
     """Create a second test project."""
     project = Project(
@@ -150,7 +150,7 @@ async def test_project_2(test_db, test_user):
 
 
 # Todo fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_todo(test_db, test_user, test_project):
     """Create a test todo."""
     todo = Todo(
@@ -169,7 +169,7 @@ async def test_todo(test_db, test_user, test_project):
     return todo
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_todo_with_subtasks(test_db, test_user, test_project):
     """Create a test todo with subtasks."""
     parent_todo = Todo(
@@ -214,7 +214,7 @@ async def test_todo_with_subtasks(test_db, test_user, test_project):
     return parent_todo
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def completed_todo(test_db, test_user):
     """Create a completed todo."""
     todo = Todo(
@@ -232,7 +232,7 @@ async def completed_todo(test_db, test_user):
     return todo
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def overdue_todo(test_db, test_user):
     """Create an overdue todo."""
     todo = Todo(
@@ -251,7 +251,7 @@ async def overdue_todo(test_db, test_user):
 
 
 # AI fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def ai_interaction(test_db, test_user, test_todo):
     """Create a test AI interaction."""
     interaction = AIInteraction(
