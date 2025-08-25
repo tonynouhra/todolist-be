@@ -54,6 +54,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest-cov aiosqlite bandit safety ruff black isort
+          
+      - name: Install Redis CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-tools
 
       - name: Set up environment variables
         run: |
@@ -65,8 +70,13 @@ jobs:
 
       - name: Wait for services
         run: |
-          timeout 60 bash -c 'until pg_isready -h localhost -p 5432 -U test; do sleep 1; done'
-          timeout 60 bash -c 'until redis-cli -h localhost -p 6379 ping; do sleep 1; done'
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c 'until pg_isready -h localhost -p 5432 -U test; do echo "Waiting for postgres..."; sleep 1; done'
+          echo "PostgreSQL is ready!"
+          
+          echo "Waiting for Redis..."
+          timeout 60 bash -c 'until redis-cli -h localhost -p 6379 ping | grep -q PONG; do echo "Waiting for redis..."; sleep 1; done'
+          echo "Redis is ready!"
 
       - name: Run unit tests
         run: |
