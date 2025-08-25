@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     """Manage application lifecycle events."""
     # Startup
     print("🚀 Starting AI Todo List API...")
-    
+
     # Development mode: Auto-create tables if they don't exist
     # Production: Use Alembic migrations (alembic upgrade head)
     if settings.environment == "development":
@@ -44,9 +44,9 @@ async def lifespan(app: FastAPI):
     else:
         print("🏭 Production mode: Use 'alembic upgrade head' to manage database schema")
         print("✅ Application started")
-    
+
     yield
-    
+
     # Shutdown
     print("🛑 Shutting down AI Todo List API...")
     await engine.dispose()
@@ -66,13 +66,13 @@ def create_app() -> FastAPI:
 
     # Add middleware
     setup_middleware(app)
-    
+
     # Add exception handlers
     setup_exception_handlers(app)
-    
+
     # Include routers
     setup_routers(app)
-    
+
     return app
 
 
@@ -86,7 +86,7 @@ def setup_middleware(app: FastAPI):
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # Request ID middleware
     @app.middleware("http")
     async def add_request_id(request: Request, call_next):
@@ -99,7 +99,7 @@ def setup_middleware(app: FastAPI):
 
 def setup_exception_handlers(app: FastAPI):
     """Configure global exception handlers."""
-    
+
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         return JSONResponse(
@@ -109,11 +109,13 @@ def setup_exception_handlers(app: FastAPI):
                 "message": exc.detail,
                 "timestamp": datetime.utcnow().isoformat(),
                 "request_id": getattr(request.state, "request_id", None),
-            }
+            },
         )
-    
+
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ):
         return JSONResponse(
             status_code=422,
             content={
@@ -122,7 +124,7 @@ def setup_exception_handlers(app: FastAPI):
                 "details": exc.errors(),
                 "timestamp": datetime.utcnow().isoformat(),
                 "request_id": getattr(request.state, "request_id", None),
-            }
+            },
         )
 
 
@@ -133,7 +135,7 @@ def setup_routers(app: FastAPI):
     from app.domains.todo.controller import router as todo_router
     from app.domains.project.controller import router as project_router
     from app.domains.ai.controller import router as ai_router
-    
+
     # Health check endpoint
     @app.get("/health")
     async def health_check():
@@ -147,20 +149,26 @@ def setup_routers(app: FastAPI):
                 await db.close()
             except Exception:
                 db_status = "unhealthy"
-            
+
             # Check AI service status
             ai_status = "not_configured"
             if settings.has_ai_enabled:
                 try:
                     from app.domains.ai.service import AIService
+
                     ai_service = AIService(next(get_db()))
                     status_info = await ai_service.get_service_status()
-                    ai_status = "healthy" if status_info.service_available else "unhealthy"
+                    ai_status = (
+                        "healthy" if status_info.service_available else "unhealthy"
+                    )
                 except Exception:
                     ai_status = "unhealthy"
-            
+
             return {
-                "status": "healthy" if db_status == "healthy" and (ai_status in ["healthy", "not_configured"]) else "degraded",
+                "status": "healthy"
+                if db_status == "healthy"
+                and (ai_status in ["healthy", "not_configured"])
+                else "degraded",
                 "version": "1.0.0",
                 "environment": settings.environment,
                 "timestamp": datetime.utcnow().isoformat(),
@@ -176,9 +184,9 @@ def setup_routers(app: FastAPI):
                     "status": "unhealthy",
                     "message": f"Health check failed: {str(e)}",
                     "timestamp": datetime.utcnow().isoformat(),
-                }
+                },
             )
-    
+
     @app.get("/")
     async def root():
         """Root endpoint with API information."""
@@ -188,13 +196,12 @@ def setup_routers(app: FastAPI):
             "description": "Intelligent task management with AI assistance",
             "docs_url": "/docs" if settings.environment == "development" else None,
         }
-    
+
     # Include domain routers
     app.include_router(user_router)
     app.include_router(todo_router)
     app.include_router(project_router)
     app.include_router(ai_router)
-
 
 
 # Create the application instance
@@ -204,12 +211,13 @@ app = create_app()
 def main():
     """Entry point for running the application directly."""
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=8000,
         reload=settings.environment == "development",
-        log_level="info"
+        log_level="info",
     )
 
 

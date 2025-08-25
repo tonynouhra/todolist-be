@@ -7,12 +7,21 @@ fetching a database session.
 from typing import Any, AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+
 # Prefer a single Base across the app to avoid multiple metadata registries
 # from app.models.base import Base  # <- if you have a shared Base defined
 from sqlalchemy.ext.declarative import declarative_base
+import os
 from app.core.config import settings
 
-db_url = (settings.database_url or "").strip()
+# For testing, prioritize TEST_DATABASE_URL
+db_url = None
+if os.getenv("TESTING") == "true":
+    db_url = os.getenv("TEST_DATABASE_URL") or settings.test_database_url
+else:
+    db_url = settings.database_url
+
+db_url = (db_url or "").strip()
 if not db_url:
     raise RuntimeError(
         "DATABASE_URL is not configured. Set it in the environment or .env file (e.g., DATABASE_URL=postgresql+asyncpg://<user>:<pass>@<host>/<db>)."

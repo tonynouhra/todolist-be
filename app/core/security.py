@@ -5,6 +5,7 @@ from jose import JWTError, jwt
 from fastapi import HTTPException, status
 from app.core.config import settings
 
+
 class ClerkAuthenticator:
     """
     Handles Clerk API authentication and token verification.
@@ -18,10 +19,11 @@ class ClerkAuthenticator:
     :ivar secret_key: The secret key used to verify JWT tokens.
     :type secret_key: str
     """
+
     def __init__(self):
         self.clerk_api_url = settings.clerk_api_url
         self.secret_key = settings.clerk_secret_key
-    
+
     async def get_jwks(self) -> dict:
         """Get JWKS from Clerk for token verification."""
         async with httpx.AsyncClient() as client:
@@ -46,12 +48,12 @@ class ClerkAuthenticator:
                 options={
                     "verify_signature": False,
                     "verify_aud": False,
-                    "verify_exp": False  # Enable expiration checking
-                }
+                    "verify_exp": False,  # Enable expiration checking
+                },
             )
             return payload
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Invalid authentication token: {str(e)}"
+                detail=f"Invalid authentication token: {str(e)}",
             )

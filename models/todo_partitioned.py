@@ -16,10 +16,9 @@ Classes:
 """
 
 from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, ForeignKey, CheckConstraint
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
-from .base import BaseModel
+from .base import BaseModel, UUID
 import uuid
 
 
@@ -51,9 +50,9 @@ class TodoActive(BaseModel):
     """
     __tablename__ = "todos_active"
     
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"))
-    parent_todo_id = Column(UUID(as_uuid=True))  # Self-reference within same partition
+    user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
+    project_id = Column(UUID(), ForeignKey("projects.id"))
+    parent_todo_id = Column(UUID())  # Self-reference within same partition
     
     title = Column(String(500), nullable=False)
     description = Column(Text)
@@ -129,9 +128,9 @@ class TodoArchived(BaseModel):
     """
     __tablename__ = "todos_archived"
     
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"))
-    parent_todo_id = Column(UUID(as_uuid=True))  # Reference to archived parent
+    user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
+    project_id = Column(UUID(), ForeignKey("projects.id"))
+    parent_todo_id = Column(UUID())  # Reference to archived parent
     
     title = Column(String(500), nullable=False)
     description = Column(Text)
@@ -177,8 +176,8 @@ class AITodoInteraction(BaseModel):
     """
     __tablename__ = "ai_todo_interactions"
     
-    todo_id = Column(UUID(as_uuid=True), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    todo_id = Column(UUID(), nullable=False)
+    user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
     interaction_type = Column(String(50), nullable=False)
     prompt = Column(Text, nullable=False)
     response = Column(Text, nullable=False)

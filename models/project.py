@@ -3,9 +3,8 @@ Project model for organizing todos.
 """
 
 from sqlalchemy import Column, String, Text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from .base import BaseModel
+from .base import BaseModel, UUID
 
 
 class Project(BaseModel):
@@ -14,7 +13,7 @@ class Project(BaseModel):
     """
     __tablename__ = "projects"
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text)
 

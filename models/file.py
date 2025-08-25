@@ -3,9 +3,8 @@ File model for file attachments.
 """
 
 from sqlalchemy import Column, String, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from .base import BaseModel
+from .base import BaseModel, UUID
 
 
 class File(BaseModel):
@@ -14,10 +13,10 @@ class File(BaseModel):
     """
     __tablename__ = "files"
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
     # Note: todo_id is not a direct foreign key anymore due to partitioning
     # We'll handle the relationship through application logic
-    todo_id = Column(UUID(as_uuid=True))  # Removed ForeignKey constraint
+    todo_id = Column(UUID())  # Removed ForeignKey constraint
     filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)
     file_size = Column(Integer)

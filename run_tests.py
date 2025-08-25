@@ -28,11 +28,16 @@ def run_command(cmd, description=""):
 def setup_test_environment():
     """Set up test environment variables."""
     os.environ.setdefault("TESTING", "true")
-    os.environ.setdefault("TEST_DATABASE_URL", "postgresql+asyncpg://test:test@localhost/test_ai_todo")
+    
+    # Use SQLite for local testing, PostgreSQL for CI
+    default_test_url = "sqlite+aiosqlite:///./test.db" if os.getenv("CI") != "true" else "postgresql+asyncpg://test:test@localhost:5432/test_ai_todo"
+    os.environ.setdefault("TEST_DATABASE_URL", default_test_url)
     
     # Disable AI service in tests by default
     os.environ.setdefault("GEMINI_API_KEY", "")
     os.environ.setdefault("AI_ENABLED", "false")
+    
+    os.environ.setdefault("DATABASE_URL", os.environ.get("TEST_DATABASE_URL", default_test_url))
     
     print("✅ Test environment configured")
 

@@ -10,9 +10,8 @@ Classes:
 """
 
 from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, backref
-from .base import BaseModel
+from .base import BaseModel, UUID
 
 
 class Todo(BaseModel):
@@ -44,9 +43,9 @@ class Todo(BaseModel):
     """
     __tablename__ = "todos"
 
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"))
-    parent_todo_id = Column(UUID(as_uuid=True), ForeignKey("todos.id"))
+    user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
+    project_id = Column(UUID(), ForeignKey("projects.id"))
+    parent_todo_id = Column(UUID(), ForeignKey("todos.id"))
 
     title = Column(String(500), nullable=False)
     description = Column(Text)

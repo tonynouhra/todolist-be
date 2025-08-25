@@ -1,4 +1,15 @@
 # tests/conftest.py
+import os
+
+# Set up test environment variables BEFORE any other imports
+os.environ.setdefault("TESTING", "true")
+# Use SQLite for local testing, PostgreSQL for CI
+default_test_url = "sqlite+aiosqlite:///./test.db" if os.getenv("CI") != "true" else "postgresql+asyncpg://test:test@localhost:5432/test_ai_todo"
+os.environ.setdefault("TEST_DATABASE_URL", default_test_url)
+os.environ.setdefault("DATABASE_URL", os.environ.get("TEST_DATABASE_URL", default_test_url))
+os.environ.setdefault("GEMINI_API_KEY", "")
+os.environ.setdefault("AI_ENABLED", "false")
+
 import pytest
 import pytest_asyncio
 import asyncio
@@ -15,8 +26,9 @@ from app.core.dependencies import get_current_user
 from models import Base, User, Todo, Project, AIInteraction
 
 # Test database URL - Use environment variable or default
-import os
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://test:test@localhost/test_ai_todo")
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL", "postgresql+asyncpg://test:test@localhost:5432/test_ai_todo"
+)
 
 
 @pytest.fixture(scope="session")
@@ -62,15 +74,16 @@ async def client(test_db):
 @pytest.fixture
 async def authenticated_client(test_db, test_user):
     """Create an authenticated test client."""
+
     def override_get_current_user():
         return test_user
-    
+
     app.dependency_overrides[get_db] = lambda: test_db
     app.dependency_overrides[get_current_user] = override_get_current_user
-    
+
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    
+
     app.dependency_overrides.clear()
 
 
@@ -82,7 +95,7 @@ async def test_user(test_db):
         clerk_user_id=f"clerk_user_{uuid.uuid4()}",
         email="test@example.com",
         username="testuser",
-        is_active=True
+        is_active=True,
     )
     test_db.add(user)
     await test_db.commit()
@@ -97,7 +110,7 @@ async def test_user_2(test_db):
         clerk_user_id=f"clerk_user_{uuid.uuid4()}",
         email="test2@example.com",
         username="testuser2",
-        is_active=True
+        is_active=True,
     )
     test_db.add(user)
     await test_db.commit()
@@ -112,7 +125,7 @@ async def test_project(test_db, test_user):
     project = Project(
         user_id=test_user.id,
         name="Test Project",
-        description="A test project for testing"
+        description="A test project for testing",
     )
     test_db.add(project)
     await test_db.commit()
@@ -124,9 +137,7 @@ async def test_project(test_db, test_user):
 async def test_project_2(test_db, test_user):
     """Create a second test project."""
     project = Project(
-        user_id=test_user.id,
-        name="Test Project 2",
-        description="Another test project"
+        user_id=test_user.id, name="Test Project 2", description="Another test project"
     )
     test_db.add(project)
     await test_db.commit()
@@ -146,7 +157,7 @@ async def test_todo(test_db, test_user, test_project):
         status="todo",
         priority=3,
         due_date=datetime.now(timezone.utc) + timedelta(days=7),
-        ai_generated=False
+        ai_generated=False,
     )
     test_db.add(todo)
     await test_db.commit()
@@ -164,11 +175,11 @@ async def test_todo_with_subtasks(test_db, test_user, test_project):
         description="A parent todo with subtasks",
         status="in_progress",
         priority=4,
-        ai_generated=False
+        ai_generated=False,
     )
     test_db.add(parent_todo)
     await test_db.flush()  # Get the ID without committing
-    
+
     # Create subtasks
     subtask1 = Todo(
         user_id=test_user.id,
@@ -178,9 +189,9 @@ async def test_todo_with_subtasks(test_db, test_user, test_project):
         description="First subtask",
         status="todo",
         priority=3,
-        ai_generated=True
+        ai_generated=True,
     )
-    
+
     subtask2 = Todo(
         user_id=test_user.id,
         project_id=test_project.id,
@@ -190,9 +201,9 @@ async def test_todo_with_subtasks(test_db, test_user, test_project):
         status="done",
         priority=2,
         ai_generated=True,
-        completed_at=datetime.now(timezone.utc)
+        completed_at=datetime.now(timezone.utc),
     )
-    
+
     test_db.add_all([subtask1, subtask2])
     await test_db.commit()
     await test_db.refresh(parent_todo)
@@ -209,7 +220,7 @@ async def completed_todo(test_db, test_user):
         status="done",
         priority=5,
         ai_generated=False,
-        completed_at=datetime.now(timezone.utc)
+        completed_at=datetime.now(timezone.utc),
     )
     test_db.add(todo)
     await test_db.commit()
@@ -227,7 +238,7 @@ async def overdue_todo(test_db, test_user):
         status="todo",
         priority=5,
         due_date=datetime.now(timezone.utc) - timedelta(days=1),
-        ai_generated=False
+        ai_generated=False,
     )
     test_db.add(todo)
     await test_db.commit()
@@ -244,7 +255,7 @@ async def ai_interaction(test_db, test_user, test_todo):
         todo_id=test_todo.id,
         prompt="Generate subtasks for: Test Todo",
         response='{"subtasks": [{"title": "Subtask 1", "priority": 3}]}',
-        interaction_type="subtask_generation"
+        interaction_type="subtask_generation",
     )
     test_db.add(interaction)
     await test_db.commit()
@@ -257,11 +268,13 @@ async def ai_interaction(test_db, test_user, test_todo):
 def mock_clerk_auth():
     """Mock Clerk authentication."""
     mock = MagicMock()
-    mock.verify_token = AsyncMock(return_value={
-        "sub": "clerk_user_123",
-        "email": "test@example.com",
-        "username": "testuser"
-    })
+    mock.verify_token = AsyncMock(
+        return_value={
+            "sub": "clerk_user_123",
+            "email": "test@example.com",
+            "username": "testuser",
+        }
+    )
     return mock
 
 
@@ -286,22 +299,22 @@ def sample_subtask_response():
                 "description": "Gather information and resources",
                 "priority": 4,
                 "estimated_time": "2 hours",
-                "order": 1
+                "order": 1,
             },
             {
                 "title": "Create an outline",
                 "description": "Structure the main points",
                 "priority": 3,
                 "estimated_time": "1 hour",
-                "order": 2
+                "order": 2,
             },
             {
                 "title": "Write the content",
                 "description": "Draft the main content",
                 "priority": 5,
                 "estimated_time": "4 hours",
-                "order": 3
-            }
+                "order": 3,
+            },
         ]
     }
 
@@ -314,12 +327,12 @@ def sample_file_analysis_response():
         "key_points": [
             "User authentication required",
             "Database schema includes users and todos",
-            "API endpoints for CRUD operations"
+            "API endpoints for CRUD operations",
         ],
         "suggested_tasks": [
             "Implement user registration",
             "Set up database migrations",
-            "Create API endpoints"
+            "Create API endpoints",
         ],
-        "confidence": 0.85
+        "confidence": 0.85,
     }

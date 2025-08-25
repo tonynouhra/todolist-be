@@ -7,13 +7,48 @@ UUID type for primary key generation and automatically manages timestamps for
 creation and updates.
 """
 
-from sqlalchemy import Column, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, DateTime, String, TypeDecorator
+from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
 from datetime import datetime
 
 Base = declarative_base()
+
+
+class UUID(TypeDecorator):
+    """
+    Platform-independent UUID type.
+    Uses PostgreSQL's UUID type when available,
+    otherwise uses CHAR(36), storing as string.
+    """
+    impl = String
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(PostgreSQLUUID())
+        else:
+            return dialect.type_descriptor(String(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return value
+        else:
+            if not isinstance(value, uuid.UUID):
+                return str(value)
+            else:
+                return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            if not isinstance(value, uuid.UUID):
+                return uuid.UUID(value)
+            return value
 
 
 class BaseModel(Base):
@@ -33,6 +68,6 @@ class BaseModel(Base):
     """
     __abstract__ = True
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(), primary_key=True, default=uuid.uuid4)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
