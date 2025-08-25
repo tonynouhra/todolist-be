@@ -38,6 +38,18 @@ class TodoService:
     ) -> Todo:
         """Create a new todo."""
 
+        # Validate project exists if project_id provided
+        if todo_data.project_id:
+            from sqlalchemy import select
+            from models.project import Project
+            
+            stmt = select(Project).where(Project.id == todo_data.project_id, Project.user_id == user_id)
+            result = await self.db.execute(stmt)
+            project = result.scalar_one_or_none()
+            if not project:
+                from app.exceptions.todo import TodoPermissionError
+                raise TodoPermissionError("Project not found or access denied")
+
         # Validate parent todo exists and belongs to user
         if todo_data.parent_todo_id:
             parent_todo = await self._get_todo_by_id_and_user(todo_data.parent_todo_id, user_id)
@@ -74,9 +86,19 @@ class TodoService:
                 await self._generate_ai_subtasks(todo)
 
             return todo
-        except SQLAlchemyError as e:
-            await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}")
+        except Exception as e:
+            # Use more defensive session cleanup
+            try:
+                if hasattr(self.db, 'in_transaction') and self.db.in_transaction():
+                    await self.db.rollback()
+            except Exception:
+                # If rollback fails, session cleanup will be handled by the framework
+                pass
+            
+            if isinstance(e, SQLAlchemyError):
+                raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}")
+            else:
+                raise
 
     async def get_todo_by_id(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
         """Get a todo by ID for a specific user."""

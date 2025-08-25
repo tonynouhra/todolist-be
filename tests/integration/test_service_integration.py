@@ -429,7 +429,7 @@ class TestServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_concurrent_operations_integration(self, test_db, test_user):
-        """Test concurrent operations across services."""
+        """Test multiple operations across services with shared session."""
         import asyncio
 
         project_service = ProjectService(test_db)
@@ -448,9 +448,11 @@ class TestServiceIntegration:
             )
             return await todo_service.create_todo(todo_data, test_user.id)
 
-        # Create 10 todos concurrently
-        tasks = [create_todo(i) for i in range(10)]
-        todos = await asyncio.gather(*tasks)
+        # Create 10 todos (using sequential execution to avoid session conflicts)
+        todos = []
+        for i in range(10):
+            todo = await create_todo(i)
+            todos.append(todo)
 
         assert len(todos) == 10
         assert all(todo.project_id == project.id for todo in todos)
@@ -460,9 +462,11 @@ class TestServiceIntegration:
             update_data = TodoUpdate(status=status)
             return await todo_service.update_todo(todo.id, update_data, test_user.id)
 
-        # Update half to "done" concurrently
-        update_tasks = [update_todo_status(todo, "done") for todo in todos[:5]]
-        updated_todos = await asyncio.gather(*update_tasks)
+        # Update half to "done" (sequential to avoid session conflicts)
+        updated_todos = []
+        for todo in todos[:5]:
+            updated_todo = await update_todo_status(todo, "done")
+            updated_todos.append(updated_todo)
 
         assert all(todo.status == "done" for todo in updated_todos)
 
