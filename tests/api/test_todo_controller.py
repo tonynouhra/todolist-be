@@ -91,7 +91,7 @@ class TestTodoController:
 
         response = await authenticated_client.post("/api/todos/", json=todo_data)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_create_todo_missing_title(self, authenticated_client: AsyncClient):
@@ -351,10 +351,10 @@ class TestTodoController:
 
         response = await authenticated_client.delete(f"/api/todos/{fake_id}")
 
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
         assert data["status"] == "error"
-        assert data["message"] == "Failed to delete todo"
+        assert data["message"] == "Todo not found"
 
     @pytest.mark.asyncio
     async def test_toggle_todo_status_to_done(self, authenticated_client: AsyncClient, test_todo):

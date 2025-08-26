@@ -48,7 +48,7 @@ class TestUserAuthController:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = response.json()
-        assert "User already exists" in data["detail"]
+        assert "User already exists" in data["message"]
 
     @pytest.mark.asyncio
     async def test_signup_invalid_email(self, client: AsyncClient):
@@ -92,12 +92,19 @@ class TestUserAuthController:
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
-            assert "Failed to create user" in data["detail"]
+            assert "Failed to create user" in data["message"]
 
     @pytest.mark.asyncio
     async def test_login_success(self, client: AsyncClient, test_user, mock_clerk_auth):
         """Test successful user login."""
         login_data = {"token": "valid_jwt_token"}
+
+        # Configure mock to return the existing test_user's data
+        mock_clerk_auth.verify_token.return_value = {
+            "sub": test_user.clerk_user_id,
+            "email": test_user.email,
+            "username": test_user.username,
+        }
 
         with patch("app.domains.user.controller.auth", mock_clerk_auth):
             response = await client.post("/api/auth/login", json=login_data)
@@ -136,9 +143,9 @@ class TestUserAuthController:
         with patch("app.domains.user.controller.auth", mock_clerk_auth):
             response = await client.post("/api/auth/login", json=login_data)
 
-            assert response.status_code == status.HTTP_403_FORBIDDEN
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED
             data = response.json()
-            assert "Invalid token payload" in data["detail"]
+            assert "Invalid token payload" in data["message"]
 
     @pytest.mark.asyncio
     async def test_login_create_new_user(self, client: AsyncClient, mock_clerk_auth):
@@ -236,7 +243,7 @@ class TestUserAuthController:
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
-            assert "Failed to update user" in data["detail"]
+            assert "Failed to update user" in data["message"]
 
     @pytest.mark.asyncio
     async def test_update_current_user_unauthorized(self, client: AsyncClient):

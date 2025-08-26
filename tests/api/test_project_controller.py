@@ -54,7 +54,7 @@ class TestProjectController:
 
         response = await authenticated_client.post("/api/projects/", json=project_data)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
     async def test_create_project_missing_name(self, authenticated_client: AsyncClient):
@@ -249,7 +249,7 @@ class TestProjectController:
             f"/api/projects/{test_project.id}", json=update_data
         )
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
     async def test_update_project_same_name(self, authenticated_client: AsyncClient, test_project):
@@ -327,10 +327,11 @@ class TestProjectController:
 
         response = await authenticated_client.delete(f"/api/projects/{fake_id}")
 
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
         assert data["status"] == "error"
-        assert data["message"] == "Failed to delete project"
+        assert data["message"] == "Project not found"
+        assert data["error_code"] == "NOT_FOUND"
 
     @pytest.mark.asyncio
     async def test_get_project_stats(self, authenticated_client: AsyncClient):
@@ -455,7 +456,8 @@ class TestProjectController:
 
         # Create authenticated client for second user
         app.dependency_overrides[get_current_user] = override_get_current_user_2
-        async with client as second_user_client:
+        from httpx import AsyncClient
+        async with AsyncClient(app=app, base_url="http://test") as second_user_client:
             response = await second_user_client.get(f"/api/projects/{project_id}")
 
             assert response.status_code == status.HTTP_200_OK

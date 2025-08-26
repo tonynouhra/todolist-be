@@ -101,11 +101,23 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+        # Handle custom exceptions that have structured detail
+        if isinstance(exc.detail, dict) and "message" in exc.detail:
+            message = exc.detail["message"]
+            error_code = exc.detail.get("error_code", "HTTP_ERROR")
+            details = exc.detail.get("details")
+        else:
+            message = str(exc.detail) if exc.detail else "An error occurred"
+            error_code = "HTTP_ERROR"
+            details = None
+        
         return JSONResponse(
             status_code=exc.status_code,
             content={
                 "status": "error",
-                "message": exc.detail,
+                "message": message,
+                "error_code": error_code,
+                "details": details,
                 "timestamp": datetime.utcnow().isoformat(),
                 "request_id": getattr(request.state, "request_id", None),
             },
@@ -113,12 +125,25 @@ def setup_exception_handlers(app: FastAPI):
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        # Convert errors to JSON-serializable format
+        errors = []
+        for error in exc.errors():
+            error_dict = {
+                "loc": error.get("loc", []),
+                "msg": str(error.get("msg", "Validation error")),
+                "type": error.get("type", "value_error"),
+            }
+            # Handle custom input if present
+            if "input" in error:
+                error_dict["input"] = str(error["input"])
+            errors.append(error_dict)
+        
         return JSONResponse(
             status_code=422,
             content={
                 "status": "error",
                 "message": "Validation error",
-                "details": exc.errors(),
+                "details": errors,
                 "timestamp": datetime.utcnow().isoformat(),
                 "request_id": getattr(request.state, "request_id", None),
             },
