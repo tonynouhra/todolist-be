@@ -98,7 +98,9 @@ class TestSettings:
     def test_file_storage_with_aws(self):
         """Test file storage with AWS configured."""
         test_settings = Settings(
-            aws_access_key_id="key", aws_secret_access_key="secret", s3_bucket_name="bucket"
+            aws_access_key_id="key",
+            aws_secret_access_key="secret",
+            s3_bucket_name="bucket",
         )
         assert test_settings.has_file_storage is True
         assert test_settings.storage_type == "aws_s3"

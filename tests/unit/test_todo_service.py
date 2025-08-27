@@ -511,7 +511,7 @@ class TestTodoService:
         todo_data = TodoCreate(title="Test Todo")
 
         # Mock the database session to raise SQLAlchemy error
-        with patch.object(test_db, 'add', side_effect=Exception("Database connection error")):
+        with patch.object(test_db, "add", side_effect=Exception("Database connection error")):
             with pytest.raises(Exception):
                 await service.create_todo(todo_data, test_user.id)
 
@@ -519,18 +519,18 @@ class TestTodoService:
     async def test_get_todos_with_ai_generated_filter(self, test_db, test_user):
         """Test filtering todos by ai_generated flag."""
         service = TodoService(test_db)
-        
+
         # Create todos with different ai_generated values
         ai_todo_data = TodoCreate(title="AI Todo", ai_generated=True)
         manual_todo_data = TodoCreate(title="Manual Todo", ai_generated=False)
-        
+
         await service.create_todo(ai_todo_data, test_user.id)
         await service.create_todo(manual_todo_data, test_user.id)
-        
+
         # Test filtering for AI-generated todos
         ai_filter = TodoFilter(ai_generated=True)
         pagination = PaginationParams(page=1, size=10)
-        
+
         result = await service.get_todos_list(test_user.id, ai_filter, pagination)
         assert result["total"] >= 1
 
@@ -543,19 +543,19 @@ class TestTodoService:
     async def test_get_todos_with_date_range_filters(self, test_db, test_user):
         """Test filtering todos by due date range."""
         service = TodoService(test_db)
-        
+
         # Create todo with specific due date
         future_date = datetime.now(timezone.utc) + timedelta(days=5)
         todo_data = TodoCreate(title="Future Todo", due_date=future_date)
         await service.create_todo(todo_data, test_user.id)
-        
+
         # Test due_date_from filter
         from_filter = TodoFilter(due_date_from=datetime.now(timezone.utc))
         pagination = PaginationParams(page=1, size=10)
-        
+
         result = await service.get_todos_list(test_user.id, from_filter, pagination)
         assert result["total"] >= 1
-        
+
         # Test due_date_to filter
         to_filter = TodoFilter(due_date_to=future_date + timedelta(days=1))
         result = await service.get_todos_list(test_user.id, to_filter, pagination)
@@ -565,18 +565,18 @@ class TestTodoService:
     async def test_get_todos_with_parent_filter_explicit_none(self, test_db, test_user):
         """Test filtering for top-level todos when parent_todo_id is explicitly None."""
         service = TodoService(test_db)
-        
+
         # Create parent and child todos
         parent_data = TodoCreate(title="Parent Todo")
         parent = await service.create_todo(parent_data, test_user.id)
-        
+
         child_data = TodoCreate(title="Child Todo", parent_todo_id=parent.id)
         await service.create_todo(child_data, test_user.id)
-        
+
         # Test filtering for top-level todos only (parent_todo_id is None)
         filter_data = TodoFilter(parent_todo_id=None)
         pagination = PaginationParams(page=1, size=10)
-        
+
         result = await service.get_todos_list(test_user.id, filter_data, pagination)
         # Should return at least the parent todo
         assert result["total"] >= 1
@@ -585,37 +585,33 @@ class TestTodoService:
     async def test_update_todo_with_project_validation(self, test_db, test_user, test_project):
         """Test updating todo with project validation."""
         service = TodoService(test_db)
-        
+
         # Create a todo
         todo_data = TodoCreate(title="Test Todo")
         todo = await service.create_todo(todo_data, test_user.id)
-        
+
         # Update with valid project
         update_data = TodoUpdate(project_id=test_project.id)
         updated_todo = await service.update_todo(todo.id, update_data, test_user.id)
-        
+
         assert updated_todo.project_id == test_project.id
 
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio
     async def test_update_todo_datetime_normalization(self, test_db, test_user):
         """Test datetime field normalization during update."""
         service = TodoService(test_db)
-        
+
         # Create a todo
         todo_data = TodoCreate(title="Test Todo")
         todo = await service.create_todo(todo_data, test_user.id)
-        
+
         # Update with due_date and completed_at
         future_date = datetime.now(timezone.utc) + timedelta(days=1)
         completed_date = datetime.now(timezone.utc)
-        
-        update_data = TodoUpdate(
-            due_date=future_date,
-            completed_at=completed_date,
-            status="done"
-        )
-        
+
+        update_data = TodoUpdate(due_date=future_date, completed_at=completed_date, status="done")
+
         updated_todo = await service.update_todo(todo.id, update_data, test_user.id)
-        
+
         assert updated_todo.due_date is not None
         assert updated_todo.completed_at is not None

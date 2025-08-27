@@ -11,6 +11,7 @@ class AIInteraction(BaseModel):
     """
     Represents an AI interaction entity in the application.
     """
+
     __tablename__ = "ai_interactions"
 
     user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)

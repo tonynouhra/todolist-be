@@ -110,7 +110,7 @@ def setup_exception_handlers(app: FastAPI):
             message = str(exc.detail) if exc.detail else "An error occurred"
             error_code = "HTTP_ERROR"
             details = None
-        
+
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -137,7 +137,7 @@ def setup_exception_handlers(app: FastAPI):
             if "input" in error:
                 error_dict["input"] = str(error["input"])
             errors.append(error_dict)
-        
+
         return JSONResponse(
             status_code=422,
             content={

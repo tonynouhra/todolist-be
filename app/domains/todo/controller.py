@@ -4,7 +4,16 @@ import logging
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request, status
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Request,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db, validate_token
@@ -222,6 +231,7 @@ async def get_todo_subtasks(
     parent_todo = await service.get_todo_by_id(todo_id, current_user.id)
     if not parent_todo:
         from app.exceptions.base import NotFoundError
+
         raise NotFoundError("Todo not found")
 
     filters = TodoFilter(parent_todo_id=todo_id)

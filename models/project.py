@@ -11,6 +11,7 @@ class Project(BaseModel):
     """
     Represents a project entity in the application.
     """
+
     __tablename__ = "projects"
 
     user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
@@ -19,10 +20,14 @@ class Project(BaseModel):
 
     # Relationships
     user = relationship("User", back_populates="projects")
-    
+
     # Keep original todos relationship for backward compatibility during migration
     todos = relationship("Todo", back_populates="project", cascade="all, delete-orphan")
-    
+
     # New partitioned relationships
-    active_todos = relationship("TodoActive", back_populates="project", cascade="all, delete-orphan")
-    archived_todos = relationship("TodoArchived", back_populates="project", cascade="all, delete-orphan")
+    active_todos = relationship(
+        "TodoActive", back_populates="project", cascade="all, delete-orphan"
+    )
+    archived_todos = relationship(
+        "TodoArchived", back_populates="project", cascade="all, delete-orphan"
+    )

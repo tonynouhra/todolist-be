@@ -457,6 +457,7 @@ class TestProjectController:
         # Create authenticated client for second user
         app.dependency_overrides[get_current_user] = override_get_current_user_2
         from httpx import AsyncClient
+
         async with AsyncClient(app=app, base_url="http://test") as second_user_client:
             response = await second_user_client.get(f"/api/projects/{project_id}")
 

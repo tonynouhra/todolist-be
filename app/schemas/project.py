@@ -17,14 +17,14 @@ class ProjectBase(BaseSchema):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """Validate and clean the project name."""
         if isinstance(v, str):
             v = v.strip()
             if not v:
-                raise ValueError('Project name cannot be empty or only whitespace')
+                raise ValueError("Project name cannot be empty or only whitespace")
         return v
 
 
@@ -40,14 +40,14 @@ class ProjectUpdate(BaseSchema):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: Optional[str]) -> Optional[str]:
         """Validate and clean the project name."""
         if v is not None and isinstance(v, str):
             v = v.strip()
             if not v:
-                raise ValueError('Project name cannot be empty or only whitespace')
+                raise ValueError("Project name cannot be empty or only whitespace")
         return v
 
 

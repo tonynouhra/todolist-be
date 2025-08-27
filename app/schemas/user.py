@@ -14,12 +14,12 @@ class UserSignupRequest(BaseSchema):
     username: Optional[str] = Field(None, max_length=100, description="Optional username")
     clerk_user_id: str = Field(..., max_length=255, description="Clerk user ID")
 
-    @field_validator('clerk_user_id')
+    @field_validator("clerk_user_id")
     @classmethod
     def validate_clerk_user_id(cls, v: str) -> str:
         """Validate that clerk_user_id is not empty."""
         if not v or not v.strip():
-            raise ValueError('Clerk user ID cannot be empty')
+            raise ValueError("Clerk user ID cannot be empty")
         return v.strip()
 
 

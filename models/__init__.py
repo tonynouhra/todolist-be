@@ -13,8 +13,15 @@ from .ai_interaction import AIInteraction
 from .todo_partitioned import TodoActive, TodoArchived, AITodoInteraction
 
 __all__ = [
-    "Base", "BaseModel", 
-    "User", "Project", "Todo", "File", "AIInteraction",
+    "Base",
+    "BaseModel",
+    "User",
+    "Project",
+    "Todo",
+    "File",
+    "AIInteraction",
     # Partitioned models
-    "TodoActive", "TodoArchived", "AITodoInteraction"
+    "TodoActive",
+    "TodoArchived",
+    "AITodoInteraction",
 ]

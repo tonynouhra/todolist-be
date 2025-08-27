@@ -42,12 +42,15 @@ class TodoService:
         if todo_data.project_id:
             from sqlalchemy import select
             from models.project import Project
-            
-            stmt = select(Project).where(Project.id == todo_data.project_id, Project.user_id == user_id)
+
+            stmt = select(Project).where(
+                Project.id == todo_data.project_id, Project.user_id == user_id
+            )
             result = await self.db.execute(stmt)
             project = result.scalar_one_or_none()
             if not project:
                 from app.exceptions.todo import InvalidTodoOperationError
+
                 raise InvalidTodoOperationError("Project not found")
 
         # Validate parent todo exists and belongs to user
@@ -89,12 +92,12 @@ class TodoService:
         except Exception as e:
             # Use more defensive session cleanup
             try:
-                if hasattr(self.db, 'in_transaction') and self.db.in_transaction():
+                if hasattr(self.db, "in_transaction") and self.db.in_transaction():
                     await self.db.rollback()
             except Exception:
                 # If rollback fails, session cleanup will be handled by the framework
                 pass
-            
+
             if isinstance(e, SQLAlchemyError):
                 raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}")
             else:

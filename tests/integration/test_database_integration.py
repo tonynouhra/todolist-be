@@ -161,7 +161,9 @@ class TestDatabaseIntegration:
         for subtask in parent_with_subtasks.subtasks:
             assert subtask.parent_todo_id == parent_todo.id
             # Load parent relationship for verification
-            stmt_parent = select(Todo).where(Todo.id == subtask.id).options(selectinload(Todo.parent))
+            stmt_parent = (
+                select(Todo).where(Todo.id == subtask.id).options(selectinload(Todo.parent))
+            )
             result_parent = await test_db.execute(stmt_parent)
             subtask_with_parent = result_parent.scalar_one()
             assert subtask_with_parent.parent.id == parent_todo.id

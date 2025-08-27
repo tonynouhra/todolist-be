@@ -11,6 +11,7 @@ class File(BaseModel):
     """
     Represents a file attachment entity in the application.
     """
+
     __tablename__ = "files"
 
     user_id = Column(UUID(), ForeignKey("users.id"), nullable=False)
@@ -25,6 +26,6 @@ class File(BaseModel):
 
     # Relationships
     user = relationship("User", back_populates="files")
-    
+
     # Note: todo relationship removed due to partitioned structure
     # Files are now linked to active todos through application logic

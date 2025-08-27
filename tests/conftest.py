@@ -83,7 +83,7 @@ async def authenticated_client(test_db, test_user):
 
     def override_get_current_user():
         return test_user
-    
+
     def override_validate_token():
         return {"sub": test_user.clerk_user_id, "email": test_user.email}
 

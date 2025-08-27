@@ -25,7 +25,11 @@ class TestCoreDependencies:
         mock_token = MagicMock()
         mock_token.credentials = "valid_jwt_token"
 
-        mock_payload = {"sub": "user_123", "email": "test@example.com", "username": "testuser"}
+        mock_payload = {
+            "sub": "user_123",
+            "email": "test@example.com",
+            "username": "testuser",
+        }
 
         with patch("app.core.dependencies.auth.verify_token") as mock_verify:
             mock_verify.return_value = mock_payload
@@ -292,7 +296,10 @@ class TestClerkAuthenticator:
         mock_payload = {"sub": "user_123", "email": "test@example.com"}
 
         test_user = User(
-            clerk_user_id="user_123", email="test@example.com", username="testuser", is_active=True
+            clerk_user_id="user_123",
+            email="test@example.com",
+            username="testuser",
+            is_active=True,
         )
 
         with patch("app.core.dependencies.UserService") as mock_service_class:

@@ -21,7 +21,11 @@ from app.exceptions.ai import (
     AIServiceUnavailableError,
     AITimeoutError,
 )
-from app.schemas.ai import FileAnalysisResponse, GeneratedSubtask, SubtaskGenerationResponse
+from app.schemas.ai import (
+    FileAnalysisResponse,
+    GeneratedSubtask,
+    SubtaskGenerationResponse,
+)
 
 
 class TestAIController:
@@ -134,9 +138,7 @@ class TestAIController:
         rate_limit_error.details = {"retry_after": 120}
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.generate_subtasks = AsyncMock(
-                side_effect=rate_limit_error
-            )
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(side_effect=rate_limit_error)
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=request_data
             )

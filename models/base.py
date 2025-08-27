@@ -22,11 +22,12 @@ class UUID(TypeDecorator):
     Uses PostgreSQL's UUID type when available,
     otherwise uses CHAR(36), storing as string.
     """
+
     impl = String
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(PostgreSQLUUID())
         else:
             return dialect.type_descriptor(String(36))
@@ -34,7 +35,7 @@ class UUID(TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
-        elif dialect.name == 'postgresql':
+        elif dialect.name == "postgresql":
             return value
         else:
             if not isinstance(value, uuid.UUID):
@@ -66,6 +67,7 @@ class BaseModel(Base):
     :ivar updated_at: Timestamp representing when the record was last updated.
     :type updated_at: datetime
     """
+
     __abstract__ = True
 
     id = Column(UUID(), primary_key=True, default=uuid.uuid4)
