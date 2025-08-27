@@ -1,16 +1,14 @@
 """Security related functions."""
 
 import httpx
-from fastapi import HTTPException, status
 import jwt
-from jwt import InvalidTokenError
+from fastapi import HTTPException, status
 
 from app.core.config import settings
 
 
 class ClerkAuthenticator:
-    """
-    Handles Clerk API authentication and token verification.
+    """Handles Clerk API authentication and token verification.
 
     This class is responsible for integrating with Clerk by verifying JSON Web Tokens
     (JWTs) using a secret key. The main purpose of this class is to ensure tokens
@@ -33,8 +31,7 @@ class ClerkAuthenticator:
             return response.json()
 
     async def verify_token(self, token: str) -> dict:
-        """
-        Verifies a given JSON Web Token (JWT) using Clerk's public key. The method decodes
+        """Verifies a given JSON Web Token (JWT) using Clerk's public key. The method decodes
         the provided token and validates its authenticity. If the token is invalid,
         it raises an HTTPException with proper status code and error detail.
 

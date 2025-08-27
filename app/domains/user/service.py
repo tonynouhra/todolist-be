@@ -1,5 +1,5 @@
 # app/domains/user/service.py
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
@@ -13,7 +13,7 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_user_by_clerk_id(self, clerk_user_id: str) -> Optional[User]:
+    async def get_user_by_clerk_id(self, clerk_user_id: str) -> User | None:
         """Get a user by Clerk user ID."""
         result = await self.db.execute(select(User).where(User.clerk_user_id == clerk_user_id))
         return result.scalar_one_or_none()
@@ -42,14 +42,14 @@ class UserService:
             )
         return user
 
-    async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
+    async def get_user_by_id(self, user_id: UUID) -> User | None:
         """Get a user by ID."""
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
     async def update_user(
         self, user_id: UUID, username: str = None, email: str = None
-    ) -> Optional[User]:
+    ) -> User | None:
         """Update user information."""
         user = await self.get_user_by_id(user_id)
         if not user:
@@ -68,7 +68,7 @@ class UserService:
             await self.db.rollback()
             raise e
 
-    async def deactivate_user(self, user_id: UUID) -> Optional[User]:
+    async def deactivate_user(self, user_id: UUID) -> User | None:
         """Deactivate a user account."""
         user = await self.get_user_by_id(user_id)
         if not user:
@@ -83,7 +83,7 @@ class UserService:
             await self.db.rollback()
             raise e
 
-    async def activate_user(self, user_id: UUID) -> Optional[User]:
+    async def activate_user(self, user_id: UUID) -> User | None:
         """Activate a user account."""
         user = await self.get_user_by_id(user_id)
         if not user:
@@ -112,7 +112,7 @@ class UserService:
             await self.db.rollback()
             raise e
 
-    async def get_user_profile(self, user_id: UUID) -> Optional[Dict[str, Any]]:
+    async def get_user_profile(self, user_id: UUID) -> dict[str, Any] | None:
         """Get complete user profile information."""
         user = await self.get_user_by_id(user_id)
         if not user:

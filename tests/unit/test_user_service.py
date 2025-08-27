@@ -6,13 +6,12 @@ testing all business logic methods with various scenarios and edge cases.
 """
 
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.domains.user.service import UserService
-from models.user import User
 
 
 class TestUserService:

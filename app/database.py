@@ -1,11 +1,11 @@
 # python
-"""
-This module sets up the asynchronous database engine, session factory, and
+"""This module sets up the asynchronous database engine, session factory, and
 base class for ORM models using SQLAlchemy. It also provides a utility for
 fetching a database session.
 """
 import os
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.ext.declarative import declarative_base
 
 from app.core.config import settings
+
 
 # For testing, prioritize TEST_DATABASE_URL
 db_url = None

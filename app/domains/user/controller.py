@@ -17,14 +17,14 @@ from app.schemas.user import (
 )
 from models.user import User
 
+
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 auth = ClerkAuthenticator()
 
 
 @router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 async def signup(signup_data: UserSignupRequest, db: AsyncSession = Depends(get_db)):
-    """
-    Register a new user with Clerk authentication.
+    """Register a new user with Clerk authentication.
 
     This endpoint creates a new user account in the local database using
     the provided Clerk user ID and user information.
@@ -56,8 +56,7 @@ async def signup(signup_data: UserSignupRequest, db: AsyncSession = Depends(get_
 
 @router.post("/login", response_model=AuthResponse)
 async def login(login_data: UserLoginRequest, db: AsyncSession = Depends(get_db)):
-    """
-    Authenticate user with Clerk JWT token.
+    """Authenticate user with Clerk JWT token.
 
     This endpoint verifies the provided JWT token with Clerk and returns
     user information if authentication is successful.
@@ -89,8 +88,7 @@ async def login(login_data: UserLoginRequest, db: AsyncSession = Depends(get_db)
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout():
-    """
-    Logout endpoint.
+    """Logout endpoint.
 
     Since we're using Clerk for authentication, the actual logout logic
     is handled on the client side. This endpoint just provides a
@@ -101,8 +99,7 @@ async def logout():
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """
-    Get current authenticated user information.
+    """Get current authenticated user information.
 
     This endpoint returns the profile information of the currently
     authenticated user.
@@ -116,8 +113,7 @@ async def update_current_user(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Update current authenticated user information.
+    """Update current authenticated user information.
 
     This endpoint allows users to update their profile information
     such as username and email.

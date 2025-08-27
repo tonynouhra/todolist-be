@@ -1,8 +1,7 @@
 """User-related Pydantic schemas for request/response validation."""
 
-from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import EmailStr, Field, field_validator
 
 from .base import BaseModelSchema, BaseSchema
 
@@ -11,7 +10,7 @@ class UserSignupRequest(BaseSchema):
     """Schema for user signup request."""
 
     email: EmailStr = Field(..., description="User's email address")
-    username: Optional[str] = Field(None, max_length=100, description="Optional username")
+    username: str | None = Field(None, max_length=100, description="Optional username")
     clerk_user_id: str = Field(..., max_length=255, description="Clerk user ID")
 
     @field_validator("clerk_user_id")
@@ -34,7 +33,7 @@ class UserResponse(BaseModelSchema):
 
     clerk_user_id: str
     email: str
-    username: Optional[str]
+    username: str | None
     is_active: bool
 
 
@@ -54,5 +53,5 @@ class LogoutResponse(BaseSchema):
 class UserUpdateRequest(BaseSchema):
     """Schema for updating user information."""
 
-    username: Optional[str] = Field(None, max_length=100, description="Username to update")
-    email: Optional[EmailStr] = Field(None, description="Email to update")
+    username: str | None = Field(None, max_length=100, description="Username to update")
+    email: EmailStr | None = Field(None, description="Email to update")

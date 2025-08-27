@@ -7,8 +7,8 @@ and various filtering scenarios.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -17,11 +17,9 @@ from app.exceptions.todo import (
     InvalidTodoOperationError,
     MaxTodoDepthExceededError,
     TodoNotFoundError,
-    TodoPermissionError,
 )
 from app.schemas.todo import TodoCreate, TodoFilter, TodoUpdate
 from app.shared.pagination import PaginationParams
-from models.todo import Todo
 
 
 class TestTodoService:
@@ -37,7 +35,7 @@ class TestTodoService:
             status="todo",
             priority=3,
             project_id=test_project.id,
-            due_date=datetime.now(timezone.utc) + timedelta(days=7),
+            due_date=datetime.now(UTC) + timedelta(days=7),
         )
 
         result = await service.create_todo(todo_data, test_user.id)
@@ -394,7 +392,7 @@ class TestTodoService:
         todo_data_overdue = TodoCreate(
             title="Overdue Todo",
             status="todo",
-            due_date=datetime.now(timezone.utc) - timedelta(days=1),
+            due_date=datetime.now(UTC) - timedelta(days=1),
         )
 
         await service.create_todo(todo_data_pending, test_user.id)
@@ -433,7 +431,7 @@ class TestTodoService:
 
         result = service._normalize_datetime(naive_dt)
 
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         assert result.year == 2023
         assert result.month == 12
         assert result.day == 25
@@ -442,11 +440,11 @@ class TestTodoService:
     async def test_normalize_datetime_timezone_aware(self, test_db):
         """Test datetime normalization for timezone-aware datetime."""
         service = TodoService(test_db)
-        aware_dt = datetime(2023, 12, 25, 15, 30, 0, tzinfo=timezone.utc)
+        aware_dt = datetime(2023, 12, 25, 15, 30, 0, tzinfo=UTC)
 
         result = service._normalize_datetime(aware_dt)
 
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         assert result == aware_dt
 
     @pytest.mark.asyncio
@@ -545,12 +543,12 @@ class TestTodoService:
         service = TodoService(test_db)
 
         # Create todo with specific due date
-        future_date = datetime.now(timezone.utc) + timedelta(days=5)
+        future_date = datetime.now(UTC) + timedelta(days=5)
         todo_data = TodoCreate(title="Future Todo", due_date=future_date)
         await service.create_todo(todo_data, test_user.id)
 
         # Test due_date_from filter
-        from_filter = TodoFilter(due_date_from=datetime.now(timezone.utc))
+        from_filter = TodoFilter(due_date_from=datetime.now(UTC))
         pagination = PaginationParams(page=1, size=10)
 
         result = await service.get_todos_list(test_user.id, from_filter, pagination)
@@ -606,8 +604,8 @@ class TestTodoService:
         todo = await service.create_todo(todo_data, test_user.id)
 
         # Update with due_date and completed_at
-        future_date = datetime.now(timezone.utc) + timedelta(days=1)
-        completed_date = datetime.now(timezone.utc)
+        future_date = datetime.now(UTC) + timedelta(days=1)
+        completed_date = datetime.now(UTC)
 
         update_data = TodoUpdate(due_date=future_date, completed_at=completed_date, status="done")
 

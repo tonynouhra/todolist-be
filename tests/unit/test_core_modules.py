@@ -4,12 +4,11 @@ Unit tests for Core modules - Simple tests to boost coverage.
 This module contains basic tests for core functionality to reach 80% coverage.
 """
 
-import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import jwt
 import pytest
 from fastapi import HTTPException, Request, status
-import jwt
 
 from app.core.dependencies import get_current_user, validate_token
 from app.core.security import ClerkAuthenticator

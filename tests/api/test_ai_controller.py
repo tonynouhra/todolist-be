@@ -6,7 +6,7 @@ testing subtask generation, file analysis, and AI service status endpoints.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -48,7 +48,7 @@ class TestAIController:
                 for subtask in sample_subtask_response["subtasks"]
             ],
             total_subtasks=len(sample_subtask_response["subtasks"]),
-            generation_timestamp=datetime.now(timezone.utc),
+            generation_timestamp=datetime.now(UTC),
             ai_model="gemini-pro",
         )
 
@@ -264,7 +264,7 @@ class TestAIController:
             key_points=sample_file_analysis_response["key_points"],
             suggested_tasks=sample_file_analysis_response["suggested_tasks"],
             confidence_score=sample_file_analysis_response["confidence"],
-            analysis_timestamp=datetime.now(timezone.utc),
+            analysis_timestamp=datetime.now(UTC),
             ai_model="gemini-pro",
         )
 
@@ -311,7 +311,7 @@ class TestAIController:
                 key_points=["Point 1", "Point 2"],
                 suggested_tasks=["Task 1", "Task 2"],
                 confidence_score=0.8,
-                analysis_timestamp=datetime.now(timezone.utc),
+                analysis_timestamp=datetime.now(UTC),
                 ai_model="gemini-pro",
             )
 
@@ -342,7 +342,7 @@ class TestAIController:
             key_points=["Sprint goals discussed"],
             suggested_tasks=["Create user stories", "Estimate tasks"],
             confidence_score=0.9,
-            analysis_timestamp=datetime.now(timezone.utc),
+            analysis_timestamp=datetime.now(UTC),
             ai_model="gemini-pro",
         )
 
@@ -374,14 +374,14 @@ class TestAIController:
     @pytest.mark.asyncio
     async def test_get_ai_service_status_healthy(self, authenticated_client: AsyncClient):
         """Test getting healthy AI service status."""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from app.schemas.ai import AIServiceStatus
 
         mock_status = AIServiceStatus(
             service_available=True,
             model_name="gemini-pro",
-            last_request_timestamp=datetime.now(timezone.utc),
+            last_request_timestamp=datetime.now(UTC),
             requests_today=42,
         )
 
@@ -530,7 +530,7 @@ class TestAIController:
             parent_task_title=test_todo.title,
             generated_subtasks=[],
             total_subtasks=0,
-            generation_timestamp=datetime.now(timezone.utc),
+            generation_timestamp=datetime.now(UTC),
             ai_model="gemini-pro",
         )
 

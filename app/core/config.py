@@ -1,12 +1,10 @@
 # python
 # app/core/config.py
-"""
-Configuration settings for AI Todo List application.
+"""Configuration settings for AI Todo List application.
 Uses Pydantic BaseSettings for environment variable management.
 """
 import secrets
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import AnyHttpUrl, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -58,38 +56,38 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=30, description="JWT token expiration time")
 
     # ===== Database Settings =====
-    database_url: Optional[str] = Field(default=None, description="Database connection URL")
+    database_url: str | None = Field(default=None, description="Database connection URL")
     db_pool_size: int = Field(default=20, description="Database connection pool size")
     db_max_overflow: int = Field(default=0, description="Database max overflow connections")
 
     # Test database URL
-    test_database_url: Optional[str] = Field(default=None, description="Test database URL")
+    test_database_url: str | None = Field(default=None, description="Test database URL")
 
     # ===== Authentication (Clerk) =====
-    clerk_secret_key: Optional[str] = Field(default=None, description="Clerk secret key")
+    clerk_secret_key: str | None = Field(default=None, description="Clerk secret key")
     clerk_api_url: AnyHttpUrl = Field(default="https://api.clerk.com", description="Clerk API URL")
 
     # ===== AI Service (Gemini) =====
-    gemini_api_key: Optional[str] = Field(default=None, description="Google Gemini API key")
+    gemini_api_key: str | None = Field(default=None, description="Google Gemini API key")
     gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model to use")
     gemini_max_tokens: int = Field(default=1000, description="Maximum tokens for Gemini")
     ai_request_timeout: int = Field(default=30, description="AI request timeout in seconds")
 
     # ===== File Storage Settings =====
-    aws_access_key_id: Optional[str] = Field(default=None, description="AWS access key ID")
-    aws_secret_access_key: Optional[str] = Field(default=None, description="AWS secret access key")
-    s3_bucket_name: Optional[str] = Field(default=None, description="S3 bucket name")
+    aws_access_key_id: str | None = Field(default=None, description="AWS access key ID")
+    aws_secret_access_key: str | None = Field(default=None, description="AWS secret access key")
+    s3_bucket_name: str | None = Field(default=None, description="S3 bucket name")
     s3_region: str = Field(default="us-east-1", description="S3 region")
-    s3_endpoint_url: Optional[str] = Field(default=None, description="S3 endpoint URL")
+    s3_endpoint_url: str | None = Field(default=None, description="S3 endpoint URL")
 
-    cloudflare_account_id: Optional[str] = Field(default=None, description="CloudFlare account ID")
-    cloudflare_access_key_id: Optional[str] = Field(
+    cloudflare_account_id: str | None = Field(default=None, description="CloudFlare account ID")
+    cloudflare_access_key_id: str | None = Field(
         default=None, description="CloudFlare R2 access key"
     )
-    cloudflare_secret_access_key: Optional[str] = Field(
+    cloudflare_secret_access_key: str | None = Field(
         default=None, description="CloudFlare R2 secret key"
     )
-    cloudflare_bucket_name: Optional[str] = Field(
+    cloudflare_bucket_name: str | None = Field(
         default=None, description="CloudFlare R2 bucket name"
     )
 
@@ -114,7 +112,7 @@ class Settings(BaseSettings):
     )
 
     @property
-    def ALLOWED_ORIGINS(self) -> List[str]:
+    def ALLOWED_ORIGINS(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""
         if isinstance(self.allowed_origins, str):
             return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
@@ -129,16 +127,16 @@ class Settings(BaseSettings):
     )
 
     # ===== Email Configuration =====
-    smtp_host: Optional[str] = Field(default=None, description="SMTP host")
+    smtp_host: str | None = Field(default=None, description="SMTP host")
     smtp_port: int = Field(default=587, description="SMTP port")
-    smtp_user: Optional[str] = Field(default=None, description="SMTP username")
-    smtp_password: Optional[str] = Field(default=None, description="SMTP password")
-    email_from: Optional[str] = Field(default=None, description="Email from address")
+    smtp_user: str | None = Field(default=None, description="SMTP username")
+    smtp_password: str | None = Field(default=None, description="SMTP password")
+    email_from: str | None = Field(default=None, description="Email from address")
 
     # ===== Monitoring & Logging =====
     log_level: LogLevelEnum = Field(default=LogLevelEnum.INFO, description="Logging level")
     log_format: LogFormatEnum = Field(default=LogFormatEnum.json, description="Log format")
-    sentry_dsn: Optional[str] = Field(default=None, description="Sentry DSN for error tracking")
+    sentry_dsn: str | None = Field(default=None, description="Sentry DSN for error tracking")
 
     # ===== WebSocket Configuration =====
     websocket_heartbeat_interval: int = Field(

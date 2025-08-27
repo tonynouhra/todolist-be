@@ -5,11 +5,9 @@ This module contains comprehensive unit tests for the AIService class,
 testing AI integration including subtask generation, file analysis, and error handling.
 """
 
-import asyncio
 import json
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
@@ -23,7 +21,6 @@ from app.exceptions.ai import (
     AIQuotaExceededError,
     AIRateLimitError,
     AIServiceError,
-    AIServiceUnavailableError,
     AITimeoutError,
 )
 from app.schemas.ai import FileAnalysisRequest, GeneratedSubtask, SubtaskGenerationRequest
@@ -120,7 +117,7 @@ class TestAIService:
                 service = AIService(test_db)
                 service.model = MagicMock()
 
-                with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError()):
+                with patch("asyncio.wait_for", side_effect=TimeoutError()):
                     request = SubtaskGenerationRequest(todo_id=test_todo.id, max_subtasks=3)
 
                     with pytest.raises(AITimeoutError):
@@ -308,7 +305,7 @@ class TestAIService:
                 service = AIService(test_db)
                 service.model = MagicMock()
 
-                with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError()):
+                with patch("asyncio.wait_for", side_effect=TimeoutError()):
                     status = await service.get_service_status()
 
                     assert status.service_available is False

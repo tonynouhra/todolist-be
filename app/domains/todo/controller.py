@@ -1,10 +1,9 @@
 """Todo API controller with FastAPI endpoints."""
 
 import logging
-from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request, status
+from fastapi import APIRouter, Body, Depends, Path, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_db, validate_token
@@ -20,6 +19,7 @@ from app.schemas.todo import (
 )
 from app.shared.pagination import PaginationParams
 from models.user import User
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,6 @@ async def create_todo(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new todo."""
-
     service = TodoService(db)
     todo = await service.create_todo(
         todo_data=todo_data,
@@ -56,19 +55,18 @@ async def create_todo(
 @router.get("/", response_model=TodoListResponse)
 async def get_todos(
     request: Request,
-    status: Optional[str] = Query(None, regex="^(todo|in_progress|done)$"),
-    priority: Optional[int] = Query(None, ge=1, le=5),
-    project_id: Optional[UUID] = Query(None),
-    parent_todo_id: Optional[UUID] = Query(None),
-    ai_generated: Optional[bool] = Query(None),
-    search: Optional[str] = Query(None),
+    status: str | None = Query(None, regex="^(todo|in_progress|done)$"),
+    priority: int | None = Query(None, ge=1, le=5),
+    project_id: UUID | None = Query(None),
+    parent_todo_id: UUID | None = Query(None),
+    ai_generated: bool | None = Query(None),
+    search: str | None = Query(None),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get paginated list of todos with optional filters."""
-
     filters = TodoFilter(
         status=status,
         priority=priority,
@@ -106,21 +104,14 @@ async def get_todo(
     db: AsyncSession = Depends(get_db),
 ):
     """Get a specific todo by ID."""
-
     service = TodoService(db)
 
     if include_subtasks:
         todo = await service.get_todo_with_subtasks(todo_id, current_user.id)
-        if todo:
-            todo_data = TodoWithSubtasks.model_validate(todo)
-        else:
-            todo_data = None
+        todo_data = TodoWithSubtasks.model_validate(todo) if todo else None
     else:
         todo = await service.get_todo_by_id(todo_id, current_user.id)
-        if todo:
-            todo_data = TodoResponse.model_validate(todo)
-        else:
-            todo_data = None
+        todo_data = TodoResponse.model_validate(todo) if todo else None
 
     if not todo_data:
         return ResponseSchema(status="error", message="Todo not found", data=None)
@@ -141,7 +132,6 @@ async def update_todo(
     db: AsyncSession = Depends(get_db),
 ):
     """Update a specific todo."""
-
     service = TodoService(db)
     todo = await service.update_todo(todo_id, todo_data, current_user.id)
 
@@ -160,7 +150,6 @@ async def delete_todo(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a specific todo and all its subtasks."""
-
     service = TodoService(db)
     success = await service.delete_todo(todo_id, current_user.id)
 
@@ -179,7 +168,6 @@ async def toggle_todo_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Toggle todo status between todo and done."""
-
     service = TodoService(db)
     todo = await service.toggle_todo_status(todo_id, current_user.id)
 
@@ -197,7 +185,6 @@ async def get_todo_stats(
     db: AsyncSession = Depends(get_db),
 ):
     """Get todo statistics for the current user."""
-
     service = TodoService(db)
     stats = await service.get_user_todo_stats(current_user.id)
 
@@ -216,7 +203,6 @@ async def get_todo_subtasks(
     db: AsyncSession = Depends(get_db),
 ):
     """Get subtasks of a specific todo."""
-
     # First verify the parent todo exists and belongs to user
     service = TodoService(db)
     parent_todo = await service.get_todo_by_id(todo_id, current_user.id)

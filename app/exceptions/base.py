@@ -1,6 +1,6 @@
 """Base exception classes."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import HTTPException
 
@@ -13,7 +13,7 @@ class BaseAppException(HTTPException):
         message: str,
         status_code: int = 500,
         error_code: str = "INTERNAL_ERROR",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         self.message = message
         self.error_code = error_code
@@ -31,7 +31,7 @@ class NotFoundError(BaseAppException):
     def __init__(
         self,
         message: str = "Resource not found",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message=message, status_code=404, error_code="NOT_FOUND", details=details)
 
@@ -42,7 +42,7 @@ class PermissionError(BaseAppException):
     def __init__(
         self,
         message: str = "Permission denied",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,
@@ -58,7 +58,7 @@ class ValidationError(BaseAppException):
     def __init__(
         self,
         message: str = "Validation failed",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             message=message,

@@ -18,7 +18,6 @@ from app.core.config import (
     LogLevelEnum,
     Settings,
     get_config_summary,
-    settings,
 )
 
 

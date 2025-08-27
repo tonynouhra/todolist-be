@@ -6,7 +6,7 @@ model relationships, constraints, and data persistence across the application.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import func, select
@@ -283,7 +283,7 @@ class TestDatabaseIntegration:
     async def test_datetime_timezone_handling(self, test_db, test_user):
         """Test proper handling of timezone-aware datetimes."""
         # Create todo with specific due date
-        future_date = datetime.now(timezone.utc) + timedelta(days=7)
+        future_date = datetime.now(UTC) + timedelta(days=7)
 
         todo = Todo(
             user_id=test_user.id,
@@ -300,11 +300,11 @@ class TestDatabaseIntegration:
         assert todo.due_date is not None
         # In PostgreSQL, timezone info is preserved; in SQLite it may be lost
         if todo.due_date.tzinfo is not None:
-            assert todo.due_date.tzinfo == timezone.utc
+            assert todo.due_date.tzinfo == UTC
 
         # Test completion timestamp
         todo.status = "done"
-        todo.completed_at = datetime.now(timezone.utc)
+        todo.completed_at = datetime.now(UTC)
         await test_db.commit()
         await test_db.refresh(todo)
 
@@ -488,7 +488,7 @@ class TestDatabaseIntegration:
     @pytest.mark.asyncio
     async def test_data_integrity_across_operations(self, test_db, test_user):
         """Test data integrity across multiple operations."""
-        user_service = UserService(test_db)
+        UserService(test_db)
         project_service = ProjectService(test_db)
         todo_service = TodoService(test_db)
 

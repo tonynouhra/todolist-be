@@ -1,10 +1,8 @@
 """AI API controller with FastAPI endpoints."""
 
 import logging
-from typing import Optional
-from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,12 +21,11 @@ from app.schemas.ai import (
     AIErrorResponse,
     AIServiceStatus,
     FileAnalysisRequest,
-    FileAnalysisResponse,
     SubtaskGenerationRequest,
-    SubtaskGenerationResponse,
 )
 from app.schemas.base import ResponseSchema
 from models.user import User
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +44,6 @@ async def generate_subtasks(
     db: AsyncSession = Depends(get_db),
 ):
     """Generate AI subtasks for a given task."""
-
     try:
         service = AIService(db)
         result = await service.generate_subtasks(
@@ -198,7 +194,6 @@ async def analyze_file(
     db: AsyncSession = Depends(get_db),
 ):
     """Analyze a file using AI."""
-
     try:
         service = AIService(db)
         result = await service.analyze_file(request=analysis_request, user_id=current_user.id)
@@ -245,7 +240,6 @@ async def get_ai_service_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Get AI service status and availability."""
-
     try:
         service = AIService(db)
         status_info = await service.get_service_status()
@@ -270,7 +264,6 @@ async def get_ai_service_status(
 
 def _handle_ai_service_error(error: AIServiceError) -> JSONResponse:
     """Handle AI service errors with appropriate HTTP status codes."""
-
     if isinstance(error, AIConfigurationError):
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

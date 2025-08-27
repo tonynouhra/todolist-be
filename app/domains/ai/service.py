@@ -3,8 +3,8 @@
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 import google.generativeai as genai
@@ -24,7 +24,6 @@ from app.exceptions.ai import (
     AIServiceError,
     AIServiceUnavailableError,
     AITimeoutError,
-    map_ai_error,
 )
 from app.schemas.ai import (
     AIServiceStatus,
@@ -37,7 +36,7 @@ from app.schemas.ai import (
 from models.ai_interaction import AIInteraction
 from models.file import File
 from models.todo import Todo
-from models.user import User
+
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +91,6 @@ class AIService:
         self, request: SubtaskGenerationRequest, user_id: UUID
     ) -> SubtaskGenerationResponse:
         """Generate AI subtasks for an existing todo."""
-
         if not self.model:
             raise AIServiceUnavailableError("AI service not properly initialized")
 
@@ -146,14 +144,14 @@ class AIService:
                 parent_task_title=todo.title,
                 generated_subtasks=subtasks,
                 total_subtasks=len(subtasks),
-                generation_timestamp=datetime.now(timezone.utc),
+                generation_timestamp=datetime.now(UTC),
                 ai_model=settings.gemini_model,
             )
 
             logger.info(f"Generated {len(subtasks)} subtasks for task: {todo.title}")
             return ai_response
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             await self.db.rollback()
             raise AITimeoutError("AI request timed out")
         except json.JSONDecodeError as e:
@@ -179,7 +177,6 @@ class AIService:
         self, request: FileAnalysisRequest, user_id: UUID
     ) -> FileAnalysisResponse:
         """Analyze a file using AI."""
-
         if not self.model:
             raise AIServiceUnavailableError("AI service not properly initialized")
 
@@ -215,11 +212,11 @@ class AIService:
                 key_points=analysis_data.get("key_points", []),
                 suggested_tasks=analysis_data.get("suggested_tasks", []),
                 confidence_score=analysis_data.get("confidence", 0.8),
-                analysis_timestamp=datetime.now(timezone.utc),
+                analysis_timestamp=datetime.now(UTC),
                 ai_model=settings.gemini_model,
             )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise AITimeoutError("File analysis request timed out")
         except json.JSONDecodeError as e:
             raise AIParsingError(f"Failed to parse AI response: {str(e)}")
@@ -237,14 +234,13 @@ class AIService:
 
     async def get_service_status(self) -> AIServiceStatus:
         """Get AI service status and usage information."""
-
         service_available = False
         actual_model_name = settings.gemini_model
         requests_today = 0
 
         try:
             # Get today's interaction count first (this should always work)
-            today = datetime.now(timezone.utc).date()
+            today = datetime.now(UTC).date()
             query = select(AIInteraction).where(AIInteraction.created_at >= today)
             result = await self.db.execute(query)
             requests_today = len(result.scalars().all())
@@ -280,11 +276,11 @@ class AIService:
             return AIServiceStatus(
                 service_available=service_available,
                 model_name=actual_model_name,
-                last_request_timestamp=datetime.now(timezone.utc),
+                last_request_timestamp=datetime.now(UTC),
                 requests_today=requests_today,
             )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.error("Service status check timed out")
         except Exception as e:
             logger.error(f"Service status check failed: {str(e)}")
@@ -301,7 +297,6 @@ class AIService:
 
     def _build_subtask_generation_prompt_from_todo(self, todo: Todo, max_subtasks: int) -> str:
         """Build prompt for subtask generation from todo data."""
-
         base_prompt = f"""
 Given the following main task, generate a list of specific, actionable subtasks that would help complete it efficiently.
 
@@ -347,10 +342,9 @@ Generate practical, actionable subtasks that break down the main task effectivel
         return base_prompt
 
     def _build_file_analysis_prompt(
-        self, file: File, analysis_type: str, context: Optional[str]
+        self, file: File, analysis_type: str, context: str | None
     ) -> str:
         """Build prompt for file analysis."""
-
         prompt = f"""
 Analyze the following file and provide insights based on the analysis type requested.
 
@@ -429,7 +423,7 @@ Analyze the following file and provide insights based on the analysis type reque
             logger.error(f"Gemini API call failed: {str(e)}")
             raise AIServiceError(f"AI generation failed: {str(e)}")
 
-    def _parse_subtask_response(self, response: str) -> List[GeneratedSubtask]:
+    def _parse_subtask_response(self, response: str) -> list[GeneratedSubtask]:
         """Parse AI response into structured subtasks."""
         try:
             # Extract JSON from response (handle code blocks)
@@ -462,7 +456,7 @@ Analyze the following file and provide insights based on the analysis type reque
             logger.error(f"Error parsing subtask response: {str(e)}")
             raise AIParsingError(f"Failed to parse response: {str(e)}")
 
-    def _parse_file_analysis_response(self, response: str) -> Dict[str, Any]:
+    def _parse_file_analysis_response(self, response: str) -> dict[str, Any]:
         """Parse AI file analysis response."""
         try:
             json_start = response.find("{")
@@ -484,7 +478,7 @@ Analyze the following file and provide insights based on the analysis type reque
         prompt: str,
         response: str,
         interaction_type: str,
-        todo_id: Optional[UUID] = None,
+        todo_id: UUID | None = None,
     ) -> None:
         """Store AI interaction in database."""
         try:
@@ -504,13 +498,13 @@ Analyze the following file and provide insights based on the analysis type reque
             await self.db.rollback()
             # Don't raise here - interaction storage failure shouldn't fail the main operation
 
-    async def _get_file_by_id(self, file_id: UUID, user_id: UUID) -> Optional[File]:
+    async def _get_file_by_id(self, file_id: UUID, user_id: UUID) -> File | None:
         """Get file by ID and verify user ownership."""
         query = select(File).where(File.id == file_id, File.user_id == user_id)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def _get_todo_by_id(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
+    async def _get_todo_by_id(self, todo_id: UUID, user_id: UUID) -> Todo | None:
         """Get todo by ID and verify user ownership."""
         query = select(Todo).where(Todo.id == todo_id, Todo.user_id == user_id)
         result = await self.db.execute(query)

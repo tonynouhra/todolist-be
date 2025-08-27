@@ -1,6 +1,5 @@
 # app/core/dependencies.py
 import logging
-from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer
@@ -11,6 +10,7 @@ from app.database import get_db
 from app.domains.user.service import UserService
 from models import User
 
+
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
@@ -18,8 +18,7 @@ auth = ClerkAuthenticator()
 
 
 async def validate_token(token: str = Depends(security)) -> dict:
-    """
-    Validate and decode JWT token from Clerk.
+    """Validate and decode JWT token from Clerk.
 
     Returns:
         dict: Decoded token payload
@@ -63,8 +62,7 @@ async def get_current_user(
     payload: dict = Depends(validate_token),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """
-    Get current authenticated user from JWT payload.
+    """Get current authenticated user from JWT payload.
 
     Returns:
         User: Current authenticated user
@@ -110,11 +108,10 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    payload: Optional[dict] = Depends(validate_token),
+    payload: dict | None = Depends(validate_token),
     db: AsyncSession = Depends(get_db),
-) -> Optional[User]:
-    """
-    Get current user if authenticated, otherwise return None.
+) -> User | None:
+    """Get current user if authenticated, otherwise return None.
     Used for optional authentication endpoints.
 
     Returns:

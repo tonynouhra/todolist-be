@@ -6,8 +6,8 @@ testing all CRUD operations, filtering, pagination, and hierarchical features.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 from fastapi import status
@@ -26,7 +26,7 @@ class TestTodoController:
             "status": "todo",
             "priority": 4,
             "project_id": str(test_project.id),
-            "due_date": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+            "due_date": (datetime.now(UTC) + timedelta(days=7)).isoformat(),
         }
 
         response = await authenticated_client.post("/api/todos/", json=todo_data)

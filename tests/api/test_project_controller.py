@@ -6,7 +6,6 @@ testing all CRUD operations, project-todo relationships, and statistics.
 """
 
 import uuid
-from unittest.mock import patch
 
 import pytest
 from fastapi import status
@@ -451,12 +450,11 @@ class TestProjectController:
             return test_user_2
 
         from app.core.dependencies import get_current_user
-        from app.database import get_db
         from app.main import app
 
         # Create authenticated client for second user
         app.dependency_overrides[get_current_user] = override_get_current_user_2
-        from httpx import AsyncClient, ASGITransport
+        from httpx import ASGITransport, AsyncClient
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as second_user_client:

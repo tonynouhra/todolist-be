@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from .base import BaseModelSchema, BaseSchema
 
@@ -24,9 +23,9 @@ class GeneratedSubtask(BaseSchema):
     """Schema for a generated subtask."""
 
     title: str = Field(..., min_length=1, max_length=500)
-    description: Optional[str] = None
+    description: str | None = None
     priority: int = Field(default=3, ge=1, le=5)
-    estimated_time: Optional[str] = Field(
+    estimated_time: str | None = Field(
         None, description="Estimated time to complete (e.g., '30 minutes', '2 hours')"
     )
     order: int = Field(..., ge=1, description="Suggested order of completion")
@@ -36,7 +35,7 @@ class SubtaskGenerationResponse(BaseSchema):
     """Schema for AI subtask generation response."""
 
     parent_task_title: str
-    generated_subtasks: List[GeneratedSubtask]
+    generated_subtasks: list[GeneratedSubtask]
     total_subtasks: int
     generation_timestamp: datetime
     ai_model: str = Field(default="gemini-1.5-flash", alias="model_used")
@@ -47,7 +46,7 @@ class FileAnalysisRequest(BaseSchema):
 
     file_id: UUID
     analysis_type: str = Field(default="general", pattern="^(general|task_extraction|summary)$")
-    context: Optional[str] = Field(None, description="Additional context for analysis")
+    context: str | None = Field(None, description="Additional context for analysis")
 
 
 class FileAnalysisResponse(BaseSchema):
@@ -56,8 +55,8 @@ class FileAnalysisResponse(BaseSchema):
     file_id: UUID
     analysis_type: str
     summary: str
-    key_points: List[str] = []
-    suggested_tasks: List[str] = []
+    key_points: list[str] = []
+    suggested_tasks: list[str] = []
     confidence_score: float = Field(..., ge=0.0, le=1.0, description="AI confidence in analysis")
     analysis_timestamp: datetime
     ai_model: str = Field(default="gemini-1.5-flash", alias="model_used")
@@ -67,7 +66,7 @@ class AIInteractionResponse(BaseModelSchema):
     """Schema for AI interaction history response."""
 
     user_id: UUID
-    todo_id: Optional[UUID] = None
+    todo_id: UUID | None = None
     prompt: str
     response: str
     interaction_type: str
@@ -78,7 +77,7 @@ class AIInteractionResponse(BaseModelSchema):
 class AIInteractionListResponse(BaseSchema):
     """Schema for AI interaction list response."""
 
-    interactions: List[AIInteractionResponse]
+    interactions: list[AIInteractionResponse]
     total: int
     page: int
     size: int
@@ -91,9 +90,9 @@ class AIServiceStatus(BaseSchema):
 
     service_available: bool
     model_name: str
-    last_request_timestamp: Optional[datetime] = None
+    last_request_timestamp: datetime | None = None
     requests_today: int = Field(default=0, description="Number of requests made today")
-    quota_remaining: Optional[int] = Field(None, description="Remaining API quota if available")
+    quota_remaining: int | None = Field(None, description="Remaining API quota if available")
 
 
 class AIErrorResponse(BaseSchema):
@@ -101,8 +100,8 @@ class AIErrorResponse(BaseSchema):
 
     error_code: str
     error_message: str
-    retry_after: Optional[int] = Field(None, description="Seconds to wait before retrying")
-    suggestions: List[str] = []
+    retry_after: int | None = Field(None, description="Seconds to wait before retrying")
+    suggestions: list[str] = []
 
 
 # Update forward references if needed

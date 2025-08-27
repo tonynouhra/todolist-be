@@ -1,5 +1,4 @@
-"""
-Partitioned Todo service layer with business logic for scalable database structure.
+"""Partitioned Todo service layer with business logic for scalable database structure.
 
 This service works with the new partitioned database structure:
 - TodoActive for active todos (todo, in_progress)
@@ -10,26 +9,23 @@ The service provides backward compatibility while leveraging the new partitioned
 for optimal performance.
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Union
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import and_, asc, desc, func, or_, select
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.exceptions.todo import (
     InvalidTodoOperationError,
     MaxTodoDepthExceededError,
     TodoNotFoundError,
-    TodoPermissionError,
 )
 from app.schemas.todo import TodoCreate, TodoFilter, TodoUpdate
 from app.shared.pagination import PaginationParams, paginate
 from models.project import Project
-from models.todo_partitioned import AITodoInteraction, Todo, TodoActive, TodoArchived
-from models.user import User
+from models.todo_partitioned import Todo, TodoActive, TodoArchived
 
 
 class PartitionedTodoService:
@@ -42,7 +38,6 @@ class PartitionedTodoService:
         self, todo_data: TodoCreate, user_id: UUID, generate_ai_subtasks: bool = False
     ) -> TodoActive:
         """Create a new todo in the active partition."""
-
         # Validate parent todo exists and belongs to user (within active partition)
         depth = 0
         if todo_data.parent_todo_id:
@@ -87,9 +82,8 @@ class PartitionedTodoService:
 
     async def get_todo_by_id(
         self, todo_id: UUID, user_id: UUID, include_archived: bool = False
-    ) -> Optional[Union[TodoActive, TodoArchived]]:
+    ) -> TodoActive | TodoArchived | None:
         """Get a todo by ID for a specific user from active or archived partitions."""
-
         # First check active partition
         active_todo = await self._get_active_todo_by_id_and_user(todo_id, user_id)
         if active_todo:
@@ -107,9 +101,8 @@ class PartitionedTodoService:
         filters: TodoFilter,
         pagination: PaginationParams,
         include_archived: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get paginated list of todos with filters from active and optionally archived partitions."""
-
         if include_archived:
             return await self._get_todos_from_both_partitions(user_id, filters, pagination)
         else:
@@ -117,9 +110,8 @@ class PartitionedTodoService:
 
     async def get_todo_with_subtasks(
         self, todo_id: UUID, user_id: UUID, include_archived: bool = False
-    ) -> Optional[Union[TodoActive, TodoArchived]]:
+    ) -> TodoActive | TodoArchived | None:
         """Get todo with all its subtasks from appropriate partitions."""
-
         # Get the parent todo
         parent_todo = await self.get_todo_by_id(todo_id, user_id, include_archived)
         if not parent_todo:
@@ -149,9 +141,8 @@ class PartitionedTodoService:
 
     async def update_todo(
         self, todo_id: UUID, todo_data: TodoUpdate, user_id: UUID
-    ) -> Optional[TodoActive]:
+    ) -> TodoActive | None:
         """Update a todo (only active todos can be updated)."""
-
         todo = await self._get_active_todo_by_id_and_user(todo_id, user_id)
         if not todo:
             raise TodoNotFoundError("Todo not found or cannot be updated (might be archived)")
@@ -166,15 +157,13 @@ class PartitionedTodoService:
         for field, value in update_data.items():
             if hasattr(todo, field):
                 # Normalize datetime fields
-                if field == "due_date" and value is not None:
-                    value = self._normalize_datetime(value)
-                elif field == "completed_at" and value is not None:
+                if field == "due_date" and value is not None or field == "completed_at" and value is not None:
                     value = self._normalize_datetime(value)
                 setattr(todo, field, value)
 
         # Auto-set completed_at when status changes to 'done'
         if todo_data.status == "done" and todo.status != "done":
-            todo.completed_at = datetime.now(timezone.utc)
+            todo.completed_at = datetime.now(UTC)
         elif todo_data.status and todo_data.status != "done":
             todo.completed_at = None
 
@@ -192,7 +181,6 @@ class PartitionedTodoService:
 
     async def delete_todo(self, todo_id: UUID, user_id: UUID) -> bool:
         """Delete a todo and all its subtasks (only from active partition)."""
-
         todo = await self._get_active_todo_by_id_and_user(todo_id, user_id)
         if not todo:
             raise TodoNotFoundError("Todo not found or cannot be deleted (might be archived)")
@@ -209,9 +197,8 @@ class PartitionedTodoService:
             await self.db.rollback()
             raise InvalidTodoOperationError(f"Failed to delete todo: {str(e)}")
 
-    async def toggle_todo_status(self, todo_id: UUID, user_id: UUID) -> Optional[TodoActive]:
+    async def toggle_todo_status(self, todo_id: UUID, user_id: UUID) -> TodoActive | None:
         """Toggle todo status between todo and done (only for active todos)."""
-
         todo = await self._get_active_todo_by_id_and_user(todo_id, user_id)
         if not todo:
             raise TodoNotFoundError("Todo not found or cannot be modified (might be archived)")
@@ -221,7 +208,7 @@ class PartitionedTodoService:
             todo.completed_at = None
         else:
             todo.status = "done"
-            todo.completed_at = datetime.now(timezone.utc)
+            todo.completed_at = datetime.now(UTC)
 
         try:
             await self.db.commit()
@@ -231,9 +218,8 @@ class PartitionedTodoService:
             await self.db.rollback()
             raise InvalidTodoOperationError(f"Failed to toggle todo status: {str(e)}")
 
-    async def get_user_todo_stats(self, user_id: UUID) -> Dict[str, Any]:
+    async def get_user_todo_stats(self, user_id: UUID) -> dict[str, Any]:
         """Get comprehensive todo statistics for a user from both partitions."""
-
         # Active todos statistics
         active_total_query = select(func.count(TodoActive.id)).where(TodoActive.user_id == user_id)
         active_total = await self.db.scalar(active_total_query) or 0
@@ -255,7 +241,7 @@ class PartitionedTodoService:
         archived_total = await self.db.scalar(archived_total_query) or 0
 
         # Overdue todos (only from active partition)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         overdue_query = select(func.count(TodoActive.id)).where(
             and_(
                 TodoActive.user_id == user_id,
@@ -282,13 +268,12 @@ class PartitionedTodoService:
         }
 
     async def move_completed_todos_to_archive(self, days_old: int = 30) -> int:
-        """
-        Manual archival method for moving completed todos to archive partition.
+        """Manual archival method for moving completed todos to archive partition.
 
         Returns the number of todos archived.
         Note: This is typically handled by automated maintenance jobs.
         """
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_old)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days_old)
 
         # Find completed todos older than cutoff
         query = select(TodoActive).where(
@@ -334,7 +319,7 @@ class PartitionedTodoService:
 
     async def _get_active_todo_by_id_and_user(
         self, todo_id: UUID, user_id: UUID
-    ) -> Optional[TodoActive]:
+    ) -> TodoActive | None:
         """Get active todo by ID and user ID."""
         query = select(TodoActive).where(
             and_(TodoActive.id == todo_id, TodoActive.user_id == user_id)
@@ -344,7 +329,7 @@ class PartitionedTodoService:
 
     async def _get_archived_todo_by_id_and_user(
         self, todo_id: UUID, user_id: UUID
-    ) -> Optional[TodoArchived]:
+    ) -> TodoArchived | None:
         """Get archived todo by ID and user ID."""
         query = select(TodoArchived).where(
             and_(TodoArchived.id == todo_id, TodoArchived.user_id == user_id)
@@ -354,9 +339,8 @@ class PartitionedTodoService:
 
     async def _get_active_todos_only(
         self, user_id: UUID, filters: TodoFilter, pagination: PaginationParams
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get todos from active partition only."""
-
         query = select(TodoActive).where(TodoActive.user_id == user_id)
 
         # Apply filters
@@ -369,9 +353,8 @@ class PartitionedTodoService:
 
     async def _get_todos_from_both_partitions(
         self, user_id: UUID, filters: TodoFilter, pagination: PaginationParams
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get todos from both active and archived partitions."""
-
         # This is more complex and requires careful implementation
         # For now, we'll get active todos and note that archived integration needs more work
         active_result = await self._get_active_todos_only(user_id, filters, pagination)
@@ -383,7 +366,6 @@ class PartitionedTodoService:
 
     def _apply_filters_to_query(self, query, filters: TodoFilter, model_class):
         """Apply filters to a query for the given model class."""
-
         if filters.status:
             query = query.where(model_class.status == filters.status)
 
@@ -420,7 +402,6 @@ class PartitionedTodoService:
 
     async def _delete_subtasks_recursive(self, parent_id: UUID, user_id: UUID):
         """Recursively delete all subtasks of a todo."""
-
         # Find all subtasks
         subtasks_query = select(TodoActive).where(
             and_(TodoActive.parent_todo_id == parent_id, TodoActive.user_id == user_id)
@@ -439,9 +420,9 @@ class PartitionedTodoService:
             return None
 
         if dt.tzinfo is None:
-            return dt.replace(tzinfo=timezone.utc)
+            return dt.replace(tzinfo=UTC)
 
-        return dt.astimezone(timezone.utc)
+        return dt.astimezone(UTC)
 
     async def _validate_project_ownership(self, project_id: UUID, user_id: UUID) -> None:
         """Validate that a project belongs to the user."""
@@ -485,7 +466,7 @@ class PartitionedTodoService:
 
             await self.db.commit()
 
-        except Exception as e:
+        except Exception:
             # Don't fail the main todo creation if AI generation fails
             await self.db.rollback()
             pass
@@ -493,8 +474,7 @@ class PartitionedTodoService:
 
 # Backward compatibility service wrapper
 class TodoService(PartitionedTodoService):
-    """
-    Backward compatibility wrapper that maintains the original TodoService interface
+    """Backward compatibility wrapper that maintains the original TodoService interface
     while using the new partitioned structure underneath.
 
     This allows existing code to continue working while gradually migrating to
@@ -508,7 +488,7 @@ class TodoService(PartitionedTodoService):
         active_todo = await super().create_todo(todo_data, user_id, generate_ai_subtasks)
         return Todo.from_active(active_todo)
 
-    async def get_todo_by_id(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
+    async def get_todo_by_id(self, todo_id: UUID, user_id: UUID) -> Todo | None:
         """Get a todo by ID and return as compatibility Todo object."""
         result = await super().get_todo_by_id(todo_id, user_id, include_archived=True)
 

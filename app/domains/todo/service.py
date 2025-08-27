@@ -1,11 +1,11 @@
 """Todo service layer with business logic."""
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import and_, asc, desc, or_
+from sqlalchemy import and_, desc, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -16,13 +16,12 @@ from app.exceptions.todo import (
     InvalidTodoOperationError,
     MaxTodoDepthExceededError,
     TodoNotFoundError,
-    TodoPermissionError,
 )
 from app.schemas.todo import TodoCreate, TodoFilter, TodoUpdate
 from app.shared.pagination import PaginationParams, paginate
 from models.project import Project
 from models.todo import Todo
-from models.user import User
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,6 @@ class TodoService:
         self, todo_data: TodoCreate, user_id: UUID, generate_ai_subtasks: bool = False
     ) -> Todo:
         """Create a new todo."""
-
         # Validate project exists if project_id provided
         if todo_data.project_id:
             from sqlalchemy import select
@@ -95,24 +93,23 @@ class TodoService:
             try:
                 if hasattr(self.db, "in_transaction") and self.db.in_transaction():
                     await self.db.rollback()
-            except Exception:
-                # If rollback fails, session cleanup will be handled by the framework
-                pass
+            except Exception as rollback_error:
+                # If rollback fails, log the error but continue - session cleanup will be handled by the framework
+                logger.warning(f"Failed to rollback transaction during error handling: {rollback_error}")
 
             if isinstance(e, SQLAlchemyError):
                 raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}")
             else:
                 raise
 
-    async def get_todo_by_id(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
+    async def get_todo_by_id(self, todo_id: UUID, user_id: UUID) -> Todo | None:
         """Get a todo by ID for a specific user."""
         return await self._get_todo_by_id_and_user(todo_id, user_id)
 
     async def get_todos_list(
         self, user_id: UUID, filters: TodoFilter, pagination: PaginationParams
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get paginated list of todos with filters."""
-
         query = select(Todo).where(Todo.user_id == user_id)
 
         # Apply filters
@@ -151,7 +148,7 @@ class TodoService:
 
         return await paginate(self.db, query, pagination)
 
-    async def get_todo_with_subtasks(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
+    async def get_todo_with_subtasks(self, todo_id: UUID, user_id: UUID) -> Todo | None:
         """Get todo with all its subtasks."""
         query = (
             select(Todo)
@@ -164,9 +161,8 @@ class TodoService:
 
     async def update_todo(
         self, todo_id: UUID, todo_data: TodoUpdate, user_id: UUID
-    ) -> Optional[Todo]:
+    ) -> Todo | None:
         """Update a todo."""
-
         todo = await self._get_todo_by_id_and_user(todo_id, user_id)
         if not todo:
             raise TodoNotFoundError("Todo not found")
@@ -184,15 +180,13 @@ class TodoService:
         for field, value in update_data.items():
             if hasattr(todo, field):
                 # Normalize datetime fields
-                if field == "due_date" and value is not None:
-                    value = self._normalize_datetime(value)
-                elif field == "completed_at" and value is not None:
+                if field == "due_date" and value is not None or field == "completed_at" and value is not None:
                     value = self._normalize_datetime(value)
                 setattr(todo, field, value)
 
         # Auto-set completed_at when status changes to 'done'
         if todo_data.status == "done" and original_status != "done":
-            todo.completed_at = datetime.now(timezone.utc)
+            todo.completed_at = datetime.now(UTC)
         elif todo_data.status and todo_data.status != "done":
             todo.completed_at = None
 
@@ -206,7 +200,6 @@ class TodoService:
 
     async def delete_todo(self, todo_id: UUID, user_id: UUID) -> bool:
         """Delete a todo and all its subtasks."""
-
         todo = await self._get_todo_by_id_and_user(todo_id, user_id)
         if not todo:
             raise TodoNotFoundError("Todo not found")
@@ -220,9 +213,8 @@ class TodoService:
             await self.db.rollback()
             raise InvalidTodoOperationError(f"Failed to delete todo: {str(e)}")
 
-    async def toggle_todo_status(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
+    async def toggle_todo_status(self, todo_id: UUID, user_id: UUID) -> Todo | None:
         """Toggle todo status between todo and done."""
-
         todo = await self._get_todo_by_id_and_user(todo_id, user_id)
         if not todo:
             raise TodoNotFoundError("Todo not found")
@@ -232,7 +224,7 @@ class TodoService:
             todo.completed_at = None
         else:
             todo.status = "done"
-            todo.completed_at = datetime.now(timezone.utc)
+            todo.completed_at = datetime.now(UTC)
 
         try:
             await self.db.commit()
@@ -242,9 +234,8 @@ class TodoService:
             await self.db.rollback()
             raise InvalidTodoOperationError(f"Failed to toggle todo status: {str(e)}")
 
-    async def get_user_todo_stats(self, user_id: UUID) -> Dict[str, Any]:
+    async def get_user_todo_stats(self, user_id: UUID) -> dict[str, Any]:
         """Get todo statistics for a user."""
-
         # Total todos
         total_query = select(Todo).where(Todo.user_id == user_id)
         total_result = await self.db.execute(total_query)
@@ -263,7 +254,7 @@ class TodoService:
         in_progress_todos = len(in_progress_result.scalars().all())
 
         # Overdue todos
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         overdue_query = select(Todo).where(
             and_(Todo.user_id == user_id, Todo.due_date < now, Todo.status != "done")
         )
@@ -281,7 +272,7 @@ class TodoService:
 
     # Private helper methods
 
-    async def _get_todo_by_id_and_user(self, todo_id: UUID, user_id: UUID) -> Optional[Todo]:
+    async def _get_todo_by_id_and_user(self, todo_id: UUID, user_id: UUID) -> Todo | None:
         """Get todo by ID and user ID."""
         query = select(Todo).where(and_(Todo.id == todo_id, Todo.user_id == user_id))
         result = await self.db.execute(query)
@@ -310,10 +301,10 @@ class TodoService:
 
         # If datetime is timezone-naive, assume it's UTC
         if dt.tzinfo is None:
-            return dt.replace(tzinfo=timezone.utc)
+            return dt.replace(tzinfo=UTC)
 
         # If datetime is timezone-aware, convert to UTC
-        return dt.astimezone(timezone.utc)
+        return dt.astimezone(UTC)
 
     async def _validate_project_ownership(self, project_id: UUID, user_id: UUID) -> None:
         """Validate that a project belongs to the user."""

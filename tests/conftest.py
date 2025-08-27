@@ -1,6 +1,7 @@
 # tests/conftest.py
 import os
 
+
 # Set up test environment variables BEFORE any other imports
 os.environ.setdefault("TESTING", "true")
 # Use SQLite for local testing, PostgreSQL for CI
@@ -16,7 +17,7 @@ os.environ.setdefault("AI_ENABLED", "false")
 
 import asyncio
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -29,6 +30,7 @@ from app.core.dependencies import get_current_user
 from app.database import get_db
 from app.main import app
 from models import AIInteraction, Base, Project, Todo, User
+
 
 # Test database URL - Use environment variable or default
 TEST_DATABASE_URL = os.getenv(
@@ -82,8 +84,9 @@ async def client(test_db):
 @pytest_asyncio.fixture
 async def authenticated_client(test_db, test_user):
     """Create an authenticated test client."""
-    from app.core.dependencies import validate_token
     from httpx import ASGITransport
+
+    from app.core.dependencies import validate_token
 
     def override_get_current_user():
         return test_user
@@ -171,7 +174,7 @@ async def test_todo(test_db, test_user, test_project):
         description="A test todo item",
         status="todo",
         priority=3,
-        due_date=datetime.now(timezone.utc) + timedelta(days=7),
+        due_date=datetime.now(UTC) + timedelta(days=7),
         ai_generated=False,
     )
     test_db.add(todo)
@@ -216,7 +219,7 @@ async def test_todo_with_subtasks(test_db, test_user, test_project):
         status="done",
         priority=2,
         ai_generated=True,
-        completed_at=datetime.now(timezone.utc),
+        completed_at=datetime.now(UTC),
     )
 
     test_db.add_all([subtask1, subtask2])
@@ -242,7 +245,7 @@ async def completed_todo(test_db, test_user):
         status="done",
         priority=5,
         ai_generated=False,
-        completed_at=datetime.now(timezone.utc),
+        completed_at=datetime.now(UTC),
     )
     test_db.add(todo)
     await test_db.commit()
@@ -259,7 +262,7 @@ async def overdue_todo(test_db, test_user):
         description="An overdue todo item",
         status="todo",
         priority=5,
-        due_date=datetime.now(timezone.utc) - timedelta(days=1),
+        due_date=datetime.now(UTC) - timedelta(days=1),
         ai_generated=False,
     )
     test_db.add(todo)

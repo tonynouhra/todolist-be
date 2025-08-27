@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
 from pydantic import ConfigDict, Field, field_validator
@@ -15,7 +13,7 @@ class ProjectBase(BaseSchema):
     """Base project schema with common fields."""
 
     name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
+    description: str | None = None
 
     @field_validator("name")
     @classmethod
@@ -37,12 +35,12 @@ class ProjectCreate(ProjectBase):
 class ProjectUpdate(BaseSchema):
     """Schema for updating a project."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
 
     @field_validator("name")
     @classmethod
-    def validate_name(cls, v: Optional[str]) -> Optional[str]:
+    def validate_name(cls, v: str | None) -> str | None:
         """Validate and clean the project name."""
         if v is not None and isinstance(v, str):
             v = v.strip()
@@ -56,11 +54,11 @@ class ProjectResponse(BaseModelSchema):
 
     user_id: UUID
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     # Computed fields
-    todo_count: Optional[int] = None
-    completed_todo_count: Optional[int] = None
+    todo_count: int | None = None
+    completed_todo_count: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -68,19 +66,19 @@ class ProjectResponse(BaseModelSchema):
 class ProjectWithTodos(ProjectResponse):
     """Schema for project with todos."""
 
-    todos: List[TodoResponse] = []
+    todos: list[TodoResponse] = []
 
 
 class ProjectFilter(BaseSchema):
     """Schema for filtering projects."""
 
-    search: Optional[str] = None
+    search: str | None = None
 
 
 class ProjectListResponse(BaseSchema):
     """Schema for project list response."""
 
-    projects: List[ProjectResponse]
+    projects: list[ProjectResponse]
     total: int
     page: int
     size: int
@@ -98,6 +96,7 @@ class ProjectStats(BaseSchema):
 
 # Import TodoResponse at the end to avoid circular imports
 from .todo import TodoResponse
+
 
 # Rebuild the model to resolve forward references
 ProjectWithTodos.model_rebuild()

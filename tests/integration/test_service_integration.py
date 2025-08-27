@@ -6,19 +6,17 @@ work together, testing cross-service interactions and workflows.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
-from app.domains.ai.service import AIService
 from app.domains.project.service import ProjectService
 from app.domains.todo.service import TodoService
 from app.domains.user.service import UserService
-from app.schemas.ai import GeneratedSubtask, SubtaskGenerationRequest, SubtaskGenerationResponse
+from app.schemas.ai import GeneratedSubtask, SubtaskGenerationResponse
 from app.schemas.project import ProjectCreate
 from app.schemas.todo import TodoCreate, TodoUpdate
-from models import Project, Todo, User
 
 
 class TestServiceIntegration:
@@ -50,7 +48,7 @@ class TestServiceIntegration:
             description="Part of the workflow test",
             project_id=project.id,
             priority=4,
-            due_date=datetime.now(timezone.utc) + timedelta(days=5),
+            due_date=datetime.now(UTC) + timedelta(days=5),
         )
         todo = await todo_service.create_todo(todo_data, user.id)
 
@@ -185,50 +183,49 @@ class TestServiceIntegration:
             parent_task_title=parent_todo.title,
             generated_subtasks=mock_subtasks,
             total_subtasks=len(mock_subtasks),
-            generation_timestamp=datetime.now(timezone.utc),
+            generation_timestamp=datetime.now(UTC),
             ai_model="gemini-pro",
         )
 
         with patch(
             "app.domains.ai.service.AIService.generate_subtasks",
             return_value=mock_response,
-        ):
-            with patch.object(todo_service, "_generate_ai_subtasks") as mock_generate:
-                # Simulate the AI subtask generation process
-                async def create_subtasks(todo):
-                    for subtask_data in mock_subtasks:
-                        subtask_create = TodoCreate(
-                            title=subtask_data.title,
-                            description=subtask_data.description,
-                            priority=subtask_data.priority,
-                            parent_todo_id=todo.id,
-                            ai_generated=True,
-                            status="todo",
-                        )
-                        await todo_service.create_todo(subtask_create, test_user.id)
+        ), patch.object(todo_service, "_generate_ai_subtasks") as mock_generate:
+            # Simulate the AI subtask generation process
+            async def create_subtasks(todo):
+                for subtask_data in mock_subtasks:
+                    subtask_create = TodoCreate(
+                        title=subtask_data.title,
+                        description=subtask_data.description,
+                        priority=subtask_data.priority,
+                        parent_todo_id=todo.id,
+                        ai_generated=True,
+                        status="todo",
+                    )
+                    await todo_service.create_todo(subtask_create, test_user.id)
 
-                mock_generate.side_effect = create_subtasks
+            mock_generate.side_effect = create_subtasks
 
-                # Create todo with AI subtasks
-                ai_todo_data = TodoCreate(
-                    title="AI Enhanced Task",
-                    description="This will generate AI subtasks",
-                    generate_ai_subtasks=True,
-                )
+            # Create todo with AI subtasks
+            ai_todo_data = TodoCreate(
+                title="AI Enhanced Task",
+                description="This will generate AI subtasks",
+                generate_ai_subtasks=True,
+            )
 
-                ai_todo = await todo_service.create_todo(
-                    ai_todo_data, test_user.id, generate_ai_subtasks=True
-                )
+            ai_todo = await todo_service.create_todo(
+                ai_todo_data, test_user.id, generate_ai_subtasks=True
+            )
 
-                # Verify subtasks were created
-                todo_with_subtasks = await todo_service.get_todo_with_subtasks(
-                    ai_todo.id, test_user.id
-                )
+            # Verify subtasks were created
+            todo_with_subtasks = await todo_service.get_todo_with_subtasks(
+                ai_todo.id, test_user.id
+            )
 
-                assert len(todo_with_subtasks.subtasks) == 3
-                for subtask in todo_with_subtasks.subtasks:
-                    assert subtask.ai_generated is True
-                    assert subtask.parent_todo_id == ai_todo.id
+            assert len(todo_with_subtasks.subtasks) == 3
+            for subtask in todo_with_subtasks.subtasks:
+                assert subtask.ai_generated is True
+                assert subtask.parent_todo_id == ai_todo.id
 
     @pytest.mark.asyncio
     async def test_project_deletion_impact_on_todos(self, test_db, test_user):
@@ -406,7 +403,7 @@ class TestServiceIntegration:
     @pytest.mark.asyncio
     async def test_service_error_handling_integration(self, test_db, test_user):
         """Test error handling across service interactions."""
-        project_service = ProjectService(test_db)
+        ProjectService(test_db)
         todo_service = TodoService(test_db)
 
         # Test creating todo with non-existent project
@@ -430,7 +427,6 @@ class TestServiceIntegration:
     @pytest.mark.asyncio
     async def test_concurrent_operations_integration(self, test_db, test_user):
         """Test multiple operations across services with shared session."""
-        import asyncio
 
         project_service = ProjectService(test_db)
         todo_service = TodoService(test_db)

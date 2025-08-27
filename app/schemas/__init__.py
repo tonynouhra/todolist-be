@@ -10,6 +10,7 @@ from .todo import *
 from .todo import TodoWithSubtasks
 from .user import *
 
+
 # Rebuild models after all schemas are loaded
 ProjectWithTodos.model_rebuild()
 TodoWithSubtasks.model_rebuild()

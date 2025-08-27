@@ -1,12 +1,13 @@
 """Pagination utilities."""
 
-from typing import Any, Dict, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql import Select
+
 
 T = TypeVar("T")
 
@@ -30,9 +31,8 @@ class PaginatedResponse(BaseModel, Generic[T]):
     total_pages: int
 
 
-async def paginate(db: AsyncSession, query: Select, pagination: PaginationParams) -> Dict[str, Any]:
-    """
-    Paginate a SQLAlchemy query.
+async def paginate(db: AsyncSession, query: Select, pagination: PaginationParams) -> dict[str, Any]:
+    """Paginate a SQLAlchemy query.
 
     Args:
         db: Database session
@@ -42,7 +42,6 @@ async def paginate(db: AsyncSession, query: Select, pagination: PaginationParams
     Returns:
         Dictionary with pagination info and items
     """
-
     # Get total count by creating a count query from the original query's subquery
     subquery = query.subquery()
     count_query = select(func.count()).select_from(subquery)

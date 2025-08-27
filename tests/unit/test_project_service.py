@@ -12,11 +12,9 @@ import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.domains.project.service import ProjectService
-from app.exceptions.base import NotFoundError, PermissionError, ValidationError
+from app.exceptions.base import NotFoundError, ValidationError
 from app.schemas.project import ProjectCreate, ProjectFilter, ProjectUpdate
 from app.shared.pagination import PaginationParams
-from models.project import Project
-from models.todo import Todo
 
 
 class TestProjectService:

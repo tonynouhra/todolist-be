@@ -6,8 +6,7 @@ with realistic default values and easy customization.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
@@ -54,7 +53,7 @@ class TodoFactory(SQLAlchemyModelFactory):
     description = factory.Faker("text", max_nb_chars=500)
     status = factory.Iterator(["todo", "in_progress", "done"])
     priority = factory.Faker("random_int", min=1, max=5)
-    due_date = factory.LazyFunction(lambda: datetime.now(timezone.utc) + timedelta(days=7))
+    due_date = factory.LazyFunction(lambda: datetime.now(UTC) + timedelta(days=7))
     ai_generated = False
     # user_id, project_id, parent_todo_id will be passed when creating
 
@@ -62,7 +61,7 @@ class TodoFactory(SQLAlchemyModelFactory):
     def set_completed_at(self, create, extracted, **kwargs):
         """Set completed_at if status is done."""
         if self.status == "done":
-            self.completed_at = datetime.now(timezone.utc)
+            self.completed_at = datetime.now(UTC)
 
 
 class SubtaskFactory(TodoFactory):
@@ -101,7 +100,7 @@ async def create_user_with_todos(
     user = UserFactory.create(**user_kwargs)
     todos = []
 
-    for i in range(num_todos):
+    for _i in range(num_todos):
         todo = TodoFactory.create(user_id=user.id)
         todos.append(todo)
 
@@ -119,7 +118,7 @@ async def create_project_with_todos(
     project = ProjectFactory.create(user_id=user_id)
     todos = []
 
-    for i in range(num_todos):
+    for _i in range(num_todos):
         todo = TodoFactory.create(user_id=user_id, project_id=project.id)
         todos.append(todo)
 
@@ -131,7 +130,7 @@ async def create_todo_with_subtasks(
     session,
     user_id: uuid.UUID,
     num_subtasks: int = 3,
-    project_id: Optional[uuid.UUID] = None,
+    project_id: uuid.UUID | None = None,
 ) -> tuple[Todo, list[Todo]]:
     """Create a parent todo with a specified number of subtasks."""
     TodoFactory._meta.sqlalchemy_session = session
@@ -140,7 +139,7 @@ async def create_todo_with_subtasks(
     parent_todo = TodoFactory.create(user_id=user_id, project_id=project_id, status="in_progress")
 
     subtasks = []
-    for i in range(num_subtasks):
+    for _i in range(num_subtasks):
         subtask = SubtaskFactory.create(
             user_id=user_id, parent_todo_id=parent_todo.id, project_id=project_id
         )
@@ -151,7 +150,7 @@ async def create_todo_with_subtasks(
 
 
 async def create_mixed_status_todos(
-    session, user_id: uuid.UUID, project_id: Optional[uuid.UUID] = None
+    session, user_id: uuid.UUID, project_id: uuid.UUID | None = None
 ) -> list[Todo]:
     """Create todos with different statuses for testing."""
     TodoFactory._meta.sqlalchemy_session = session
@@ -168,7 +167,7 @@ async def create_mixed_status_todos(
         user_id=user_id,
         project_id=project_id,
         status="todo",
-        due_date=datetime.now(timezone.utc) - timedelta(days=1),
+        due_date=datetime.now(UTC) - timedelta(days=1),
         priority=5,
     )
     todos.append(overdue_todo)

@@ -6,13 +6,11 @@ controller, testing all endpoints with various scenarios and edge cases.
 """
 
 import uuid
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import status
 from httpx import AsyncClient
-
-from app.schemas.user import UserLoginRequest, UserSignupRequest, UserUpdateRequest
 
 
 class TestUserAuthController:
@@ -260,7 +258,7 @@ class TestUserAuthController:
         # Test signup endpoint
         response = await client.options("/api/auth/signup")
         assert (
-            "access-control-allow-origin" in response.headers.keys()
+            "access-control-allow-origin" in response.headers
             or response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
         )
 

@@ -1,5 +1,4 @@
-"""
-AI Todo List API - Main Application Module
+"""AI Todo List API - Main Application Module.
 
 This module initializes the FastAPI application with proper configuration,
 middleware, routing, and lifecycle management for the AI-powered todo system.
@@ -10,6 +9,7 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
+
 
 # Add the project root to Python path if running directly
 if __name__ == "__main__":

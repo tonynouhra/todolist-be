@@ -1,6 +1,6 @@
 """AI service exceptions."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .base import BaseAppException
 
@@ -12,7 +12,7 @@ class AIServiceError(BaseAppException):
         self,
         message: str = "AI service error occurred",
         error_code: str = "AI_SERVICE_ERROR",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, error_code, details)
 
@@ -23,7 +23,7 @@ class AIServiceUnavailableError(AIServiceError):
     def __init__(
         self,
         message: str = "AI service is temporarily unavailable",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, "AI_SERVICE_UNAVAILABLE", details)
 
@@ -34,7 +34,7 @@ class AIQuotaExceededError(AIServiceError):
     def __init__(
         self,
         message: str = "AI service quota exceeded",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, "AI_QUOTA_EXCEEDED", details)
 
@@ -45,7 +45,7 @@ class AIInvalidRequestError(AIServiceError):
     def __init__(
         self,
         message: str = "Invalid request to AI service",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, "AI_INVALID_REQUEST", details)
 
@@ -56,7 +56,7 @@ class AITimeoutError(AIServiceError):
     def __init__(
         self,
         message: str = "AI service request timed out",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, "AI_TIMEOUT", details)
 
@@ -67,7 +67,7 @@ class AIParsingError(AIServiceError):
     def __init__(
         self,
         message: str = "Failed to parse AI service response",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, "AI_PARSING_ERROR", details)
 
@@ -78,7 +78,7 @@ class AIConfigurationError(AIServiceError):
     def __init__(
         self,
         message: str = "AI service is not properly configured",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, "AI_CONFIGURATION_ERROR", details)
 
@@ -89,7 +89,7 @@ class AIContentFilterError(AIServiceError):
     def __init__(
         self,
         message: str = "Content was blocked by AI safety filters",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message, "AI_CONTENT_FILTERED", details)
 
@@ -100,8 +100,8 @@ class AIRateLimitError(AIServiceError):
     def __init__(
         self,
         message: str = "AI service rate limit exceeded",
-        retry_after: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None,
+        retry_after: int | None = None,
+        details: dict[str, Any] | None = None,
     ):
         if details is None:
             details = {}
@@ -124,7 +124,7 @@ AI_ERROR_MAPPING = {
 
 
 def map_ai_error(
-    error_type: str, message: str, details: Optional[Dict[str, Any]] = None
+    error_type: str, message: str, details: dict[str, Any] | None = None
 ) -> AIServiceError:
     """Map error type to appropriate exception."""
     exception_class = AI_ERROR_MAPPING.get(error_type, AIServiceError)

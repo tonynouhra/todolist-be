@@ -1,6 +1,6 @@
 """Project service layer with business logic."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import and_, desc, func, or_
@@ -9,12 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.exceptions.base import NotFoundError, PermissionError, ValidationError
+from app.exceptions.base import NotFoundError, ValidationError
 from app.schemas.project import ProjectCreate, ProjectFilter, ProjectUpdate
 from app.shared.pagination import PaginationParams, paginate
 from models.project import Project
 from models.todo import Todo
-from models.user import User
 
 
 class ProjectService:
@@ -25,7 +24,6 @@ class ProjectService:
 
     async def create_project(self, project_data: ProjectCreate, user_id: UUID) -> Project:
         """Create a new project."""
-
         # Check if project name already exists for this user
         existing = await self._get_project_by_name_and_user(project_data.name, user_id)
         if existing:
@@ -46,13 +44,12 @@ class ProjectService:
             await self.db.rollback()
             raise ValidationError(f"Failed to create project: {str(e)}")
 
-    async def get_project_by_id(self, project_id: UUID, user_id: UUID) -> Optional[Project]:
+    async def get_project_by_id(self, project_id: UUID, user_id: UUID) -> Project | None:
         """Get a project by ID, ensuring it belongs to the user."""
         return await self._get_project_by_id_and_user(project_id, user_id)
 
-    async def get_project_with_todos(self, project_id: UUID, user_id: UUID) -> Optional[Project]:
+    async def get_project_with_todos(self, project_id: UUID, user_id: UUID) -> Project | None:
         """Get a project with its todos."""
-
         stmt = (
             select(Project)
             .options(selectinload(Project.todos))
@@ -65,24 +62,22 @@ class ProjectService:
     async def get_projects_list(
         self,
         user_id: UUID,
-        filters: Optional[ProjectFilter] = None,
-        pagination: Optional[PaginationParams] = None,
-    ) -> Dict[str, Any]:
+        filters: ProjectFilter | None = None,
+        pagination: PaginationParams | None = None,
+    ) -> dict[str, Any]:
         """Get paginated list of projects with optional filters."""
-
         # Build base query
         stmt = select(Project).where(Project.user_id == user_id)
 
         # Add filters
-        if filters:
-            if filters.search:
-                search_term = f"%{filters.search}%"
-                stmt = stmt.where(
-                    or_(
-                        Project.name.ilike(search_term),
-                        Project.description.ilike(search_term),
-                    )
+        if filters and filters.search:
+            search_term = f"%{filters.search}%"
+            stmt = stmt.where(
+                or_(
+                    Project.name.ilike(search_term),
+                    Project.description.ilike(search_term),
                 )
+            )
 
         # Add ordering
         stmt = stmt.order_by(desc(Project.updated_at))
@@ -106,7 +101,6 @@ class ProjectService:
         self, project_id: UUID, project_data: ProjectUpdate, user_id: UUID
     ) -> Project:
         """Update a project."""
-
         project = await self._get_project_by_id_and_user(project_id, user_id)
         if not project:
             raise NotFoundError("Project not found")
@@ -132,7 +126,6 @@ class ProjectService:
 
     async def delete_project(self, project_id: UUID, user_id: UUID) -> bool:
         """Delete a project and handle todos."""
-
         project = await self._get_project_by_id_and_user(project_id, user_id)
         if not project:
             raise NotFoundError("Project not found")
@@ -153,9 +146,8 @@ class ProjectService:
             await self.db.rollback()
             raise ValidationError(f"Failed to delete project: {str(e)}")
 
-    async def get_project_stats(self, user_id: UUID) -> Dict[str, Any]:
+    async def get_project_stats(self, user_id: UUID) -> dict[str, Any]:
         """Get project statistics for a user."""
-
         # Total projects
         total_stmt = select(func.count(Project.id)).where(Project.user_id == user_id)
         total_result = await self.db.execute(total_stmt)
@@ -192,9 +184,8 @@ class ProjectService:
 
     async def get_project_with_todo_counts(
         self, project_id: UUID, user_id: UUID
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Get project with todo counts."""
-
         project = await self._get_project_by_id_and_user(project_id, user_id)
         if not project:
             return None
@@ -232,13 +223,13 @@ class ProjectService:
     # Private helper methods
     async def _get_project_by_id_and_user(
         self, project_id: UUID, user_id: UUID
-    ) -> Optional[Project]:
+    ) -> Project | None:
         """Get project by ID and user ID."""
         stmt = select(Project).where(and_(Project.id == project_id, Project.user_id == user_id))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def _get_project_by_name_and_user(self, name: str, user_id: UUID) -> Optional[Project]:
+    async def _get_project_by_name_and_user(self, name: str, user_id: UUID) -> Project | None:
         """Get project by name and user ID."""
         stmt = select(Project).where(and_(Project.name == name, Project.user_id == user_id))
         result = await self.db.execute(stmt)
