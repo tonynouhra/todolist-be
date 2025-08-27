@@ -21,11 +21,7 @@ from app.exceptions.ai import (
     AIServiceUnavailableError,
     AITimeoutError,
 )
-from app.schemas.ai import (
-    FileAnalysisResponse,
-    GeneratedSubtask,
-    SubtaskGenerationResponse,
-)
+from app.schemas.ai import FileAnalysisResponse, GeneratedSubtask, SubtaskGenerationResponse
 
 
 class TestAIController:

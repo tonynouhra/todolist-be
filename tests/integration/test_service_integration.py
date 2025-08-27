@@ -15,11 +15,7 @@ from app.domains.ai.service import AIService
 from app.domains.project.service import ProjectService
 from app.domains.todo.service import TodoService
 from app.domains.user.service import UserService
-from app.schemas.ai import (
-    GeneratedSubtask,
-    SubtaskGenerationRequest,
-    SubtaskGenerationResponse,
-)
+from app.schemas.ai import GeneratedSubtask, SubtaskGenerationRequest, SubtaskGenerationResponse
 from app.schemas.project import ProjectCreate
 from app.schemas.todo import TodoCreate, TodoUpdate
 from models import Project, Todo, User

@@ -41,6 +41,7 @@ class TodoService:
         # Validate project exists if project_id provided
         if todo_data.project_id:
             from sqlalchemy import select
+
             from models.project import Project
 
             stmt = select(Project).where(

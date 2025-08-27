@@ -26,11 +26,7 @@ from app.exceptions.ai import (
     AIServiceUnavailableError,
     AITimeoutError,
 )
-from app.schemas.ai import (
-    FileAnalysisRequest,
-    GeneratedSubtask,
-    SubtaskGenerationRequest,
-)
+from app.schemas.ai import FileAnalysisRequest, GeneratedSubtask, SubtaskGenerationRequest
 from models.ai_interaction import AIInteraction
 
 
