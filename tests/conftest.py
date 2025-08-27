@@ -70,8 +70,10 @@ async def test_db():
 @pytest_asyncio.fixture
 async def client(test_db):
     """Create a test client with database dependency override."""
+    from httpx import ASGITransport
     app.dependency_overrides[get_db] = lambda: test_db
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
 
@@ -80,6 +82,7 @@ async def client(test_db):
 async def authenticated_client(test_db, test_user):
     """Create an authenticated test client."""
     from app.core.dependencies import validate_token
+    from httpx import ASGITransport
 
     def override_get_current_user():
         return test_user
@@ -91,7 +94,8 @@ async def authenticated_client(test_db, test_user):
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[validate_token] = override_validate_token
 
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
     app.dependency_overrides.clear()
