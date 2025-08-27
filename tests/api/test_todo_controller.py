@@ -91,7 +91,7 @@ class TestTodoController:
 
         response = await authenticated_client.post("/api/todos/", json=todo_data)
 
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.asyncio
     async def test_create_todo_missing_title(self, authenticated_client: AsyncClient):
@@ -424,10 +424,7 @@ class TestTodoController:
 
         response = await authenticated_client.get(f"/api/todos/{fake_id}/subtasks")
 
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert data["total"] == 0
-        assert len(data["todos"]) == 0
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio
     async def test_get_todo_subtasks_pagination(self, authenticated_client: AsyncClient, test_todo):

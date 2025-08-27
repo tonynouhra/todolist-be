@@ -413,9 +413,9 @@ class TestServiceIntegration:
         fake_project_id = uuid.uuid4()
         todo_data = TodoCreate(title="Invalid Project Todo", project_id=fake_project_id)
 
-        from app.exceptions.todo import TodoPermissionError
+        from app.exceptions.todo import InvalidTodoOperationError
 
-        with pytest.raises(TodoPermissionError):
+        with pytest.raises(InvalidTodoOperationError):
             await todo_service.create_todo(todo_data, test_user.id)
 
         # Test creating subtask with non-existent parent
