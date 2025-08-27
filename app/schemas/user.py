@@ -1,6 +1,5 @@
 """User-related Pydantic schemas for request/response validation."""
 
-
 from pydantic import EmailStr, Field, field_validator
 
 from .base import BaseModelSchema, BaseSchema

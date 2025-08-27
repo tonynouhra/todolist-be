@@ -1,6 +1,5 @@
 """Todo-related exceptions."""
 
-
 from .base import BaseAppException
 
 

@@ -187,10 +187,13 @@ class TestServiceIntegration:
             ai_model="gemini-pro",
         )
 
-        with patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            return_value=mock_response,
-        ), patch.object(todo_service, "_generate_ai_subtasks") as mock_generate:
+        with (
+            patch(
+                "app.domains.ai.service.AIService.generate_subtasks",
+                return_value=mock_response,
+            ),
+            patch.object(todo_service, "_generate_ai_subtasks") as mock_generate,
+        ):
             # Simulate the AI subtask generation process
             async def create_subtasks(todo):
                 for subtask_data in mock_subtasks:
