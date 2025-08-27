@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException, Request, status
-from jose import jwt
+import jwt
 
 from app.core.dependencies import get_current_user, validate_token
 from app.core.security import ClerkAuthenticator
