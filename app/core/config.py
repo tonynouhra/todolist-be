@@ -148,6 +148,10 @@ class Settings(BaseSettings):
         default=1000, description="Maximum WebSocket connections"
     )
 
+    # ===== Server Settings =====
+    host: str = Field(default="127.0.0.1", description="Host to bind the server")
+    port: int = Field(default=8000, description="Port to bind the server")
+
     # ===== Development Settings =====
     reload: bool = Field(default=False, description="Auto-reload in development")
     docs_url: str = Field(default="/docs", description="API documentation URL")

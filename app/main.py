@@ -235,8 +235,8 @@ def main():
 
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=settings.host,  # Use configurable host instead of hardcoded 0.0.0.0
+        port=settings.port,  # Use configurable port instead of hardcoded 8000
         reload=settings.environment == "development",
         log_level="info",
     )
