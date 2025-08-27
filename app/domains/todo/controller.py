@@ -221,9 +221,8 @@ async def get_todo_subtasks(
     service = TodoService(db)
     parent_todo = await service.get_todo_by_id(todo_id, current_user.id)
     if not parent_todo:
-        return TodoListResponse(
-            todos=[], total=0, page=page, size=size, has_next=False, has_prev=False
-        )
+        from app.exceptions.base import NotFoundError
+        raise NotFoundError("Todo not found")
 
     filters = TodoFilter(parent_todo_id=todo_id)
     pagination = PaginationParams(page=page, size=size)

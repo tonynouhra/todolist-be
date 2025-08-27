@@ -453,7 +453,7 @@ class PartitionedTodoService:
             project = result.scalar_one_or_none()
 
             if not project:
-                raise TodoPermissionError("Project not found or access denied")
+                raise InvalidTodoOperationError("Project not found")
 
     async def _generate_ai_subtasks(self, todo: TodoActive) -> None:
         """Generate AI subtasks for a todo."""

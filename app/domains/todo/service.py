@@ -47,8 +47,8 @@ class TodoService:
             result = await self.db.execute(stmt)
             project = result.scalar_one_or_none()
             if not project:
-                from app.exceptions.todo import TodoPermissionError
-                raise TodoPermissionError("Project not found or access denied")
+                from app.exceptions.todo import InvalidTodoOperationError
+                raise InvalidTodoOperationError("Project not found")
 
         # Validate parent todo exists and belongs to user
         if todo_data.parent_todo_id:
@@ -321,7 +321,7 @@ class TodoService:
             project = result.scalar_one_or_none()
 
             if not project:
-                raise TodoPermissionError("Project not found or access denied")
+                raise InvalidTodoOperationError("Project not found")
 
     async def _generate_ai_subtasks(self, todo: Todo) -> None:
         """Generate AI subtasks for a todo."""
