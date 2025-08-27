@@ -157,7 +157,12 @@ class PartitionedTodoService:
         for field, value in update_data.items():
             if hasattr(todo, field):
                 # Normalize datetime fields
-                if field == "due_date" and value is not None or field == "completed_at" and value is not None:
+                if (
+                    field == "due_date"
+                    and value is not None
+                    or field == "completed_at"
+                    and value is not None
+                ):
                     value = self._normalize_datetime(value)
                 setattr(todo, field, value)
 

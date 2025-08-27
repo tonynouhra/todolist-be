@@ -221,9 +221,7 @@ class ProjectService:
         return project_dict
 
     # Private helper methods
-    async def _get_project_by_id_and_user(
-        self, project_id: UUID, user_id: UUID
-    ) -> Project | None:
+    async def _get_project_by_id_and_user(self, project_id: UUID, user_id: UUID) -> Project | None:
         """Get project by ID and user ID."""
         stmt = select(Project).where(and_(Project.id == project_id, Project.user_id == user_id))
         result = await self.db.execute(stmt)

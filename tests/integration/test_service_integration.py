@@ -218,9 +218,7 @@ class TestServiceIntegration:
             )
 
             # Verify subtasks were created
-            todo_with_subtasks = await todo_service.get_todo_with_subtasks(
-                ai_todo.id, test_user.id
-            )
+            todo_with_subtasks = await todo_service.get_todo_with_subtasks(ai_todo.id, test_user.id)
 
             assert len(todo_with_subtasks.subtasks) == 3
             for subtask in todo_with_subtasks.subtasks:

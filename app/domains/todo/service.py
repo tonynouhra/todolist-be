@@ -95,7 +95,9 @@ class TodoService:
                     await self.db.rollback()
             except Exception as rollback_error:
                 # If rollback fails, log the error but continue - session cleanup will be handled by the framework
-                logger.warning(f"Failed to rollback transaction during error handling: {rollback_error}")
+                logger.warning(
+                    f"Failed to rollback transaction during error handling: {rollback_error}"
+                )
 
             if isinstance(e, SQLAlchemyError):
                 raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}")
@@ -159,9 +161,7 @@ class TodoService:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def update_todo(
-        self, todo_id: UUID, todo_data: TodoUpdate, user_id: UUID
-    ) -> Todo | None:
+    async def update_todo(self, todo_id: UUID, todo_data: TodoUpdate, user_id: UUID) -> Todo | None:
         """Update a todo."""
         todo = await self._get_todo_by_id_and_user(todo_id, user_id)
         if not todo:
@@ -180,7 +180,12 @@ class TodoService:
         for field, value in update_data.items():
             if hasattr(todo, field):
                 # Normalize datetime fields
-                if field == "due_date" and value is not None or field == "completed_at" and value is not None:
+                if (
+                    field == "due_date"
+                    and value is not None
+                    or field == "completed_at"
+                    and value is not None
+                ):
                     value = self._normalize_datetime(value)
                 setattr(todo, field, value)
 
