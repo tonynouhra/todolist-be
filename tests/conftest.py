@@ -71,6 +71,7 @@ async def test_db():
 async def client(test_db):
     """Create a test client with database dependency override."""
     from httpx import ASGITransport
+
     app.dependency_overrides[get_db] = lambda: test_db
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
