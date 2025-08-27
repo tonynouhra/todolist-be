@@ -1,6 +1,6 @@
 
 # ===== Core Framework =====
-fastapi==0.104.0
+fastapi>=0.109.1  # Fix PYSEC-2024-38
 uvicorn[standard]==0.24.0
 
 # ===== Data Validation & Settings =====
@@ -14,9 +14,9 @@ alembic==1.12.0
 asyncpg==0.28.0
 
 # ===== Authentication & Security =====
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]>=3.4.0  # Fix PYSEC-2024-232, PYSEC-2024-233
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+python-multipart>=0.0.18  # Fix GHSA-2jv5-9r88-3w3p, GHSA-59g5-xgcq-4qw3
 
 # ===== AI Integration =====
 google-generativeai==0.3.0
@@ -35,6 +35,11 @@ aiofiles==23.2.0
 
 # ===== Security Updates =====
 setuptools>=78.1.1  # Fix PYSEC-2022-43012 and PYSEC-2025-49
+# Explicit dependencies for security fixes
+h11>=0.16.0  # Fix GHSA-vqfr-h8mv-ghfj
+starlette>=0.47.2  # Fix GHSA-f96h-pmfr-66vw, GHSA-2c2j-9gv5-cj73
+urllib3>=2.5.0  # Fix GHSA-pq67-6m6q-mj2v
+ecdsa>=0.20.0  # Fix GHSA-wj6h-64fc-37mp
 
 # ===== Utilities =====
 python-dotenv==1.0.0
@@ -44,7 +49,7 @@ python-slugify==8.0.1
 emails==0.6
 
 # ===== Monitoring & Logging =====
-sentry-sdk[fastapi]==1.32.0
+sentry-sdk[fastapi]>=1.45.1  # Fix GHSA-g92j-qhmh-64v2
 
 # ===== Development Dependencies =====
 pytest==7.4.0
@@ -55,7 +60,7 @@ factory-boy==3.3.0
 faker==19.6.0
 
 # ===== Code Quality =====
-black==23.9.0
+black>=24.3.0  # Fix PYSEC-2024-48
 isort==5.12.0
 flake8==6.0.0
 mypy==1.5.0
