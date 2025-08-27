@@ -493,7 +493,7 @@ class TestTodoService:
         """Test project ownership validation failure."""
         service = TodoService(test_db)
 
-        with pytest.raises(TodoPermissionError):
+        with pytest.raises(InvalidTodoOperationError):
             await service._validate_project_ownership(test_project.id, test_user_2.id)
 
     @pytest.mark.asyncio
