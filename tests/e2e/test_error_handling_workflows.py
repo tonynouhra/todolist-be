@@ -222,9 +222,12 @@ class TestErrorHandlingWorkflows:
             assert isinstance(data["data"]["suggestions"], list)
 
         # Step 2: Test quota exceeded error
-        with patch("app.domains.ai.service.AIService._initialize_client"), patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIQuotaExceededError("API quota exceeded"),
+        with (
+            patch("app.domains.ai.service.AIService._initialize_client"),
+            patch(
+                "app.domains.ai.service.AIService.generate_subtasks",
+                side_effect=AIQuotaExceededError("API quota exceeded"),
+            ),
         ):
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=ai_request_data
@@ -236,9 +239,12 @@ class TestErrorHandlingWorkflows:
             assert "AI_QUOTA_EXCEEDED" in data["data"]["error_code"]
 
         # Step 3: Test timeout error
-        with patch("app.domains.ai.service.AIService._initialize_client"), patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AITimeoutError("Request timed out"),
+        with (
+            patch("app.domains.ai.service.AIService._initialize_client"),
+            patch(
+                "app.domains.ai.service.AIService.generate_subtasks",
+                side_effect=AITimeoutError("Request timed out"),
+            ),
         ):
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=ai_request_data
@@ -250,9 +256,12 @@ class TestErrorHandlingWorkflows:
             assert "AI_TIMEOUT" in data["data"]["error_code"]
 
         # Step 4: Test generic AI service error
-        with patch("app.domains.ai.service.AIService._initialize_client"), patch(
-            "app.domains.ai.service.AIService.generate_subtasks",
-            side_effect=AIServiceError("Generic AI error"),
+        with (
+            patch("app.domains.ai.service.AIService._initialize_client"),
+            patch(
+                "app.domains.ai.service.AIService.generate_subtasks",
+                side_effect=AIServiceError("Generic AI error"),
+            ),
         ):
             response = await authenticated_client.post(
                 "/api/ai/generate-subtasks", json=ai_request_data
