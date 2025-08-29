@@ -9,9 +9,10 @@ Classes:
     Todo: Represents a todo item with hierarchical structure and AI capabilities.
 """
 
-from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, ForeignKey
-from sqlalchemy.orm import relationship, backref
-from .base import BaseModel, UUID
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import backref, relationship
+
+from .base import UUID, BaseModel
 
 
 class Todo(BaseModel):

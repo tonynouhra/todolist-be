@@ -30,8 +30,9 @@ files : sqlalchemy.orm.relationship
     cascading deletes for related objects.
 """
 
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Boolean, Column, String
 from sqlalchemy.orm import relationship
+
 from .base import BaseModel
 
 

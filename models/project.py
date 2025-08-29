@@ -2,9 +2,10 @@
 Project model for organizing todos.
 """
 
-from sqlalchemy import Column, String, Text, ForeignKey
+from sqlalchemy import Column, ForeignKey, String, Text
 from sqlalchemy.orm import relationship
-from .base import BaseModel, UUID
+
+from .base import UUID, BaseModel
 
 
 class Project(BaseModel):

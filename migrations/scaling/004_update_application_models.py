@@ -8,13 +8,14 @@ This file contains the new model definitions for the partitioned database struct
 Replace the existing models with these updated versions.
 """
 
-from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, ForeignKey, CheckConstraint
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.sql import func
-from models.base import BaseModel
 import uuid
 
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import backref, relationship
+from sqlalchemy.sql import func
+
+from models.base import BaseModel
 
 # ====================================================================
 # UPDATED TODO MODELS FOR PARTITIONED STRUCTURE
@@ -252,9 +253,9 @@ def get_all_user_todos(db_session, user_id: UUID, include_archived: bool = False
     Helper function to get all todos for a user from both active and archived tables.
     Use this instead of direct model queries during transition period.
     """
-    from sqlalchemy.orm import Session
     from sqlalchemy import union_all
-    
+    from sqlalchemy.orm import Session
+
     # Get active todos
     active_query = db_session.query(TodoActive).filter(TodoActive.user_id == user_id)
     

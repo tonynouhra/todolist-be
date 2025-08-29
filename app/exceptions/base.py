@@ -37,7 +37,7 @@ class NotFoundError(BaseAppException):
         super().__init__(message=message, status_code=404, error_code="NOT_FOUND", details=details)
 
 
-class PermissionError(BaseAppException):
+class AppPermissionError(BaseAppException):
     """Exception raised when user doesn't have permission to access a resource."""
 
     def __init__(

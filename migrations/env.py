@@ -1,10 +1,9 @@
 import os
 import sys
-from pathlib import Path
 from logging.config import fileConfig
+from pathlib import Path
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -14,11 +13,13 @@ sys.path.insert(0, str(project_root))
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+
 load_dotenv()
+
+from models import ai_interaction, file, project, todo, user
 
 # Import all models for autogenerate support
 from models.base import Base
-from models import user, todo, project, file, ai_interaction
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

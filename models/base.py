@@ -7,11 +7,12 @@ UUID type for primary key generation and automatically manages timestamps for
 creation and updates.
 """
 
+import uuid
+from datetime import datetime
+
 from sqlalchemy import Column, DateTime, String, TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.ext.declarative import declarative_base
-import uuid
-from datetime import datetime
 
 Base = declarative_base()
 

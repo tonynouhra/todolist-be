@@ -15,20 +15,22 @@ Classes:
     AITodoInteraction: AI interactions partitioned by user_id
 """
 
+import uuid
+
 from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
     Column,
+    DateTime,
+    ForeignKey,
+    Integer,
     String,
     Text,
-    Integer,
-    DateTime,
-    Boolean,
-    ForeignKey,
-    CheckConstraint,
 )
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func
-from .base import BaseModel, UUID
-import uuid
+
+from .base import UUID, BaseModel
 
 
 class TodoActive(BaseModel):

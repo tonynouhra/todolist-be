@@ -10,7 +10,6 @@ from app.database import get_db
 from app.domains.user.service import UserService
 from models import User
 
-
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
@@ -49,7 +48,7 @@ async def validate_token(token: str = Depends(security)) -> dict:
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Token validation error: {str(e)}")
+        logger.error("Token validation error: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed",
@@ -100,7 +99,7 @@ async def get_current_user(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"User authentication error: {str(e)}")
+        logger.error("User authentication error: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Authentication service error",
@@ -131,5 +130,5 @@ async def get_optional_user(
         return user if user and user.is_active else None
 
     except Exception as e:
-        logger.warning(f"Optional user authentication failed: {str(e)}")
+        logger.warning("Optional user authentication failed: %s", str(e))
         return None

@@ -10,12 +10,6 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
-
-# Add the project root to Python path if running directly
-if __name__ == "__main__":
-    project_root = Path(__file__).parent.parent
-    sys.path.insert(0, str(project_root))
-
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +19,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.config import settings
 from app.database import engine, get_db
 from models import Base
+
+# Add the project root to Python path if running directly
+if __name__ == "__main__":
+    project_root = Path(__file__).parent.parent
+    sys.path.insert(0, str(project_root))
 
 
 @asynccontextmanager
@@ -54,7 +53,7 @@ async def lifespan(_app: FastAPI):
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
-    app = FastAPI(
+    fastapi_app = FastAPI(
         title="AI Todo List API",
         description="Intelligent task management system with AI-powered sub-task generation",
         version="1.0.0",
@@ -64,30 +63,30 @@ def create_app() -> FastAPI:
     )
 
     # Add middleware
-    setup_middleware(app)
+    setup_middleware(fastapi_app)
 
     # Add exception handlers
-    setup_exception_handlers(app)
+    setup_exception_handlers(fastapi_app)
 
     # Include routers
-    setup_routers(app)
+    setup_routers(fastapi_app)
 
-    return app
+    return fastapi_app
 
 
-def setup_middleware(app: FastAPI):
+def setup_middleware(fastapi_app: FastAPI):
     """Configure application middleware."""
     # CORS middleware
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
+        allow_origins=settings.allowed_origins_list,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     # Request ID middleware
-    @app.middleware("http")
+    @fastapi_app.middleware("http")
     async def add_request_id(request: Request, call_next):
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
@@ -96,10 +95,10 @@ def setup_middleware(app: FastAPI):
         return response
 
 
-def setup_exception_handlers(app: FastAPI):
+def setup_exception_handlers(fastapi_app: FastAPI):
     """Configure global exception handlers."""
 
-    @app.exception_handler(StarletteHTTPException)
+    @fastapi_app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         # Handle custom exceptions that have structured detail
         if isinstance(exc.detail, dict) and "message" in exc.detail:
@@ -123,7 +122,7 @@ def setup_exception_handlers(app: FastAPI):
             },
         )
 
-    @app.exception_handler(RequestValidationError)
+    @fastapi_app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
         # Convert errors to JSON-serializable format
         errors = []
@@ -150,7 +149,7 @@ def setup_exception_handlers(app: FastAPI):
         )
 
 
-def setup_routers(app: FastAPI):
+def setup_routers(fastapi_app: FastAPI):
     """Configure application routers."""
     # Import routers
     from app.domains.ai.controller import router as ai_router
@@ -159,7 +158,7 @@ def setup_routers(app: FastAPI):
     from app.domains.user.controller import router as user_router
 
     # Health check endpoint
-    @app.get("/health")
+    @fastapi_app.get("/health")
     async def health_check():
         """Comprehensive health check endpoint."""
         try:
@@ -208,7 +207,7 @@ def setup_routers(app: FastAPI):
                 },
             )
 
-    @app.get("/")
+    @fastapi_app.get("/")
     async def root():
         """Root endpoint with API information."""
         return {
@@ -219,10 +218,10 @@ def setup_routers(app: FastAPI):
         }
 
     # Include domain routers
-    app.include_router(user_router)
-    app.include_router(todo_router)
-    app.include_router(project_router)
-    app.include_router(ai_router)
+    fastapi_app.include_router(user_router)
+    fastapi_app.include_router(todo_router)
+    fastapi_app.include_router(project_router)
+    fastapi_app.include_router(ai_router)
 
 
 # Create the application instance

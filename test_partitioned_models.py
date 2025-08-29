@@ -4,8 +4,8 @@ Test script to validate the new partitioned models work correctly.
 This script tests model imports, relationships, and basic functionality.
 """
 
-import sys
 import os
+import sys
 import uuid
 from datetime import datetime, timezone
 
@@ -18,15 +18,15 @@ def test_model_imports():
     print("Testing model imports...")
 
     try:
+        from models.file import File
+        from models.project import Project
         from models.todo_partitioned import (
-            TodoActive,
-            TodoArchived,
             AITodoInteraction,
             Todo,
+            TodoActive,
+            TodoArchived,
         )
         from models.user import User
-        from models.project import Project
-        from models.file import File
 
         print("✅ All models imported successfully")
         return True
@@ -40,7 +40,7 @@ def test_model_creation():
     print("Testing model instance creation...")
 
     try:
-        from models.todo_partitioned import TodoActive, TodoArchived, AITodoInteraction
+        from models.todo_partitioned import AITodoInteraction, TodoActive, TodoArchived
 
         user_id = uuid.uuid4()
 
@@ -91,7 +91,7 @@ def test_model_methods():
     print("Testing model methods...")
 
     try:
-        from models.todo_partitioned import TodoActive, TodoArchived, Todo
+        from models.todo_partitioned import Todo, TodoActive, TodoArchived
 
         user_id = uuid.uuid4()
 

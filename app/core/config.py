@@ -12,10 +12,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class EnvironmentEnum(str, Enum):
-    development = "development"
-    testing = "testing"
-    staging = "staging"
-    production = "production"
+    DEVELOPMENT = "development"
+    TESTING = "testing"
+    STAGING = "staging"
+    PRODUCTION = "production"
 
 
 class LogLevelEnum(str, Enum):
@@ -27,8 +27,8 @@ class LogLevelEnum(str, Enum):
 
 
 class LogFormatEnum(str, Enum):
-    simple = "simple"
-    json = "json"
+    SIMPLE = "simple"
+    JSON = "json"
 
 
 class Settings(BaseSettings):
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # ===== Application Settings =====
     app_name: str = Field(default="AI Todo List API", description="Application name")
     environment: EnvironmentEnum = Field(
-        default=EnvironmentEnum.development, description="Environment type"
+        default=EnvironmentEnum.DEVELOPMENT, description="Environment type"
     )
     debug: bool = Field(default=False, description="Debug mode")
     version: str = Field(default="1.0.0", description="Application version")
@@ -113,7 +113,7 @@ class Settings(BaseSettings):
     )
 
     @property
-    def ALLOWED_ORIGINS(self) -> list[str]:  # noqa: N802
+    def allowed_origins_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""
         if isinstance(self.allowed_origins, str):
             return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
@@ -136,7 +136,7 @@ class Settings(BaseSettings):
 
     # ===== Monitoring & Logging =====
     log_level: LogLevelEnum = Field(default=LogLevelEnum.INFO, description="Logging level")
-    log_format: LogFormatEnum = Field(default=LogFormatEnum.json, description="Log format")
+    log_format: LogFormatEnum = Field(default=LogFormatEnum.JSON, description="Log format")
     sentry_dsn: str | None = Field(default=None, description="Sentry DSN for error tracking")
 
     # ===== WebSocket Configuration =====
@@ -159,15 +159,15 @@ class Settings(BaseSettings):
     # ===== Computed Properties =====
     @property
     def is_development(self) -> bool:
-        return self.environment == EnvironmentEnum.development
+        return self.environment == EnvironmentEnum.DEVELOPMENT
 
     @property
     def is_production(self) -> bool:
-        return self.environment == EnvironmentEnum.production
+        return self.environment == EnvironmentEnum.PRODUCTION
 
     @property
     def is_testing(self) -> bool:
-        return self.environment == EnvironmentEnum.testing
+        return self.environment == EnvironmentEnum.TESTING
 
     @property
     def database_url_sync(self) -> str:
@@ -194,7 +194,7 @@ class Settings(BaseSettings):
     def storage_type(self) -> str:
         if self.cloudflare_access_key_id:
             return "cloudflare_r2"
-        elif self.aws_access_key_id:
+        if self.aws_access_key_id:
             return "aws_s3"
         return "none"
 
@@ -206,7 +206,7 @@ class Settings(BaseSettings):
             lv = v.lower()
             if lv in ["dev", "develop"]:
                 return "development"
-            elif lv in ["prod"]:
+            if lv in ["prod"]:
                 return "production"
         return v
 

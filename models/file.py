@@ -2,9 +2,10 @@
 File model for file attachments.
 """
 
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from .base import BaseModel, UUID
+
+from .base import UUID, BaseModel
 
 
 class File(BaseModel):

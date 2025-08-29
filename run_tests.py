@@ -6,10 +6,10 @@ This script provides convenient commands to run different types of tests
 with appropriate configurations and options.
 """
 
-import os
-import sys
-import subprocess
 import argparse
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -156,10 +156,10 @@ def run_tests_by_marker(marker, verbose=False):
 def check_test_dependencies():
     """Check if test dependencies are available."""
     try:
-        import pytest
-        import httpx
         import factory
         import faker
+        import httpx
+        import pytest
 
         print("✅ Core test dependencies available")
         return True
@@ -249,6 +249,3 @@ Examples:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
-

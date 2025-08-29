@@ -17,7 +17,6 @@ from app.schemas.user import (
 )
 from models.user import User
 
-
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 auth = ClerkAuthenticator()
 

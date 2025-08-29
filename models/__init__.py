@@ -2,15 +2,15 @@
 Models package initialization.
 """
 
+from .ai_interaction import AIInteraction
 from .base import Base, BaseModel
-from .user import User
+from .file import File
 from .project import Project
 from .todo import Todo
-from .file import File
-from .ai_interaction import AIInteraction
 
 # New partitioned models
-from .todo_partitioned import TodoActive, TodoArchived, AITodoInteraction
+from .todo_partitioned import AITodoInteraction, TodoActive, TodoArchived
+from .user import User
 
 __all__ = [
     "Base",

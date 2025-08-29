@@ -37,7 +37,6 @@ from models.ai_interaction import AIInteraction
 from models.file import File
 from models.todo import Todo
 
-
 logger = logging.getLogger(__name__)
 
 

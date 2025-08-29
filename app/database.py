@@ -17,22 +17,21 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from app.core.config import settings
 
-
 # For testing, prioritize TEST_DATABASE_URL
-db_url = None
+DB_URL = None
 if os.getenv("TESTING") == "true":
-    db_url = os.getenv("TEST_DATABASE_URL") or settings.test_database_url
+    DB_URL = os.getenv("TEST_DATABASE_URL") or settings.test_database_url
 else:
-    db_url = settings.database_url
+    DB_URL = settings.database_url
 
-db_url = (db_url or "").strip()
-if not db_url:
+DB_URL = (DB_URL or "").strip()
+if not DB_URL:
     raise RuntimeError(
         "DATABASE_URL is not configured. Set it in the environment or .env file (e.g., DATABASE_URL=postgresql+asyncpg://<user>:<pass>@<host>/<db>)."
     )
 
 engine = create_async_engine(
-    db_url,
+    DB_URL,
     echo=settings.debug,
 )
 
