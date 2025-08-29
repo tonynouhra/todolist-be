@@ -53,8 +53,6 @@ known_first_party = ["app", "models", "tests"]
 known_third_party = ["fastapi", "sqlalchemy", "pydantic", "pytest"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 skip_gitignore = true
-# Skip import checking since we use ruff for this
-check_untyped_defs = false
 
 [tool.mypy]
 python_version = "3.11"
