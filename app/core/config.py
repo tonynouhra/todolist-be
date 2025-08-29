@@ -12,10 +12,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class EnvironmentEnum(str, Enum):
-    DEVELOPMENT = "development"
-    TESTING = "testing"
-    STAGING = "staging"
-    PRODUCTION = "production"
+    development = "development"
+    testing = "testing"
+    staging = "staging"
+    production = "production"
 
 
 class LogLevelEnum(str, Enum):
@@ -27,8 +27,8 @@ class LogLevelEnum(str, Enum):
 
 
 class LogFormatEnum(str, Enum):
-    SIMPLE = "simple"
-    JSON = "json"
+    simple = "simple"
+    json = "json"
 
 
 class Settings(BaseSettings):
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # ===== Application Settings =====
     app_name: str = Field(default="AI Todo List API", description="Application name")
     environment: EnvironmentEnum = Field(
-        default=EnvironmentEnum.DEVELOPMENT, description="Environment type"
+        default=EnvironmentEnum.development, description="Environment type"
     )
     debug: bool = Field(default=False, description="Debug mode")
     version: str = Field(default="1.0.0", description="Application version")
@@ -136,7 +136,7 @@ class Settings(BaseSettings):
 
     # ===== Monitoring & Logging =====
     log_level: LogLevelEnum = Field(default=LogLevelEnum.INFO, description="Logging level")
-    log_format: LogFormatEnum = Field(default=LogFormatEnum.JSON, description="Log format")
+    log_format: LogFormatEnum = Field(default=LogFormatEnum.json, description="Log format")
     sentry_dsn: str | None = Field(default=None, description="Sentry DSN for error tracking")
 
     # ===== WebSocket Configuration =====
@@ -159,15 +159,15 @@ class Settings(BaseSettings):
     # ===== Computed Properties =====
     @property
     def is_development(self) -> bool:
-        return self.environment == EnvironmentEnum.DEVELOPMENT
+        return self.environment == EnvironmentEnum.development
 
     @property
     def is_production(self) -> bool:
-        return self.environment == EnvironmentEnum.PRODUCTION
+        return self.environment == EnvironmentEnum.production
 
     @property
     def is_testing(self) -> bool:
-        return self.environment == EnvironmentEnum.TESTING
+        return self.environment == EnvironmentEnum.testing
 
     @property
     def database_url_sync(self) -> str:

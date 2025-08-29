@@ -49,8 +49,6 @@ class TodoService:
             result = await self.db.execute(stmt)
             project = result.scalar_one_or_none()
             if not project:
-                from app.exceptions.todo import InvalidTodoOperationError
-
                 raise InvalidTodoOperationError("Project not found")
 
         # Validate parent todo exists and belongs to user

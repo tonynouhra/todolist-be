@@ -510,10 +510,11 @@ class TestTodoService:
 
         # Mock the database session to raise SQLAlchemy error
         from sqlalchemy.exc import SQLAlchemyError
+        from app.exceptions.todo import InvalidTodoOperationError
 
         with (
             patch.object(test_db, "add", side_effect=SQLAlchemyError("Database connection error")),
-            pytest.raises(SQLAlchemyError),
+            pytest.raises(InvalidTodoOperationError),
         ):
             await service.create_todo(todo_data, test_user.id)
 
