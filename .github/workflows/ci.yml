@@ -1,10 +1,26 @@
 name: CI/CD Pipeline
 
+# This pipeline runs comprehensive tests and builds production-ready Docker images
+# 
+# Image Tagging Strategy:
+# - dev-YYYYMMDD-HHmmss: Development builds from main branch
+# - staging-YYYYMMDD-HHmmss: Staging builds from staging branch  
+# - prod-YYYYMMDD-HHmmss: Production builds from main branch (non-PR)
+# - latest: Latest production build from main branch
+# - pr-XXX: Pull request builds
+# - Branch name: Feature branch builds
+#
+# Registry Configuration:
+# 1. Uncomment Docker Hub login step and set DOCKER_USERNAME/DOCKER_PASSWORD secrets
+# 2. For GCP: Update image names to gcr.io/$PROJECT_ID/todolist-backend
+# 3. For GAR: Update to us-central1-docker.pkg.dev/$PROJECT_ID/todolist/backend
+# 4. Set push: true in build step once registry is configured
+
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, staging]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, staging]
 
 env:
   PYTHON_VERSION: "3.11"
@@ -459,6 +475,7 @@ jobs:
           echo "Dependency check job: ${{ needs.dependency-check.result }}"
           echo "Docker job: ${{ needs.docker.result }}"
           echo "Performance job: ${{ needs.performance.result }}"
+          echo "Build production image job: ${{ needs.build-production-image.result }}"
           
           if [[ "${{ needs.test.result }}" == "failure" || 
                 "${{ needs.code-quality.result }}" == "failure" || 
@@ -467,6 +484,9 @@ jobs:
                 "${{ needs.performance.result }}" == "failure" ]]; then
             echo "❌ CI Pipeline failed"
             exit 1
+          elif [[ "${{ needs.build-production-image.result }}" == "success" ]]; then
+            echo "✅ CI Pipeline passed and production image built successfully"
+            echo "🚀 Image ready for deployment: ${{ needs.build-production-image.outputs.image-tag }}"
           else
-            echo "✅ CI Pipeline passed"
+            echo "✅ CI Pipeline passed (production image build skipped or failed)"
           fi
