@@ -20,6 +20,7 @@ from app.core.config import settings
 from app.database import engine, get_db
 from models import Base
 
+
 # Add the project root to Python path if running directly
 if __name__ == "__main__":
     project_root = Path(__file__).parent.parent

@@ -17,6 +17,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from app.core.config import settings
 
+
 # For testing, prioritize TEST_DATABASE_URL
 DB_URL = None
 if os.getenv("TESTING") == "true":

@@ -52,6 +52,9 @@ ensure_newline_before_comments = true
 known_first_party = ["app", "models", "tests"]
 known_third_party = ["fastapi", "sqlalchemy", "pydantic", "pytest"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip_gitignore = true
+# Skip import checking since we use ruff for this
+check_untyped_defs = false
 
 [tool.mypy]
 python_version = "3.11"
@@ -164,3 +167,35 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning",
     "ignore::RuntimeWarning:google.*",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [
+    ".eggs",
+    ".git", 
+    ".hg",
+    ".mypy_cache",
+    ".tox",
+    ".venv",
+    "build",
+    "dist",
+    "migrations",
+    "alembic"
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]  # Line too long (handled by black)
+
+[tool.ruff.lint.isort]
+profile = "black"
+line-length = 100
+multi-line-output = 3
+include-trailing-comma = true
+force-grid-wrap = 0
+use-parentheses = true
+ensure-newline-before-comments = true
+known-first-party = ["app", "models", "tests"]
+known-third-party = ["fastapi", "sqlalchemy", "pydantic", "pytest"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
