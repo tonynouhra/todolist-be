@@ -20,10 +20,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tools
+      - name: Install modern quality tools
         run: |
           python -m pip install --upgrade pip
-          pip install ruff black isort
+          pip install ruff black pylint
 
       - name: Check PR size
         run: |
@@ -49,26 +49,32 @@ jobs:
             echo "✅ No obvious breaking changes detected"
           fi
 
-      - name: Check code formatting
+      - name: Check code formatting and imports
         run: |
           # Check if code needs formatting
-          echo "Checking code formatting..."
+          echo "🔍 Checking code formatting with Black..."
           if ! black --check app/ tests/; then
             echo "❌ Code formatting issues found. Run 'black app/ tests/' to fix."
             exit 1
           fi
+          echo "✅ Black formatting looks good"
           
-          if ! isort --check-only app/ tests/; then
-            echo "❌ Import sorting issues found. Run 'isort app/ tests/' to fix."
+          echo "🔍 Checking imports and linting with Ruff..."
+          if ! ruff check app/ tests/ --output-format=github; then
+            echo "❌ Import sorting or linting issues found. Run 'ruff check app/ tests/ --fix' to fix."
             exit 1
           fi
-          
-          echo "✅ Code formatting looks good"
+          echo "✅ Ruff checks passed"
 
-      - name: Quick lint check
+      - name: Code quality summary
         run: |
-          echo "Running quick lint check..."
-          ruff check app/ tests/ --exit-zero --format=github
+          echo "🎯 Running comprehensive quality check..."
+          if python quality_check.py; then
+            echo "✅ All quality checks passed!"
+          else
+            echo "❌ Quality checks failed. See details above."
+            exit 1
+          fi
 
       - name: Check for TODO/FIXME comments
         run: |
@@ -143,8 +149,9 @@ jobs:
             **Status**: ${{ needs.pr-quality.result == 'success' && '✅ Passed' || '❌ Failed' }}
             
             ### Quick Checklist
-            - [ ] Code is properly formatted (Black + isort)
-            - [ ] No linting errors (Ruff)
+            - [ ] Code is properly formatted (Black)
+            - [ ] Imports are sorted and no linting errors (Ruff)
+            - [ ] Code quality score ≥ 9.5/10 (Pylint)
             - [ ] Tests added for new functionality
             - [ ] No breaking changes (or properly documented)
             - [ ] PR size is reasonable (< 1000 lines)

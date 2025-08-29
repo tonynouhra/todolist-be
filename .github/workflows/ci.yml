@@ -53,7 +53,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools
           pip install -r requirements.txt
-          pip install pytest-cov aiosqlite bandit safety ruff black isort
+          pip install pytest-cov aiosqlite bandit safety ruff black
           
       - name: Install Redis CLI
         run: |
@@ -106,7 +106,7 @@ jobs:
           name: codecov-umbrella
 
   code-quality:
-    name: Code Quality Checks
+    name: Code Quality Checks (Modern Toolchain)
     runs-on: ubuntu-latest
     
     steps:
@@ -119,32 +119,27 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
-      - name: Install code quality tools
+      - name: Install modern code quality tools
         run: |
           python -m pip install --upgrade pip
-          pip install ruff black isort mypy pylint
+          pip install ruff black pylint
 
-      - name: Check code formatting with Black
+      - name: Run comprehensive quality checks
         run: |
-          black --check --diff app/ tests/
+          python quality_check.py
 
-      - name: Check import sorting with isort
-        run: |
-          isort --check-only --diff app/ tests/
-
-      - name: Lint with Ruff
-        run: |
-          ruff check app/ tests/
-
-      - name: Type check with MyPy
-        run: |
-          mypy app/ --ignore-missing-imports --no-strict-optional
-        continue-on-error: true  # MyPy can be strict, allow warnings
-
-      - name: Lint with Pylint
-        run: |
-          pylint app/ --disable=all --enable=E,W,C0103,C0111 --exit-zero
-        continue-on-error: true  # Pylint can be very strict
+      # Alternative: Individual steps for detailed error reporting
+      # - name: Check imports and linting with Ruff (Fast)
+      #   run: |
+      #     ruff check app/ tests/ --output-format=github
+      # 
+      # - name: Check code formatting with Black
+      #   run: |
+      #     black --check --diff app/ tests/
+      # 
+      # - name: Deep code analysis with Pylint
+      #   run: |
+      #     pylint app/ --score=y --fail-under=9.5
 
   security:
     name: Security Checks

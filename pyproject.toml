@@ -41,6 +41,8 @@ extend-exclude = '''
 )/
 '''
 
+# DEPRECATED: isort configuration kept for legacy compatibility only
+# We use Ruff for import sorting - it's faster and avoids tool conflicts
 [tool.isort]
 profile = "black"
 line_length = 100
@@ -53,6 +55,7 @@ known_first_party = ["app", "models", "tests"]
 known_third_party = ["fastapi", "sqlalchemy", "pydantic", "pytest"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 skip_gitignore = true
+lines_after_imports = 2
 
 [tool.mypy]
 python_version = "3.11"
