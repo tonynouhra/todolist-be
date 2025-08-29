@@ -22,6 +22,7 @@ from app.shared.pagination import PaginationParams, paginate
 from models.project import Project
 from models.todo import Todo
 
+
 logger = logging.getLogger(__name__)
 
 

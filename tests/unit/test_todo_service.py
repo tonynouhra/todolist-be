@@ -511,9 +511,11 @@ class TestTodoService:
         # Mock the database session to raise SQLAlchemy error
         from sqlalchemy.exc import SQLAlchemyError
 
-        with patch.object(test_db, "add", side_effect=SQLAlchemyError("Database connection error")):
-            with pytest.raises(SQLAlchemyError):
-                await service.create_todo(todo_data, test_user.id)
+        with (
+            patch.object(test_db, "add", side_effect=SQLAlchemyError("Database connection error")),
+            pytest.raises(SQLAlchemyError),
+        ):
+            await service.create_todo(todo_data, test_user.id)
 
     @pytest.mark.asyncio
     async def test_get_todos_with_ai_generated_filter(self, test_db, test_user):

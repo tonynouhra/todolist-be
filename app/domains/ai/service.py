@@ -37,6 +37,7 @@ from models.ai_interaction import AIInteraction
 from models.file import File
 from models.todo import Todo
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,6 +45,11 @@ class AIService:
     """Service class for AI operations using Google Gemini."""
 
     def __init__(self, db: AsyncSession):
+        """Initialize AI service with database session.
+
+        Args:
+            db: Async database session for data operations.
+        """
         self.db = db
         self.model = None
         self._initialize_client()
@@ -63,10 +69,18 @@ class AIService:
             self.model = genai.GenerativeModel(
                 model_name=model_name,
                 safety_settings={
-                    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                    HarmCategory.HARM_CATEGORY_HARASSMENT: (
+                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                    ),
+                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: (
+                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                    ),
+                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: (
+                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                    ),
+                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: (
+                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+                    ),
                 },
                 generation_config=genai.types.GenerationConfig(
                     candidate_count=1,
@@ -82,9 +96,9 @@ class AIService:
             try:
                 available_models = list(genai.list_models())
                 logger.info(f"Available models: {[model.name for model in available_models]}")
-            except:
+            except Exception:
                 logger.warning("Could not list available models")
-            raise AIConfigurationError(f"Failed to initialize AI service: {str(e)}")
+            raise AIConfigurationError(f"Failed to initialize AI service: {str(e)}") from e
 
     async def generate_subtasks(
         self, request: SubtaskGenerationRequest, user_id: UUID
