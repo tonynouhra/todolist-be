@@ -10,7 +10,6 @@ from app.database import get_db
 from app.domains.user.service import UserService
 from models import User
 
-
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()

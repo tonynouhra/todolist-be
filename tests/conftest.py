@@ -1,7 +1,6 @@
 # tests/conftest.py
 import os
 
-
 # Set up test environment variables BEFORE any other imports
 os.environ.setdefault("TESTING", "true")
 # Use SQLite for local testing, PostgreSQL for CI
@@ -30,7 +29,6 @@ from app.core.dependencies import get_current_user
 from app.database import get_db
 from app.main import app
 from models import AIInteraction, Base, Project, Todo, User
-
 
 # Test database URL - Use environment variable or default
 TEST_DATABASE_URL = os.getenv(

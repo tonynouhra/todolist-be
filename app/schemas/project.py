@@ -97,6 +97,5 @@ class ProjectStats(BaseSchema):
 # Import TodoResponse at the end to avoid circular imports
 from .todo import TodoResponse
 
-
 # Rebuild the model to resolve forward references
 ProjectWithTodos.model_rebuild()

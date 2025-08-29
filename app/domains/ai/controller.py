@@ -26,7 +26,6 @@ from app.schemas.ai import (
 from app.schemas.base import ResponseSchema
 from models.user import User
 
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
