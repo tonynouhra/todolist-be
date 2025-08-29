@@ -1,3 +1,4 @@
+# ruff: noqa: D107
 """Todo-related exceptions."""
 
 from .base import BaseAppException

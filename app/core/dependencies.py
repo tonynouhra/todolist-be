@@ -53,7 +53,7 @@ async def validate_token(token: str = Depends(security)) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 async def get_current_user(
@@ -103,7 +103,7 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Authentication service error",
-        )
+        ) from e
 
 
 async def get_optional_user(
@@ -111,6 +111,7 @@ async def get_optional_user(
     db: AsyncSession = Depends(get_db),
 ) -> User | None:
     """Get current user if authenticated, otherwise return None.
+
     Used for optional authentication endpoints.
 
     Returns:

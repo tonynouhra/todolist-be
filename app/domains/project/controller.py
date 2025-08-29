@@ -33,7 +33,7 @@ router = APIRouter(
 
 @router.post("/", response_model=ResponseSchema, status_code=201)
 async def create_project(
-    request: Request,
+    _request: Request,
     project_data: ProjectCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -51,7 +51,7 @@ async def create_project(
 
 @router.get("/", response_model=ProjectListResponse)
 async def get_projects(
-    request: Request,
+    _request: Request,
     search: str | None = Query(None),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
@@ -90,7 +90,7 @@ async def get_projects(
 
 @router.get("/{project_id}", response_model=ResponseSchema)
 async def get_project(
-    request: Request,
+    _request: Request,
     project_id: UUID = Path(..., description="Project ID"),
     include_todos: bool = Query(False, description="Include todos in response"),
     current_user: User = Depends(get_current_user),
@@ -119,7 +119,7 @@ async def get_project(
 
 @router.put("/{project_id}", response_model=ResponseSchema)
 async def update_project(
-    request: Request,
+    _request: Request,
     project_id: UUID = Path(..., description="Project ID"),
     project_data: ProjectUpdate = Body(...),
     current_user: User = Depends(get_current_user),
@@ -145,7 +145,7 @@ async def update_project(
 
 @router.delete("/{project_id}", response_model=ResponseSchema)
 async def delete_project(
-    request: Request,
+    _request: Request,
     project_id: UUID = Path(..., description="Project ID"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -163,7 +163,7 @@ async def delete_project(
 
 @router.get("/stats/summary", response_model=ResponseSchema)
 async def get_project_stats(
-    request: Request,
+    _request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -180,7 +180,7 @@ async def get_project_stats(
 
 @router.get("/{project_id}/todos", response_model=ResponseSchema)
 async def get_project_todos(
-    request: Request,
+    _request: Request,
     project_id: UUID = Path(..., description="Project ID"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

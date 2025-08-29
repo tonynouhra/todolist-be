@@ -68,7 +68,7 @@ class SubtaskFactory(TodoFactory):
     """Factory for creating subtask Todo instances."""
 
     ai_generated = True
-    parent_todo_id = factory.LazyAttribute(lambda obj: uuid.uuid4())
+    parent_todo_id = factory.LazyFunction(uuid.uuid4)
 
 
 class AIInteractionFactory(SQLAlchemyModelFactory):

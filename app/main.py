@@ -27,7 +27,7 @@ from models import Base
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """Manage application lifecycle events."""
     # Startup
     print("🚀 Starting AI Todo List API...")

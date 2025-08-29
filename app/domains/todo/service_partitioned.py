@@ -32,6 +32,7 @@ class PartitionedTodoService:
     """Service class for partitioned todo business logic."""
 
     def __init__(self, db: AsyncSession):
+        """Initialize service with a database session for partitioned tables."""
         self.db = db
 
     async def create_todo(
@@ -78,7 +79,7 @@ class PartitionedTodoService:
             return todo
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}") from e
 
     async def get_todo_by_id(
         self, todo_id: UUID, user_id: UUID, include_archived: bool = False
@@ -102,7 +103,10 @@ class PartitionedTodoService:
         pagination: PaginationParams,
         include_archived: bool = False,
     ) -> dict[str, Any]:
-        """Get paginated list of todos with filters from active and optionally archived partitions."""
+        """Get paginated list of todos with filters.
+
+        Supports fetching from active and optionally archived partitions.
+        """
         if include_archived:
             return await self._get_todos_from_both_partitions(user_id, filters, pagination)
         else:
@@ -182,7 +186,7 @@ class PartitionedTodoService:
             return todo
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to update todo: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to update todo: {str(e)}") from e
 
     async def delete_todo(self, todo_id: UUID, user_id: UUID) -> bool:
         """Delete a todo and all its subtasks (only from active partition)."""
@@ -200,7 +204,7 @@ class PartitionedTodoService:
             return True
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to delete todo: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to delete todo: {str(e)}") from e
 
     async def toggle_todo_status(self, todo_id: UUID, user_id: UUID) -> TodoActive | None:
         """Toggle todo status between todo and done (only for active todos)."""
@@ -221,7 +225,7 @@ class PartitionedTodoService:
             return todo
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to toggle todo status: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to toggle todo status: {str(e)}") from e
 
     async def get_user_todo_stats(self, user_id: UUID) -> dict[str, Any]:
         """Get comprehensive todo statistics for a user from both partitions."""
@@ -318,7 +322,7 @@ class PartitionedTodoService:
             return archived_count
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to archive todos: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to archive todos: {str(e)}") from e
 
     # Private helper methods
 
@@ -479,11 +483,10 @@ class PartitionedTodoService:
 
 # Backward compatibility service wrapper
 class TodoService(PartitionedTodoService):
-    """Backward compatibility wrapper that maintains the original TodoService interface
-    while using the new partitioned structure underneath.
+    """Backward compatibility wrapper for original TodoService interface.
 
-    This allows existing code to continue working while gradually migrating to
-    the partitioned structure.
+    Uses the new partitioned structure underneath while allowing existing code
+    to continue working during migration.
     """
 
     async def create_todo(

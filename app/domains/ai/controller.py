@@ -37,7 +37,7 @@ router = APIRouter(
 
 @router.post("/generate-subtasks", response_model=ResponseSchema, status_code=201)
 async def generate_subtasks(
-    request: Request,
+    _request: Request,
     generation_request: SubtaskGenerationRequest = Body(...),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -187,7 +187,7 @@ async def generate_subtasks(
 
 @router.post("/analyze-file", response_model=ResponseSchema, status_code=201)
 async def analyze_file(
-    request: Request,
+    _request: Request,
     analysis_request: FileAnalysisRequest = Body(...),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -234,8 +234,8 @@ async def analyze_file(
 
 @router.get("/status", response_model=ResponseSchema)
 async def get_ai_service_status(
-    request: Request,
-    current_user: User = Depends(get_current_user),
+    _request: Request,
+    _current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get AI service status and availability."""

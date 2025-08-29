@@ -1,3 +1,4 @@
+# ruff: noqa: D107
 """AI service exceptions."""
 
 from typing import Any

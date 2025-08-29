@@ -1,6 +1,7 @@
 # python
 # app/core/config.py
 """Configuration settings for AI Todo List application.
+
 Uses Pydantic BaseSettings for environment variable management.
 """
 import secrets
@@ -112,7 +113,7 @@ class Settings(BaseSettings):
     )
 
     @property
-    def ALLOWED_ORIGINS(self) -> list[str]:
+    def ALLOWED_ORIGINS(self) -> list[str]:  # noqa: N802
         """Parse CORS origins from comma-separated string."""
         if isinstance(self.allowed_origins, str):
             return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]

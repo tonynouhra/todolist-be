@@ -31,7 +31,7 @@ router = APIRouter(
 
 @router.post("/", response_model=ResponseSchema, status_code=201)
 async def create_todo(
-    request: Request,
+    _request: Request,
     todo_data: TodoCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -53,7 +53,7 @@ async def create_todo(
 
 @router.get("/", response_model=TodoListResponse)
 async def get_todos(
-    request: Request,
+    _request: Request,
     status: str | None = Query(None, regex="^(todo|in_progress|done)$"),
     priority: int | None = Query(None, ge=1, le=5),
     project_id: UUID | None = Query(None),
@@ -96,7 +96,7 @@ async def get_todos(
 
 @router.get("/{todo_id}", response_model=ResponseSchema)
 async def get_todo(
-    request: Request,
+    _request: Request,
     todo_id: UUID = Path(..., description="Todo ID"),
     include_subtasks: bool = Query(False, description="Include subtasks in response"),
     current_user: User = Depends(get_current_user),
@@ -124,7 +124,7 @@ async def get_todo(
 
 @router.put("/{todo_id}", response_model=ResponseSchema)
 async def update_todo(
-    request: Request,
+    _request: Request,
     todo_id: UUID = Path(..., description="Todo ID"),
     todo_data: TodoUpdate = Body(...),
     current_user: User = Depends(get_current_user),
@@ -143,7 +143,7 @@ async def update_todo(
 
 @router.delete("/{todo_id}", response_model=ResponseSchema)
 async def delete_todo(
-    request: Request,
+    _request: Request,
     todo_id: UUID = Path(..., description="Todo ID"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -161,7 +161,7 @@ async def delete_todo(
 
 @router.patch("/{todo_id}/toggle-status", response_model=ResponseSchema)
 async def toggle_todo_status(
-    request: Request,
+    _request: Request,
     todo_id: UUID = Path(..., description="Todo ID"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -179,7 +179,7 @@ async def toggle_todo_status(
 
 @router.get("/stats/summary", response_model=ResponseSchema)
 async def get_todo_stats(
-    request: Request,
+    _request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -194,7 +194,7 @@ async def get_todo_stats(
 
 @router.get("/{todo_id}/subtasks", response_model=TodoListResponse)
 async def get_todo_subtasks(
-    request: Request,
+    _request: Request,
     todo_id: UUID = Path(..., description="Todo ID"),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),

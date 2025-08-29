@@ -11,6 +11,7 @@ from models import User
 
 class UserService:
     def __init__(self, db: AsyncSession):
+        """Initialize service with a database session."""
         self.db = db
 
     async def get_user_by_clerk_id(self, clerk_user_id: str) -> User | None:

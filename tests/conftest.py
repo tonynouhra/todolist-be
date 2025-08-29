@@ -1,3 +1,4 @@
+# ruff: noqa: E402, I001
 # tests/conftest.py
 import os
 
@@ -48,13 +49,13 @@ def event_loop():
 async def test_db():
     """Create a test database session."""
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    TestSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    test_session_local = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with TestSessionLocal() as session:
+    async with test_session_local() as session:
         try:
             yield session
         finally:

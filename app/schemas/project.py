@@ -95,7 +95,7 @@ class ProjectStats(BaseSchema):
 
 
 # Import TodoResponse at the end to avoid circular imports
-from .todo import TodoResponse
+from .todo import TodoResponse  # noqa: E402, I001
 
 # Rebuild the model to resolve forward references
 ProjectWithTodos.model_rebuild()

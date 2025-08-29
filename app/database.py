@@ -1,7 +1,9 @@
 # python
-"""This module sets up the asynchronous database engine, session factory, and
-base class for ORM models using SQLAlchemy. It also provides a utility for
-fetching a database session.
+"""Database engine and session utilities.
+
+This module sets up the asynchronous database engine, session factory, and base
+class for ORM models using SQLAlchemy. It also provides a utility for fetching
+an asynchronous database session.
 """
 import os
 from collections.abc import AsyncGenerator

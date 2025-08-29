@@ -20,6 +20,7 @@ class ProjectService:
     """Service class for project business logic."""
 
     def __init__(self, db: AsyncSession):
+        """Initialize service with a database session."""
         self.db = db
 
     async def create_project(self, project_data: ProjectCreate, user_id: UUID) -> Project:
@@ -42,7 +43,7 @@ class ProjectService:
             return project
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise ValidationError(f"Failed to create project: {str(e)}")
+            raise ValidationError(f"Failed to create project: {str(e)}") from e
 
     async def get_project_by_id(self, project_id: UUID, user_id: UUID) -> Project | None:
         """Get a project by ID, ensuring it belongs to the user."""
@@ -122,7 +123,7 @@ class ProjectService:
             return project
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise ValidationError(f"Failed to update project: {str(e)}")
+            raise ValidationError(f"Failed to update project: {str(e)}") from e
 
     async def delete_project(self, project_id: UUID, user_id: UUID) -> bool:
         """Delete a project and handle todos."""
@@ -144,7 +145,7 @@ class ProjectService:
             return True
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise ValidationError(f"Failed to delete project: {str(e)}")
+            raise ValidationError(f"Failed to delete project: {str(e)}") from e
 
     async def get_project_stats(self, user_id: UUID) -> dict[str, Any]:
         """Get project statistics for a user."""

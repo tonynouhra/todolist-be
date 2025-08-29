@@ -1,3 +1,4 @@
+# ruff: noqa: D107
 """Base exception classes."""
 
 from typing import Any

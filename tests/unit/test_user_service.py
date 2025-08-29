@@ -1,3 +1,4 @@
+# ruff: noqa: SIM117
 """
 Unit tests for UserService.
 

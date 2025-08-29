@@ -1,3 +1,4 @@
+# ruff: noqa: F403, F401
 """Schemas package initialization."""
 
 # Import all schemas to ensure they're registered

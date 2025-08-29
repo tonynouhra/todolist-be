@@ -21,6 +21,7 @@ class ClerkAuthenticator:
     """
 
     def __init__(self):
+        """Initialize the authenticator with settings-derived configuration."""
         self.clerk_api_url = settings.clerk_api_url
         self.secret_key = settings.clerk_secret_key
 
@@ -31,7 +32,9 @@ class ClerkAuthenticator:
             return response.json()
 
     async def verify_token(self, token: str) -> dict:
-        """Verifies a given JSON Web Token (JWT) using Clerk's public key. The method decodes
+        """Verify a Clerk JWT and return its payload.
+
+        Verifies a given JSON Web Token (JWT) using Clerk's public key. The method decodes
         the provided token and validates its authenticity. If the token is invalid,
         it raises an HTTPException with proper status code and error detail.
 
@@ -55,4 +58,4 @@ class ClerkAuthenticator:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"Invalid authentication token: {str(e)}",
-            )
+            ) from e

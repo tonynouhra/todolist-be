@@ -377,10 +377,10 @@ class TestDatabaseModule:
         # Clean up
         await db_session.close()
 
-        try:
+        from contextlib import suppress
+
+        with suppress(StopAsyncIteration):
             await db_gen.__anext__()
-        except StopAsyncIteration:
-            pass  # Expected
 
     def test_database_base_import(self):
         """Test Base import from database module."""

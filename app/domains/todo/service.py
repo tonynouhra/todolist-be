@@ -29,6 +29,7 @@ class TodoService:
     """Service class for todo business logic."""
 
     def __init__(self, db: AsyncSession):
+        """Initialize service with a database session."""
         self.db = db
 
     async def create_todo(
@@ -93,13 +94,14 @@ class TodoService:
                 if hasattr(self.db, "in_transaction") and self.db.in_transaction():
                     await self.db.rollback()
             except Exception as rollback_error:
-                # If rollback fails, log the error but continue - session cleanup will be handled by the framework
+                # If rollback fails, log the error but continue -
+                # session cleanup will be handled by the framework
                 logger.warning(
                     f"Failed to rollback transaction during error handling: {rollback_error}"
                 )
 
             if isinstance(e, SQLAlchemyError):
-                raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}")
+                raise InvalidTodoOperationError(f"Failed to create todo: {str(e)}") from e
             else:
                 raise
 
@@ -200,7 +202,7 @@ class TodoService:
             return todo
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to update todo: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to update todo: {str(e)}") from e
 
     async def delete_todo(self, todo_id: UUID, user_id: UUID) -> bool:
         """Delete a todo and all its subtasks."""
@@ -215,7 +217,7 @@ class TodoService:
             return True
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to delete todo: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to delete todo: {str(e)}") from e
 
     async def toggle_todo_status(self, todo_id: UUID, user_id: UUID) -> Todo | None:
         """Toggle todo status between todo and done."""
@@ -236,7 +238,7 @@ class TodoService:
             return todo
         except SQLAlchemyError as e:
             await self.db.rollback()
-            raise InvalidTodoOperationError(f"Failed to toggle todo status: {str(e)}")
+            raise InvalidTodoOperationError(f"Failed to toggle todo status: {str(e)}") from e
 
     async def get_user_todo_stats(self, user_id: UUID) -> dict[str, Any]:
         """Get todo statistics for a user."""

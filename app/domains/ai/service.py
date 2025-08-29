@@ -152,10 +152,10 @@ class AIService:
 
         except TimeoutError:
             await self.db.rollback()
-            raise AITimeoutError("AI request timed out")
+            raise AITimeoutError("AI request timed out") from None
         except json.JSONDecodeError as e:
             await self.db.rollback()
-            raise AIParsingError(f"Failed to parse AI response: {str(e)}")
+            raise AIParsingError(f"Failed to parse AI response: {str(e)}") from e
         except AIParsingError:
             await self.db.rollback()
             raise
@@ -163,14 +163,14 @@ class AIService:
             await self.db.rollback()
             error_msg = str(e).lower()
             if "rate" in error_msg and "limit" in error_msg:
-                raise AIRateLimitError("Rate limit exceeded")
+                raise AIRateLimitError("Rate limit exceeded") from e
             elif "quota" in error_msg:
-                raise AIQuotaExceededError("API quota exceeded")
+                raise AIQuotaExceededError("API quota exceeded") from e
             elif "safety" in error_msg or "blocked" in error_msg:
-                raise AIContentFilterError("Content blocked by safety filters")
+                raise AIContentFilterError("Content blocked by safety filters") from e
             else:
                 logger.error(f"AI service error: {str(e)}")
-                raise AIServiceError(f"AI service error: {str(e)}")
+                raise AIServiceError(f"AI service error: {str(e)}") from e
 
     async def analyze_file(
         self, request: FileAnalysisRequest, user_id: UUID
@@ -216,20 +216,20 @@ class AIService:
             )
 
         except TimeoutError:
-            raise AITimeoutError("File analysis request timed out")
+            raise AITimeoutError("File analysis request timed out") from None
         except json.JSONDecodeError as e:
-            raise AIParsingError(f"Failed to parse AI response: {str(e)}")
+            raise AIParsingError(f"Failed to parse AI response: {str(e)}") from e
         except Exception as e:
             error_msg = str(e).lower()
             if "rate" in error_msg and "limit" in error_msg:
-                raise AIRateLimitError("Rate limit exceeded")
+                raise AIRateLimitError("Rate limit exceeded") from e
             elif "quota" in error_msg:
-                raise AIQuotaExceededError("API quota exceeded")
+                raise AIQuotaExceededError("API quota exceeded") from e
             elif "safety" in error_msg or "blocked" in error_msg:
-                raise AIContentFilterError("Content blocked by safety filters")
+                raise AIContentFilterError("Content blocked by safety filters") from e
             else:
                 logger.error(f"AI service error: {str(e)}")
-                raise AIServiceError(f"AI service error: {str(e)}")
+                raise AIServiceError(f"AI service error: {str(e)}") from e
 
     async def get_service_status(self) -> AIServiceStatus:
         """Get AI service status and usage information."""
@@ -297,7 +297,8 @@ class AIService:
     def _build_subtask_generation_prompt_from_todo(self, todo: Todo, max_subtasks: int) -> str:
         """Build prompt for subtask generation from todo data."""
         base_prompt = f"""
-Given the following main task, generate a list of specific, actionable subtasks that would help complete it efficiently.
+Given the following main task, generate a list of specific,
+actionable subtasks that would help complete it efficiently.
 
 **Main Task:** {todo.title}
 """
@@ -387,7 +388,8 @@ Analyze the following file and provide insights based on the analysis type reque
 """
         else:  # general
             prompt += """
-**Task:** Provide a general analysis of the file content including key insights and potential action items.
+**Task:** Provide a general analysis of the file content
+including key insights and potential action items.
 
 **Response Format (JSON):**
 ```json
@@ -420,7 +422,7 @@ Analyze the following file and provide insights based on the analysis type reque
 
         except Exception as e:
             logger.error(f"Gemini API call failed: {str(e)}")
-            raise AIServiceError(f"AI generation failed: {str(e)}")
+            raise AIServiceError(f"AI generation failed: {str(e)}") from e
 
     def _parse_subtask_response(self, response: str) -> list[GeneratedSubtask]:
         """Parse AI response into structured subtasks."""
@@ -450,10 +452,10 @@ Analyze the following file and provide insights based on the analysis type reque
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse subtask JSON: {str(e)}")
-            raise AIParsingError(f"Invalid JSON response: {str(e)}")
+            raise AIParsingError(f"Invalid JSON response: {str(e)}") from e
         except Exception as e:
             logger.error(f"Error parsing subtask response: {str(e)}")
-            raise AIParsingError(f"Failed to parse response: {str(e)}")
+            raise AIParsingError(f"Failed to parse response: {str(e)}") from e
 
     def _parse_file_analysis_response(self, response: str) -> dict[str, Any]:
         """Parse AI file analysis response."""
@@ -469,7 +471,7 @@ Analyze the following file and provide insights based on the analysis type reque
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse analysis JSON: {str(e)}")
-            raise AIParsingError(f"Invalid JSON in analysis response: {str(e)}")
+            raise AIParsingError(f"Invalid JSON in analysis response: {str(e)}") from e
 
     async def _store_interaction(
         self,

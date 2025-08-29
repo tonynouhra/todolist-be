@@ -50,7 +50,7 @@ async def signup(signup_data: UserSignupRequest, db: AsyncSession = Depends(get_
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create user: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/login", response_model=AuthResponse)
@@ -82,7 +82,7 @@ async def login(login_data: UserLoginRequest, db: AsyncSession = Depends(get_db)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Authentication failed: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/logout", response_model=LogoutResponse)
@@ -132,4 +132,4 @@ async def update_current_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update user: {str(e)}",
-        )
+        ) from e
