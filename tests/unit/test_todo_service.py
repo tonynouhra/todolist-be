@@ -510,6 +510,7 @@ class TestTodoService:
 
         # Mock the database session to raise SQLAlchemy error
         from sqlalchemy.exc import SQLAlchemyError
+
         from app.exceptions.todo import InvalidTodoOperationError
 
         with (
