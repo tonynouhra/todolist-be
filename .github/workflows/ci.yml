@@ -252,7 +252,13 @@ jobs:
       - name: Test Docker image
         run: |
           # Test that the image was built successfully
-          docker images | grep todolist-backend:test
+          docker images
+          if docker images | grep -q "todolist-backend.*test"; then
+            echo "✅ Docker image built successfully"
+          else
+            echo "❌ Docker image not found"
+            exit 1
+          fi
 
   performance:
     name: Performance Tests
@@ -318,12 +324,13 @@ jobs:
           import asyncio
           import time
           from sqlalchemy.ext.asyncio import create_async_engine
+          from sqlalchemy import text
           
           async def test_db_performance():
               engine = create_async_engine('${{ env.TEST_DATABASE_URL }}')
               start_time = time.time()
               async with engine.connect() as conn:
-                  await conn.execute('SELECT 1')
+                  await conn.execute(text('SELECT 1'))
               end_time = time.time()
               connection_time = (end_time - start_time) * 1000
               print(f'Database connection time: {connection_time:.2f}ms')
