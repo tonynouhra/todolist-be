@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, field_validator
 
 from .base import BaseModelSchema, BaseSchema
 
@@ -14,9 +14,20 @@ class SubtaskGenerationRequest(BaseSchema):
     """Schema for requesting AI subtask generation for an existing todo."""
 
     todo_id: UUID = Field(..., description="ID of the existing todo to generate subtasks for")
-    max_subtasks: int = Field(
-        default=5, ge=3, le=7, description="Maximum number of subtasks to generate"
+    min_subtasks: int = Field(
+        default=3, ge=1, le=5, description="Minimum number of subtasks to generate"
     )
+    max_subtasks: int = Field(
+        default=5, ge=3, le=5, description="Maximum number of subtasks to generate"
+    )
+
+    @field_validator('max_subtasks')
+    @classmethod
+    def validate_subtask_range(cls, v, info):
+        """Ensure max_subtasks is greater than or equal to min_subtasks."""
+        if 'min_subtasks' in info.data and v < info.data['min_subtasks']:
+            raise ValueError('max_subtasks must be greater than or equal to min_subtasks')
+        return v
 
 
 class GeneratedSubtask(BaseSchema):
@@ -95,6 +106,64 @@ class AIServiceStatus(BaseSchema):
     quota_remaining: int | None = Field(None, description="Remaining API quota if available")
 
 
+class TodoSuggestionRequest(BaseSchema):
+    """Schema for requesting AI todo suggestions."""
+
+    project_id: UUID | None = Field(None, description="ID of project to generate todos for")
+    user_input: str = Field(..., min_length=1, description="Description of what user wants to accomplish")
+    existing_todos: list[str] = Field(default=[], description="List of existing todo titles for context")
+    max_todos: int = Field(default=5, ge=1, le=10, description="Maximum number of todos to generate")
+
+
+class GeneratedTodo(BaseSchema):
+    """Schema for a generated todo suggestion."""
+
+    title: str = Field(..., min_length=1, max_length=500)
+    description: str | None = None
+    priority: int = Field(default=3, ge=1, le=5)
+    estimated_time: str | None = Field(
+        None, description="Estimated time to complete (e.g., '30 minutes', '2 hours')"
+    )
+    category: str | None = Field(None, description="Suggested category for the todo")
+
+
+class TodoSuggestionResponse(BaseSchema):
+    """Schema for AI todo suggestions response."""
+
+    request_description: str
+    generated_todos: list[GeneratedTodo]
+    total_todos: int
+    generation_timestamp: datetime
+    ai_model: str = Field(default="gemini-1.5-flash", alias="model_used")
+
+
+class TaskOptimizationRequest(BaseSchema):
+    """Schema for requesting AI task optimization."""
+
+    todo_id: UUID | None = Field(None, description="ID of existing todo to optimize")
+    current_title: str | None = Field(None, description="Current task title")
+    current_description: str | None = Field(None, description="Current task description")
+    optimization_type: str = Field(
+        default="description",
+        pattern="^(description|title|both|clarity|detail)$",
+        description="Type of optimization to perform"
+    )
+    context: str | None = Field(None, description="Additional context for optimization")
+
+
+class TaskOptimizationResponse(BaseSchema):
+    """Schema for AI task optimization response."""
+
+    original_title: str | None
+    original_description: str | None
+    optimized_title: str | None
+    optimized_description: str | None
+    optimization_type: str
+    improvements: list[str] = Field(default=[], description="List of improvements made")
+    optimization_timestamp: datetime
+    ai_model: str = Field(default="gemini-1.5-flash", alias="model_used")
+
+
 class AIErrorResponse(BaseSchema):
     """Schema for AI service errors."""
 
@@ -107,3 +176,5 @@ class AIErrorResponse(BaseSchema):
 # Update forward references if needed
 SubtaskGenerationResponse.model_rebuild()
 FileAnalysisResponse.model_rebuild()
+TodoSuggestionResponse.model_rebuild()
+TaskOptimizationResponse.model_rebuild()

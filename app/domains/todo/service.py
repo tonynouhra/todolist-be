@@ -334,16 +334,14 @@ class TodoService:
 
             # Build the request
             request = SubtaskGenerationRequest(
-                title=todo.title,
-                description=todo.description,
-                priority=todo.priority,
-                due_date=todo.due_date,
+                todo_id=todo.id,
+                min_subtasks=3,
                 max_subtasks=5,
             )
 
             # Generate subtasks using AI
             response = await ai_service.generate_subtasks(
-                request=request, user_id=todo.user_id, todo_id=todo.id
+                request=request, user_id=todo.user_id
             )
 
             # Create subtask records in database
@@ -372,4 +370,3 @@ class TodoService:
             logger.warning(f"Failed to generate AI subtasks for todo {todo.id}: {str(e)}")
             # Don't fail the main todo creation if AI generation fails
             await self.db.rollback()
-            pass

@@ -22,6 +22,8 @@ from app.schemas.ai import (
     AIServiceStatus,
     FileAnalysisRequest,
     SubtaskGenerationRequest,
+    TaskOptimizationRequest,
+    TodoSuggestionRequest,
 )
 from app.schemas.base import ResponseSchema
 from models.user import User
@@ -258,6 +260,103 @@ async def get_ai_service_status(
             message="AI service status check failed",
             data=AIServiceStatus(
                 service_available=False, model_name="unknown", requests_today=0
+            ).model_dump(),
+        )
+
+
+@router.post("/suggest-todos", response_model=ResponseSchema, status_code=201)
+async def suggest_todos(
+    _request: Request,
+    suggestion_request: TodoSuggestionRequest = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate AI todo suggestions based on user input."""
+    try:
+        service = AIService(db)
+        result = await service.suggest_todos(request=suggestion_request, user_id=current_user.id)
+
+        return ResponseSchema(
+            status="success",
+            message="Todo suggestions generated successfully",
+            data=result.model_dump(),
+        )
+
+    except AIInvalidRequestError as e:
+        logger.warning(f"AI invalid request: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ResponseSchema(
+                status="error",
+                message="Invalid request",
+                data=AIErrorResponse(
+                    error_code="AI_INVALID_REQUEST",
+                    error_message=str(e),
+                    suggestions=["Check request parameters", "Provide valid user input"],
+                ).model_dump(),
+            ).model_dump(),
+        )
+
+    except AIServiceError as e:
+        return _handle_ai_service_error(e)
+    except Exception as e:
+        logger.error(f"Unexpected error in AI todo suggestions: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=ResponseSchema(
+                status="error",
+                message="An unexpected error occurred during todo suggestions",
+                data=None,
+            ).model_dump(),
+        )
+
+
+@router.post("/optimize-task", response_model=ResponseSchema, status_code=201)
+async def optimize_task(
+    _request: Request,
+    optimization_request: TaskOptimizationRequest = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Optimize an existing task using AI."""
+    try:
+        service = AIService(db)
+        result = await service.optimize_task(request=optimization_request, user_id=current_user.id)
+
+        return ResponseSchema(
+            status="success",
+            message="Task optimized successfully",
+            data=result.model_dump(),
+        )
+
+    except AIInvalidRequestError as e:
+        logger.warning(f"AI invalid request: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ResponseSchema(
+                status="error",
+                message="Invalid request",
+                data=AIErrorResponse(
+                    error_code="AI_INVALID_REQUEST",
+                    error_message=str(e),
+                    suggestions=[
+                        "Check request parameters",
+                        "Provide either todo_id or current_title/description",
+                    ],
+                ).model_dump(),
+            ).model_dump(),
+        )
+
+    except AIServiceError as e:
+        return _handle_ai_service_error(e)
+    except Exception as e:
+        logger.error(f"Unexpected error in AI task optimization: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=ResponseSchema(
+                status="error",
+                message="An unexpected error occurred during task optimization",
+                data=None,
             ).model_dump(),
         )
 

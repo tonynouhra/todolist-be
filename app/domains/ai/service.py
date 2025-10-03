@@ -30,8 +30,13 @@ from app.schemas.ai import (
     FileAnalysisRequest,
     FileAnalysisResponse,
     GeneratedSubtask,
+    GeneratedTodo,
     SubtaskGenerationRequest,
     SubtaskGenerationResponse,
+    TaskOptimizationRequest,
+    TaskOptimizationResponse,
+    TodoSuggestionRequest,
+    TodoSuggestionResponse,
 )
 from models.ai_interaction import AIInteraction
 from models.file import File
@@ -113,7 +118,9 @@ class AIService:
             raise AIInvalidRequestError("Todo not found or access denied")
 
         # Build the prompt using todo data
-        prompt = self._build_subtask_generation_prompt_from_todo(todo, request.max_subtasks)
+        prompt = self._build_subtask_generation_prompt_from_todo(
+            todo, request.min_subtasks, request.max_subtasks
+        )
 
         try:
             # Make the AI request with timeout
@@ -245,6 +252,138 @@ class AIService:
                 logger.error(f"AI service error: {str(e)}")
                 raise AIServiceError(f"AI service error: {str(e)}") from e
 
+    async def suggest_todos(
+        self, request: TodoSuggestionRequest, user_id: UUID
+    ) -> TodoSuggestionResponse:
+        """Generate AI todo suggestions based on user input."""
+        if not self.model:
+            raise AIServiceUnavailableError("AI service not properly initialized")
+
+        # Build the prompt for todo suggestions
+        prompt = self._build_todo_suggestion_prompt(request)
+
+        try:
+            response = await asyncio.wait_for(
+                self._generate_content_async(prompt),
+                timeout=settings.ai_request_timeout,
+            )
+
+            # Parse the response
+            todo_suggestions = self._parse_todo_suggestion_response(response)
+
+            # Store the interaction
+            await self._store_interaction(
+                user_id=user_id,
+                prompt=prompt,
+                response=response,
+                interaction_type="todo_suggestion",
+            )
+
+            ai_response = TodoSuggestionResponse(
+                request_description=request.user_input,
+                generated_todos=todo_suggestions,
+                total_todos=len(todo_suggestions),
+                generation_timestamp=datetime.now(UTC),
+                ai_model=settings.gemini_model,
+            )
+
+            logger.info(f"Generated {len(todo_suggestions)} todo suggestions")
+            return ai_response
+
+        except TimeoutError:
+            raise AITimeoutError("Todo suggestion request timed out") from None
+        except json.JSONDecodeError as e:
+            raise AIParsingError(f"Failed to parse AI response: {str(e)}") from e
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "rate" in error_msg and "limit" in error_msg:
+                raise AIRateLimitError("Rate limit exceeded") from e
+            elif "quota" in error_msg:
+                raise AIQuotaExceededError("API quota exceeded") from e
+            elif "safety" in error_msg or "blocked" in error_msg:
+                raise AIContentFilterError("Content blocked by safety filters") from e
+            else:
+                logger.error(f"AI service error: {str(e)}")
+                raise AIServiceError(f"AI service error: {str(e)}") from e
+
+    async def optimize_task(
+        self, request: TaskOptimizationRequest, user_id: UUID
+    ) -> TaskOptimizationResponse:
+        """Optimize an existing task title and/or description using AI."""
+        if not self.model:
+            raise AIServiceUnavailableError("AI service not properly initialized")
+
+        # If todo_id is provided, get the current todo data
+        if request.todo_id:
+            todo = await self._get_todo_by_id(request.todo_id, user_id)
+            if not todo:
+                raise AIInvalidRequestError("Todo not found or access denied")
+
+            # Use todo data if not provided in request
+            current_title = request.current_title or todo.title
+            current_description = request.current_description or todo.description
+        else:
+            current_title = request.current_title
+            current_description = request.current_description
+
+        if not current_title and not current_description:
+            raise AIInvalidRequestError(
+                "Either todo_id or current_title/description must be provided"
+            )
+
+        # Build the optimization prompt
+        prompt = self._build_task_optimization_prompt(
+            current_title, current_description, request.optimization_type, request.context
+        )
+
+        try:
+            response = await asyncio.wait_for(
+                self._generate_content_async(prompt),
+                timeout=settings.ai_request_timeout,
+            )
+
+            # Parse the response
+            optimization_data = self._parse_task_optimization_response(response)
+
+            # Store the interaction
+            await self._store_interaction(
+                user_id=user_id,
+                todo_id=request.todo_id,
+                prompt=prompt,
+                response=response,
+                interaction_type="task_optimization",
+            )
+
+            ai_response = TaskOptimizationResponse(
+                original_title=current_title,
+                original_description=current_description,
+                optimized_title=optimization_data.get("optimized_title"),
+                optimized_description=optimization_data.get("optimized_description"),
+                optimization_type=request.optimization_type,
+                improvements=optimization_data.get("improvements", []),
+                optimization_timestamp=datetime.now(UTC),
+                ai_model=settings.gemini_model,
+            )
+
+            logger.info(f"Optimized task: {current_title[:50]}...")
+            return ai_response
+
+        except TimeoutError:
+            raise AITimeoutError("Task optimization request timed out") from None
+        except json.JSONDecodeError as e:
+            raise AIParsingError(f"Failed to parse AI response: {str(e)}") from e
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "rate" in error_msg and "limit" in error_msg:
+                raise AIRateLimitError("Rate limit exceeded") from e
+            elif "quota" in error_msg:
+                raise AIQuotaExceededError("API quota exceeded") from e
+            elif "safety" in error_msg or "blocked" in error_msg:
+                raise AIContentFilterError("Content blocked by safety filters") from e
+            else:
+                logger.error(f"AI service error: {str(e)}")
+                raise AIServiceError(f"AI service error: {str(e)}") from e
+
     async def get_service_status(self) -> AIServiceStatus:
         """Get AI service status and usage information."""
         service_available = False
@@ -308,7 +447,9 @@ class AIService:
 
     # Private helper methods
 
-    def _build_subtask_generation_prompt_from_todo(self, todo: Todo, max_subtasks: int) -> str:
+    def _build_subtask_generation_prompt_from_todo(
+        self, todo: Todo, min_subtasks: int, max_subtasks: int
+    ) -> str:
         """Build prompt for subtask generation from todo data."""
         base_prompt = f"""
 Given the following main task, generate a list of specific,
@@ -329,7 +470,7 @@ actionable subtasks that would help complete it efficiently.
 
         base_prompt += f"""
 **Requirements:**
-1. Generate between 3 and {max_subtasks} subtasks
+1. Generate between {min_subtasks} and {max_subtasks} subtasks
 2. Each subtask should be specific and actionable
 3. Order them logically for efficient completion
 4. Include estimated time where relevant
@@ -422,6 +563,151 @@ including key insights and potential action items.
 
         return prompt
 
+    def _build_todo_suggestion_prompt(self, request: TodoSuggestionRequest) -> str:
+        """Build prompt for AI todo suggestions."""
+        prompt = f"""
+Generate a list of actionable todo items based on the user's input.
+
+**User Request:** {request.user_input}
+"""
+
+        if request.project_id:
+            prompt += (
+                f"**Project Context:** This is for a specific project (ID: {request.project_id})\n"
+            )
+
+        if request.existing_todos:
+            existing_list = "\n".join([f"- {todo}" for todo in request.existing_todos[:10]])
+            prompt += f"""
+**Existing Todos for Context:**
+{existing_list}
+"""
+
+        prompt += f"""
+**Requirements:**
+1. Generate between 1 and {request.max_todos} relevant todos
+2. Make each todo specific and actionable
+3. Consider the user's existing todos to avoid duplicates
+4. Include realistic time estimates where appropriate
+5. Assign appropriate priority levels (1=very low, 5=very high)
+6. Suggest categories if relevant
+
+**Response Format (JSON only):**
+```json
+{{
+    "todos": [
+        {{
+            "title": "Todo title (under 500 characters)",
+            "description": "Brief description if needed (optional)",
+            "priority": 3,
+            "estimated_time": "30 minutes",
+            "category": "category name"
+        }}
+    ]
+}}
+```
+
+Generate practical, actionable todos that help the user accomplish their goal:
+"""
+
+        return prompt
+
+    def _build_task_optimization_prompt(
+        self,
+        title: str | None,
+        description: str | None,
+        optimization_type: str,
+        context: str | None,
+    ) -> str:
+        """Build prompt for task optimization."""
+        prompt = """
+Optimize the following task to make it clearer, more actionable, and better organized.
+
+**Current Task:**
+"""
+
+        if title:
+            prompt += f"Title: {title}\n"
+        if description:
+            prompt += f"Description: {description}\n"
+
+        prompt += f"""
+**Optimization Type:** {optimization_type}
+"""
+
+        if context:
+            prompt += f"**Additional Context:** {context}\n"
+
+        if optimization_type == "title":
+            prompt += """
+**Task:** Improve only the task title to be more clear and actionable.
+
+**Response Format (JSON):**
+```json
+{
+    "optimized_title": "Improved title text",
+    "improvements": ["List of specific improvements made"]
+}
+```
+"""
+        elif optimization_type == "description":
+            prompt += """
+**Task:** Improve only the task description to be more detailed and actionable.
+
+**Response Format (JSON):**
+```json
+{
+    "optimized_description": "Improved description with more detail and clarity",
+    "improvements": ["List of specific improvements made"]
+}
+```
+"""
+        elif optimization_type == "both":
+            prompt += """
+**Task:** Improve both the title and description for maximum clarity and actionability.
+
+**Response Format (JSON):**
+```json
+{
+    "optimized_title": "Improved title text",
+    "optimized_description": "Improved description with more detail",
+    "improvements": ["List of specific improvements made"]
+}
+```
+"""
+        elif optimization_type == "clarity":
+            prompt += """
+**Task:** Focus on making the task clearer and easier to understand.
+
+**Response Format (JSON):**
+```json
+{
+    "optimized_title": "Clearer title if needed",
+    "optimized_description": "Clearer description if needed",
+    "improvements": ["List of clarity improvements made"]
+}
+```
+"""
+        else:  # detail
+            prompt += """
+**Task:** Add more helpful detail while keeping the task focused.
+
+**Response Format (JSON):**
+```json
+{
+    "optimized_title": "More detailed title if needed",
+    "optimized_description": "More detailed description with specific steps",
+    "improvements": ["List of detail improvements made"]
+}
+```
+"""
+
+        prompt += """
+Make the task more actionable and well-defined:
+"""
+
+        return prompt
+
     async def _generate_content_async(self, prompt: str) -> str:
         """Generate content using Gemini API asynchronously."""
         try:
@@ -486,6 +772,61 @@ including key insights and potential action items.
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse analysis JSON: {str(e)}")
             raise AIParsingError(f"Invalid JSON in analysis response: {str(e)}") from e
+
+    def _parse_todo_suggestion_response(self, response: str) -> list[GeneratedTodo]:
+        """Parse AI response into structured todo suggestions."""
+        try:
+            # Extract JSON from response (handle code blocks)
+            json_start = response.find("{")
+            json_end = response.rfind("}") + 1
+
+            if json_start == -1 or json_end == 0:
+                raise AIParsingError("No JSON found in todo suggestion response")
+
+            json_str = response[json_start:json_end]
+            data = json.loads(json_str)
+
+            todos = []
+            for idx, todo_data in enumerate(data.get("todos", []), 1):
+                todo = GeneratedTodo(
+                    title=todo_data.get("title", f"Generated Todo {idx}"),
+                    description=todo_data.get("description"),
+                    priority=todo_data.get("priority", 3),
+                    estimated_time=todo_data.get("estimated_time"),
+                    category=todo_data.get("category"),
+                )
+                todos.append(todo)
+
+            return todos
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse todo suggestion JSON: {str(e)}")
+            raise AIParsingError(f"Invalid JSON response: {str(e)}") from e
+        except Exception as e:
+            logger.error(f"Error parsing todo suggestion response: {str(e)}")
+            raise AIParsingError(f"Failed to parse response: {str(e)}") from e
+
+    def _parse_task_optimization_response(self, response: str) -> dict[str, Any]:
+        """Parse AI task optimization response."""
+        try:
+            json_start = response.find("{")
+            json_end = response.rfind("}") + 1
+
+            if json_start == -1 or json_end == 0:
+                raise AIParsingError("No JSON found in optimization response")
+
+            json_str = response[json_start:json_end]
+            data = json.loads(json_str)
+
+            # Ensure improvements is a list
+            if "improvements" in data and not isinstance(data["improvements"], list):
+                data["improvements"] = [str(data["improvements"])]
+
+            return data
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse optimization JSON: {str(e)}")
+            raise AIParsingError(f"Invalid JSON in optimization response: {str(e)}") from e
 
     async def _store_interaction(
         self,

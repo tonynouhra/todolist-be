@@ -81,6 +81,10 @@ def setup_middleware(fastapi_app: FastAPI):
     fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins_list,
+        # In development, Vite can choose a random available port. Use a
+        # permissive regex for localhost/127.0.0.1 to prevent CORS failures
+        # while still keeping explicit origins from settings in place.
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
