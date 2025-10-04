@@ -29,7 +29,7 @@ from sqlalchemy.orm import sessionmaker
 from app.core.dependencies import get_current_user
 from app.database import get_db
 from app.main import app
-from models import AIInteraction, Base, Project, Todo, User
+from models import AIInteraction, Base, Project, Todo, User, UserSettings
 
 # Test database URL - Use environment variable or default
 TEST_DATABASE_URL = os.getenv(
@@ -133,6 +133,25 @@ async def test_user_2(test_db):
     await test_db.commit()
     await test_db.refresh(user)
     return user
+
+
+# User Settings fixtures
+@pytest_asyncio.fixture
+async def test_user_settings(test_db, test_user):
+    """Create test user settings."""
+    settings = UserSettings(
+        user_id=test_user.id,
+        theme="system",
+        language="en",
+        timezone="UTC",
+        notifications_enabled=True,
+        email_notifications=True,
+        push_notifications=True,
+    )
+    test_db.add(settings)
+    await test_db.commit()
+    await test_db.refresh(settings)
+    return settings
 
 
 # Project fixtures

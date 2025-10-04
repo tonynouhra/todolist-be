@@ -78,3 +78,4 @@ class User(BaseModel):
     # Other relationships
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     files = relationship("File", back_populates="user", cascade="all, delete-orphan")
+    settings = relationship("UserSettings", back_populates="user", cascade="all, delete-orphan", uselist=False)

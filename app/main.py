@@ -159,6 +159,7 @@ def setup_routers(fastapi_app: FastAPI):
     # Import routers
     from app.domains.ai.controller import router as ai_router
     from app.domains.project.controller import router as project_router
+    from app.domains.settings.controller import router as settings_router
     from app.domains.todo.controller import router as todo_router
     from app.domains.user.controller import router as user_router
 
@@ -227,6 +228,7 @@ def setup_routers(fastapi_app: FastAPI):
     fastapi_app.include_router(todo_router)
     fastapi_app.include_router(project_router)
     fastapi_app.include_router(ai_router)
+    fastapi_app.include_router(settings_router)
 
 
 # Create the application instance

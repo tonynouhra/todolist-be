@@ -11,6 +11,7 @@ from .todo import Todo
 # New partitioned models
 from .todo_partitioned import AITodoInteraction, TodoActive, TodoArchived
 from .user import User
+from .user_settings import UserSettings
 
 __all__ = [
     "Base",
@@ -24,4 +25,5 @@ __all__ = [
     "TodoActive",
     "TodoArchived",
     "AITodoInteraction",
+    "UserSettings",
 ]
