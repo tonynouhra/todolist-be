@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # ===== AI Service (Gemini) =====
     gemini_api_key: str | None = Field(default=None, description="Google Gemini API key")
     gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model to use")
-    gemini_max_tokens: int = Field(default=1000, description="Maximum tokens for Gemini")
+    gemini_max_tokens: int = Field(default=2048, description="Maximum tokens for Gemini (increased from 1000 to handle JSON responses)")
     ai_request_timeout: int = Field(default=30, description="AI request timeout in seconds")
 
     # ===== File Storage Settings =====

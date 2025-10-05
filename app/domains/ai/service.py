@@ -588,26 +588,27 @@ Generate a list of actionable todo items based on the user's input.
 1. Generate between 1 and {request.max_todos} relevant todos
 2. Make each todo specific and actionable
 3. Consider the user's existing todos to avoid duplicates
-4. Include realistic time estimates where appropriate
+4. Keep responses CONCISE - only include description/category/estimated_time if truly valuable
 5. Assign appropriate priority levels (1=very low, 5=very high)
-6. Suggest categories if relevant
 
-**Response Format (JSON only):**
+**Response Format (JSON only, BE CONCISE):**
 ```json
 {{
     "todos": [
         {{
-            "title": "Todo title (under 500 characters)",
-            "description": "Brief description if needed (optional)",
-            "priority": 3,
-            "estimated_time": "30 minutes",
-            "category": "category name"
+            "title": "Clear, actionable todo title",
+            "priority": 3
         }}
     ]
 }}
 ```
 
-Generate practical, actionable todos that help the user accomplish their goal:
+**Optional fields** (only include if valuable):
+- "description": Brief 1-sentence description
+- "estimated_time": Time estimate (e.g., "30 minutes")
+- "category": Category name
+
+Generate practical, concise todos. Keep it brief to avoid truncation:
 """
 
         return prompt
@@ -715,11 +716,87 @@ Make the task more actionable and well-defined:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(None, lambda: self.model.generate_content(prompt))
 
-            if not response or not response.text:
+            # Check if response exists
+            if not response:
                 raise AIServiceError("Empty response from AI service")
 
-            return response.text
+            # Check if candidates exist and are not empty
+            if not hasattr(response, 'candidates') or not response.candidates:
+                logger.error("AI response has no candidates - content may be blocked")
+                # Log prompt_feedback if available for debugging
+                if hasattr(response, 'prompt_feedback'):
+                    logger.error(f"Prompt feedback: {response.prompt_feedback}")
+                raise AIContentFilterError(
+                    "Content was blocked by AI safety filters. Please rephrase your request."
+                )
 
+            # Get the first candidate
+            candidate = response.candidates[0]
+
+            # Check finish_reason for issues
+            if hasattr(candidate, 'finish_reason'):
+                finish_reason = candidate.finish_reason
+                logger.info(f"Response finish_reason: {finish_reason}")
+
+                # Handle different finish reasons
+                if finish_reason and finish_reason != 0:  # 0 = FINISH_REASON_UNSPECIFIED or STOP
+                    # Map finish reasons (based on Gemini API docs)
+                    # 1 = STOP (normal), 2 = MAX_TOKENS, 3 = SAFETY, 4 = RECITATION, 5 = OTHER
+                    if finish_reason == 3:  # SAFETY
+                        logger.error(f"Content blocked by safety filters. Finish reason: {finish_reason}")
+                        raise AIContentFilterError(
+                            "Content was blocked by AI safety filters. Please rephrase your request."
+                        )
+                    elif finish_reason == 2:  # MAX_TOKENS
+                        logger.warning(f"Response truncated due to max tokens. Finish reason: {finish_reason}")
+                        logger.warning(f"Current max_tokens setting: {settings.gemini_max_tokens}")
+                        # Check if we have any content despite truncation
+                        if not candidate.content or not candidate.content.parts:
+                            logger.error("MAX_TOKENS hit but no partial content returned")
+                            raise AIServiceError(
+                                "Response was too long for the configured token limit. "
+                                "Try reducing the number of items requested (e.g., max_todos or max_subtasks)."
+                            )
+                    elif finish_reason in [4, 5]:  # RECITATION or OTHER
+                        logger.error(f"Response generation issue. Finish reason: {finish_reason}")
+                        raise AIServiceError(
+                            "AI could not generate a proper response. Please try again with different input."
+                        )
+
+            # Check if the candidate has content
+            if not candidate.content:
+                logger.error("AI response candidate has no content object")
+                logger.error(f"Candidate details: {candidate}")
+                raise AIServiceError("AI returned empty content")
+
+            # Check if content has parts
+            if not candidate.content.parts:
+                logger.error("AI response candidate content has no parts")
+                logger.error(f"Content details: {candidate.content}")
+                raise AIServiceError("AI returned empty content")
+
+            # Safely access the text
+            try:
+                text = response.text
+                if not text or not text.strip():
+                    logger.error("AI returned empty or whitespace-only text")
+                    logger.error(f"Response parts: {candidate.content.parts}")
+                    raise AIServiceError("AI returned empty text response")
+                return text
+            except IndexError as e:
+                logger.error(f"Index error accessing response.text: {str(e)}")
+                logger.error(f"Candidates length: {len(response.candidates)}")
+                logger.error(f"Parts length: {len(candidate.content.parts) if candidate.content.parts else 0}")
+                raise AIServiceError(
+                    "AI response structure was invalid - candidates array issue"
+                ) from e
+
+        except AIContentFilterError:
+            # Re-raise content filter errors as-is
+            raise
+        except AIServiceError:
+            # Re-raise known AI service errors as-is
+            raise
         except Exception as e:
             logger.error(f"Gemini API call failed: {str(e)}")
             raise AIServiceError(f"AI generation failed: {str(e)}") from e
@@ -801,7 +878,29 @@ Make the task more actionable and well-defined:
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse todo suggestion JSON: {str(e)}")
-            raise AIParsingError(f"Invalid JSON response: {str(e)}") from e
+            logger.error(f"Response excerpt: {response[:500]}...")
+
+            # Try to parse partial/truncated JSON by attempting to fix common issues
+            try:
+                # Extract what we can from the response
+                json_start = response.find("{")
+                if json_start == -1:
+                    raise AIParsingError("No JSON found in todo suggestion response")
+
+                # Try to find the todos array even if JSON is incomplete
+                todos_start = response.find('"todos"')
+                if todos_start != -1:
+                    logger.info("Attempting to extract partial todos from truncated response")
+                    # This is a best-effort attempt - if it fails, we'll raise the original error
+                    # We won't implement complex JSON repair here, just raise a helpful error
+
+                raise AIParsingError(
+                    f"Invalid JSON response (likely truncated due to token limit). "
+                    f"Try reducing max_todos or making the request simpler. Error: {str(e)}"
+                )
+            except AIParsingError:
+                raise
+
         except Exception as e:
             logger.error(f"Error parsing todo suggestion response: {str(e)}")
             raise AIParsingError(f"Failed to parse response: {str(e)}") from e
@@ -879,14 +978,26 @@ Make the task more actionable and well-defined:
 
             logger.info(f"Available models with generateContent: {model_names}")
 
-            # Try to find the configured model first
+            # IMPORTANT: Filter out gemini-2.x models to avoid strict rate limits
+            # gemini-2.5-pro has only 2 req/min vs gemini-1.5-flash has 15 req/min
+            filtered_models = [m for m in model_names if "gemini-2." not in m]
+            logger.info(f"Filtered models (excluding gemini-2.x): {filtered_models}")
+
+            # Try to find the configured model first (exact match or endswith)
             configured_model = settings.gemini_model
-            for model_name in model_names:
-                if configured_model in model_name or model_name.endswith(configured_model):
-                    logger.info(f"Using configured model: {model_name}")
+
+            # First try exact match in filtered list
+            if configured_model in filtered_models:
+                logger.info(f"Using configured model (exact match): {configured_model}")
+                return configured_model
+
+            # Then try endsWith match in filtered list
+            for model_name in filtered_models:
+                if model_name.endswith(configured_model) or configured_model in model_name:
+                    logger.info(f"Using configured model (match): {model_name}")
                     return model_name
 
-            # Fall back to common model names
+            # Fall back to common model names (prefer gemini-1.5)
             preferred_models = [
                 "gemini-1.5-flash",
                 "gemini-1.5-pro",
@@ -897,14 +1008,19 @@ Make the task more actionable and well-defined:
             ]
 
             for preferred in preferred_models:
-                for available in model_names:
+                for available in filtered_models:  # Use filtered_models instead of model_names
                     if preferred in available or available.endswith(preferred.split("/")[-1]):
                         logger.info(f"Using fallback model: {available}")
                         return available
 
-            # If no preferred model found, use the first available
+            # If no preferred model found, use the first available from filtered list
+            if filtered_models:
+                logger.warning(f"Using first available filtered model: {filtered_models[0]}")
+                return filtered_models[0]
+
+            # Last resort: use any available model (even gemini-2.x)
             if model_names:
-                logger.warning(f"Using first available model: {model_names[0]}")
+                logger.error(f"No gemini-1.x models found! Falling back to: {model_names[0]}")
                 return model_names[0]
 
             raise AIConfigurationError("No models with generateContent support found")

@@ -112,7 +112,7 @@ class TodoSuggestionRequest(BaseSchema):
     project_id: UUID | None = Field(None, description="ID of project to generate todos for")
     user_input: str = Field(..., min_length=1, description="Description of what user wants to accomplish")
     existing_todos: list[str] = Field(default=[], description="List of existing todo titles for context")
-    max_todos: int = Field(default=5, ge=1, le=10, description="Maximum number of todos to generate")
+    max_todos: int = Field(default=3, ge=1, le=10, description="Maximum number of todos to generate (default 3 for better quality)")
 
 
 class GeneratedTodo(BaseSchema):
