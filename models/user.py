@@ -79,3 +79,6 @@ class User(BaseModel):
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     files = relationship("File", back_populates="user", cascade="all, delete-orphan")
     settings = relationship("UserSettings", back_populates="user", cascade="all, delete-orphan", uselist=False)
+    chat_conversations = relationship(
+        "ChatConversation", back_populates="user", cascade="all, delete-orphan"
+    )

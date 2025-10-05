@@ -158,6 +158,7 @@ def setup_routers(fastapi_app: FastAPI):
     """Configure application routers."""
     # Import routers
     from app.domains.ai.controller import router as ai_router
+    from app.domains.chat.controller import router as chat_router
     from app.domains.project.controller import router as project_router
     from app.domains.settings.controller import router as settings_router
     from app.domains.todo.controller import router as todo_router
@@ -228,6 +229,7 @@ def setup_routers(fastapi_app: FastAPI):
     fastapi_app.include_router(todo_router)
     fastapi_app.include_router(project_router)
     fastapi_app.include_router(ai_router)
+    fastapi_app.include_router(chat_router)
     fastapi_app.include_router(settings_router)
 
 
