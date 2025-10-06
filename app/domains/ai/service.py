@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import re
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -12,6 +13,13 @@ from google.generativeai.types import HarmBlockThreshold, HarmCategory
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+    before_sleep_log,
+)
 
 from app.core.config import settings
 from app.exceptions.ai import (
@@ -49,6 +57,10 @@ logger = logging.getLogger(__name__)
 class AIService:
     """Service class for AI operations using Google Gemini."""
 
+    # Class-level semaphore for rate limiting (shared across instances)
+    _rate_limit_semaphore: asyncio.Semaphore | None = None
+    _semaphore_lock = asyncio.Lock()
+
     def __init__(self, db: AsyncSession):
         """Initialize AI service with database session.
 
@@ -58,6 +70,17 @@ class AIService:
         self.db = db
         self.model = None
         self._initialize_client()
+        self._last_request_time: float | None = None
+
+    @classmethod
+    async def _get_semaphore(cls) -> asyncio.Semaphore:
+        """Get or create the rate limit semaphore (thread-safe)."""
+        if cls._rate_limit_semaphore is None:
+            async with cls._semaphore_lock:
+                if cls._rate_limit_semaphore is None:
+                    # Allow up to requests_per_minute concurrent requests
+                    cls._rate_limit_semaphore = asyncio.Semaphore(settings.ai_requests_per_minute)
+        return cls._rate_limit_semaphore
 
     def _initialize_client(self):
         """Initialize Google Gemini client."""
@@ -93,7 +116,10 @@ class AIService:
                     temperature=0.7,
                 ),
             )
-            logger.info(f"Google Gemini client initialized successfully with model: {model_name}")
+            logger.info(f"✅ Google Gemini client initialized successfully")
+            logger.info(f"📊 Model: {model_name}")
+            logger.info(f"⚡ Rate limit: {settings.ai_requests_per_minute} requests/minute")
+            logger.info(f"🔄 Max retries: {settings.ai_max_retry_attempts} with exponential backoff")
 
         except Exception as e:
             logger.error(f"Failed to initialize Gemini client: {str(e)}")
@@ -123,9 +149,9 @@ class AIService:
         )
 
         try:
-            # Make the AI request with timeout
+            # Make the AI request with timeout and retry logic
             response = await asyncio.wait_for(
-                self._generate_content_async(prompt),
+                self._generate_content_with_retry(prompt),
                 timeout=settings.ai_request_timeout,
             )
 
@@ -210,7 +236,7 @@ class AIService:
 
         try:
             response = await asyncio.wait_for(
-                self._generate_content_async(prompt),
+                self._generate_content_with_retry(prompt),
                 timeout=settings.ai_request_timeout,
             )
 
@@ -264,7 +290,7 @@ class AIService:
 
         try:
             response = await asyncio.wait_for(
-                self._generate_content_async(prompt),
+                self._generate_content_with_retry(prompt),
                 timeout=settings.ai_request_timeout,
             )
 
@@ -338,7 +364,7 @@ class AIService:
 
         try:
             response = await asyncio.wait_for(
-                self._generate_content_async(prompt),
+                self._generate_content_with_retry(prompt),
                 timeout=settings.ai_request_timeout,
             )
 
@@ -420,7 +446,7 @@ class AIService:
             # Test service availability with a simple request
             test_prompt = "Respond with 'OK' if you can process this request."
             response = await asyncio.wait_for(
-                self._generate_content_async(test_prompt), timeout=5.0
+                self._generate_content_with_retry(test_prompt), timeout=5.0
             )
 
             service_available = "ok" in response.lower()
@@ -709,6 +735,39 @@ Make the task more actionable and well-defined:
 
         return prompt
 
+    def _extract_retry_delay(self, error_message: str) -> int:
+        """Extract retry delay from Gemini API error message.
+
+        Args:
+            error_message: Error message from Gemini API
+
+        Returns:
+            Retry delay in seconds, or default value if not found
+        """
+        # Pattern: "Please retry in 32.984803332s"
+        match = re.search(r"retry in (\d+(?:\.\d+)?)s", error_message)
+        if match:
+            return int(float(match.group(1))) + 1  # Add 1 second buffer
+        return settings.ai_retry_min_wait
+
+    @retry(
+        retry=retry_if_exception_type((AIRateLimitError, AIQuotaExceededError)),
+        stop=stop_after_attempt(settings.ai_max_retry_attempts),
+        wait=wait_exponential(
+            multiplier=settings.ai_retry_backoff_factor,
+            min=settings.ai_retry_min_wait,
+            max=settings.ai_retry_max_wait,
+        ),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    async def _generate_content_with_retry(self, prompt: str) -> str:
+        """Generate content with exponential backoff retry logic."""
+        # Acquire semaphore for rate limiting
+        semaphore = await self._get_semaphore()
+        async with semaphore:
+            return await self._generate_content_async(prompt)
+
     async def _generate_content_async(self, prompt: str) -> str:
         """Generate content using Gemini API asynchronously."""
         try:
@@ -798,8 +857,28 @@ Make the task more actionable and well-defined:
             # Re-raise known AI service errors as-is
             raise
         except Exception as e:
-            logger.error(f"Gemini API call failed: {str(e)}")
-            raise AIServiceError(f"AI generation failed: {str(e)}") from e
+            error_msg = str(e).lower()
+            full_error_msg = str(e)
+
+            # Parse retry delay from error message if available
+            retry_delay = self._extract_retry_delay(full_error_msg)
+
+            # Check for specific error types (check quota first, as it often includes "429")
+            if "quota" in error_msg or "exceeded your current quota" in error_msg:
+                logger.error(f"Quota exceeded. Retry after {retry_delay}s. Error: {full_error_msg}")
+                raise AIQuotaExceededError(
+                    f"API quota exceeded. Please try again in {retry_delay} seconds",
+                    details={"retry_after": retry_delay, "error": full_error_msg}
+                ) from e
+            elif "429" in full_error_msg or ("rate" in error_msg and "limit" in error_msg):
+                logger.warning(f"Rate limit hit. Retry after {retry_delay}s")
+                raise AIRateLimitError(
+                    f"Rate limit exceeded. Retry after {retry_delay} seconds",
+                    retry_after=retry_delay,
+                ) from e
+            else:
+                logger.error(f"Gemini API call failed: {full_error_msg}")
+                raise AIServiceError(f"AI generation failed: {full_error_msg}") from e
 
     def _parse_subtask_response(self, response: str) -> list[GeneratedSubtask]:
         """Parse AI response into structured subtasks."""
@@ -966,7 +1045,16 @@ Make the task more actionable and well-defined:
         return result.scalar_one_or_none()
 
     def _get_available_model(self) -> str:
-        """Get the first available model that supports generateContent."""
+        """Get the first available model that supports generateContent.
+
+        Priority order:
+        1. gemini-1.5-flash (15 req/min free tier) - PREFERRED
+        2. gemini-1.5-pro (15 req/min free tier)
+        3. gemini-pro (60 req/min free tier, legacy)
+
+        Avoids:
+        - gemini-2.x models (only 2 req/min free tier - too restrictive)
+        """
         try:
             # First try the configured model
             available_models = list(genai.list_models())
@@ -976,51 +1064,54 @@ Make the task more actionable and well-defined:
                 if "generateContent" in model.supported_generation_methods
             ]
 
-            logger.info(f"Available models with generateContent: {model_names}")
+            logger.info(f"🔍 Available Gemini models with generateContent: {model_names}")
 
             # IMPORTANT: Filter out gemini-2.x models to avoid strict rate limits
             # gemini-2.5-pro has only 2 req/min vs gemini-1.5-flash has 15 req/min
             filtered_models = [m for m in model_names if "gemini-2." not in m]
-            logger.info(f"Filtered models (excluding gemini-2.x): {filtered_models}")
+            logger.info(f"✅ Filtered models (excluding gemini-2.x for rate limits): {filtered_models}")
 
             # Try to find the configured model first (exact match or endswith)
             configured_model = settings.gemini_model
 
             # First try exact match in filtered list
             if configured_model in filtered_models:
-                logger.info(f"Using configured model (exact match): {configured_model}")
+                logger.info(f"✅ Using configured model (exact match): {configured_model}")
                 return configured_model
 
             # Then try endsWith match in filtered list
             for model_name in filtered_models:
                 if model_name.endswith(configured_model) or configured_model in model_name:
-                    logger.info(f"Using configured model (match): {model_name}")
+                    logger.info(f"✅ Using configured model (partial match): {model_name}")
                     return model_name
 
-            # Fall back to common model names (prefer gemini-1.5)
+            # Fall back to preferred model names (prioritize gemini-1.5-flash for best rate limits)
             preferred_models = [
-                "gemini-1.5-flash",
-                "gemini-1.5-pro",
-                "gemini-pro",
+                "gemini-1.5-flash",        # 15 req/min - BEST for free tier
+                "gemini-1.5-flash-latest",
                 "models/gemini-1.5-flash",
+                "gemini-1.5-pro",          # 15 req/min
+                "gemini-1.5-pro-latest",
                 "models/gemini-1.5-pro",
+                "gemini-pro",              # 60 req/min (legacy)
                 "models/gemini-pro",
             ]
 
             for preferred in preferred_models:
-                for available in filtered_models:  # Use filtered_models instead of model_names
+                for available in filtered_models:
                     if preferred in available or available.endswith(preferred.split("/")[-1]):
-                        logger.info(f"Using fallback model: {available}")
+                        logger.warning(f"⚠️ Configured model not found. Using fallback: {available}")
                         return available
 
             # If no preferred model found, use the first available from filtered list
             if filtered_models:
-                logger.warning(f"Using first available filtered model: {filtered_models[0]}")
+                logger.warning(f"⚠️ No preferred models found! Using first available: {filtered_models[0]}")
                 return filtered_models[0]
 
             # Last resort: use any available model (even gemini-2.x)
             if model_names:
-                logger.error(f"No gemini-1.x models found! Falling back to: {model_names[0]}")
+                logger.error(f"❌ No gemini-1.x models found! Using gemini-2.x (strict rate limits): {model_names[0]}")
+                logger.error("⚠️ WARNING: gemini-2.x models have only 2 req/min. Expect frequent rate limiting!")
                 return model_names[0]
 
             raise AIConfigurationError("No models with generateContent support found")

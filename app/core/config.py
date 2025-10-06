@@ -74,6 +74,13 @@ class Settings(BaseSettings):
     gemini_max_tokens: int = Field(default=2048, description="Maximum tokens for Gemini (increased from 1000 to handle JSON responses)")
     ai_request_timeout: int = Field(default=30, description="AI request timeout in seconds")
 
+    # AI Rate Limiting & Retry
+    ai_max_retry_attempts: int = Field(default=3, description="Maximum retry attempts for AI requests")
+    ai_retry_backoff_factor: float = Field(default=2.0, description="Exponential backoff factor for retries")
+    ai_retry_min_wait: int = Field(default=1, description="Minimum wait time between retries (seconds)")
+    ai_retry_max_wait: int = Field(default=60, description="Maximum wait time between retries (seconds)")
+    ai_requests_per_minute: int = Field(default=15, description="Rate limit: requests per minute (gemini-1.5-flash default)")
+
     # ===== File Storage Settings =====
     aws_access_key_id: str | None = Field(default=None, description="AWS access key ID")
     aws_secret_access_key: str | None = Field(default=None, description="AWS secret access key")
