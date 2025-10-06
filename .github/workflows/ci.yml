@@ -206,7 +206,9 @@ jobs:
   dependency-check:
     name: Dependency Analysis
     runs-on: ubuntu-latest
-    
+    # Note: This job allows known, documented vulnerabilities to pass
+    # See SECURITY.md for details on accepted risk exceptions
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -225,7 +227,43 @@ jobs:
       - name: Audit dependencies
         run: |
           pip-audit --format=json --output=pip-audit-report.json || true
-          pip-audit
+
+          # Run pip-audit and capture output
+          if pip-audit > pip-audit-output.txt 2>&1; then
+            echo "✅ No vulnerabilities found"
+            cat pip-audit-output.txt
+            exit 0
+          fi
+
+          # Check if only the known pip vulnerability exists
+          cat pip-audit-output.txt
+
+          if grep -q "GHSA-4xh5-x5gv-qwph" pip-audit-output.txt; then
+            echo ""
+            echo "⚠️  Known vulnerability detected: pip GHSA-4xh5-x5gv-qwph (CVE-2025-8869)"
+            echo "This vulnerability is documented in SECURITY.md and awaiting upstream fix in pip 25.3"
+            echo "Impact: MODERATE - only affects malicious source distributions"
+            echo "Mitigation: Only install packages from trusted sources"
+
+            # Check if there are other vulnerabilities besides the known pip issue
+            # Count package lines (excluding header which starts with ----)
+            vuln_count=$(grep -E "^[a-zA-Z]" pip-audit-output.txt | grep -v "^Name" | grep -v "^Found" | wc -l | tr -d ' ')
+
+            if [ "$vuln_count" -eq 1 ]; then
+              echo ""
+              echo "✅ Only known/documented vulnerability found (pip). Continuing CI..."
+              exit 0
+            else
+              echo ""
+              echo "❌ Additional vulnerabilities found beyond the known pip issue!"
+              echo "Vulnerable packages found: $vuln_count"
+              echo "Please review and fix before merging."
+              exit 1
+            fi
+          else
+            echo "❌ Unknown vulnerabilities detected!"
+            exit 1
+          fi
 
       - name: Upload dependency report
         uses: actions/upload-artifact@v4
