@@ -8,6 +8,7 @@ from .chat_conversation import ChatConversation
 from .chat_message import ChatMessage
 from .file import File
 from .project import Project
+from .push_subscription import PushSubscription
 from .todo import Todo
 
 # New partitioned models
@@ -31,4 +32,6 @@ __all__ = [
     # Chat models
     "ChatConversation",
     "ChatMessage",
+    # Push notifications
+    "PushSubscription",
 ]

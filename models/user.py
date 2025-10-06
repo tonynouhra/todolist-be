@@ -82,3 +82,6 @@ class User(BaseModel):
     chat_conversations = relationship(
         "ChatConversation", back_populates="user", cascade="all, delete-orphan"
     )
+    push_subscriptions = relationship(
+        "PushSubscription", back_populates="user", cascade="all, delete-orphan"
+    )
