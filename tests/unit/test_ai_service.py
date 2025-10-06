@@ -72,6 +72,7 @@ class TestAIService:
                 mock_settings.ai_request_timeout = 30
                 mock_settings.gemini_model = "gemini-pro"
                 mock_settings.gemini_max_tokens = 1000
+                mock_settings.ai_requests_per_minute = 15
 
                 service = AIService(test_db)
                 service.model = MagicMock()
@@ -132,6 +133,7 @@ class TestAIService:
                 mock_settings.gemini_api_key = "test_key"
                 mock_settings.ai_request_timeout = 30
                 mock_settings.gemini_max_tokens = 1000
+                mock_settings.ai_requests_per_minute = 15
 
                 service = AIService(test_db)
                 service.model = MagicMock()
@@ -154,6 +156,7 @@ class TestAIService:
                 mock_settings.gemini_api_key = "test_key"
                 mock_settings.ai_request_timeout = 30
                 mock_settings.gemini_max_tokens = 1000
+                mock_settings.ai_requests_per_minute = 15
 
                 service = AIService(test_db)
                 service.model = MagicMock()
@@ -176,6 +179,7 @@ class TestAIService:
                 mock_settings.gemini_api_key = "test_key"
                 mock_settings.ai_request_timeout = 30
                 mock_settings.gemini_max_tokens = 1000
+                mock_settings.ai_requests_per_minute = 15
 
                 service = AIService(test_db)
                 service.model = MagicMock()
@@ -199,6 +203,7 @@ class TestAIService:
                 mock_settings.ai_request_timeout = 30
                 mock_settings.gemini_model = "gemini-pro"
                 mock_settings.gemini_max_tokens = 1000
+                mock_settings.ai_requests_per_minute = 15
 
                 service = AIService(test_db)
                 service.model = MagicMock()
@@ -222,6 +227,7 @@ class TestAIService:
                 mock_settings.ai_request_timeout = 30
                 mock_settings.gemini_model = "gemini-pro"
                 mock_settings.gemini_max_tokens = 1000
+                mock_settings.ai_requests_per_minute = 15
 
                 service = AIService(test_db)
                 service.model = MagicMock()
@@ -272,6 +278,7 @@ class TestAIService:
                 mock_settings.gemini_api_key = "test_key"
                 mock_settings.gemini_model = "gemini-pro"
                 mock_settings.gemini_max_tokens = 1000
+                mock_settings.ai_requests_per_minute = 15
 
                 service = AIService(test_db)
                 service.model = MagicMock()
@@ -320,7 +327,7 @@ class TestAIService:
 
                 service = AIService(test_db)
 
-                prompt = service._build_subtask_generation_prompt_from_todo(test_todo, 5)
+                prompt = service._build_subtask_generation_prompt_from_todo(test_todo, 3, 5)
 
                 assert test_todo.title in prompt
                 assert "5" in prompt  # max_subtasks
