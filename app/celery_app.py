@@ -31,8 +31,8 @@ celery_app.conf.update(
 celery_app.conf.beat_schedule = {
     "send-daily-reminders": {
         "task": "app.tasks.notification_tasks.send_daily_reminders_task",
-        # "schedule": crontab(hour=12, minute=30),  # Run at 12:30 PM UTC (TESTING)
-        "schedule": crontab(minute="*/5"),  # Run every 5 minutes
+        "schedule": crontab(hour=12, minute=30),  # Run at 12:30 PM UTC (TESTING)
+        # "schedule": crontab(minute="*/5"),  # Run every 5 minutes
 
         "options": {"expires": 3600},  # Task expires after 1 hour
     },
