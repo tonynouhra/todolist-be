@@ -4,6 +4,8 @@ Models package initialization.
 
 from .ai_interaction import AIInteraction
 from .base import Base, BaseModel
+from .chat_conversation import ChatConversation
+from .chat_message import ChatMessage
 from .file import File
 from .project import Project
 from .todo import Todo
@@ -26,4 +28,7 @@ __all__ = [
     "TodoArchived",
     "AITodoInteraction",
     "UserSettings",
+    # Chat models
+    "ChatConversation",
+    "ChatMessage",
 ]
