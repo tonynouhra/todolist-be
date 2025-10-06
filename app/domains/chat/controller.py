@@ -14,6 +14,7 @@ from app.schemas.base import ResponseSchema
 from app.schemas.chat import ChatRequest
 from models.user import User
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -93,9 +94,7 @@ async def get_conversations(
     """
     try:
         service = ChatService(db)
-        result = await service.get_user_conversations(
-            user_id=current_user.id, page=page, size=size
-        )
+        result = await service.get_user_conversations(user_id=current_user.id, page=page, size=size)
 
         return ResponseSchema(
             status="success",
@@ -134,9 +133,7 @@ async def get_conversation(
     """
     try:
         service = ChatService(db)
-        result = await service.get_conversation_history(
-            conversation_id=conversation_id, user_id=current_user.id
-        )
+        result = await service.get_conversation_history(conversation_id=conversation_id, user_id=current_user.id)
 
         return ResponseSchema(
             status="success",

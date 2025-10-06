@@ -62,9 +62,7 @@ class TestAIService:
                 AIService(test_db)
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_success(
-        self, test_db, test_user, test_todo, sample_subtask_response
-    ):
+    async def test_generate_subtasks_success(self, test_db, test_user, test_todo, sample_subtask_response):
         """Test successful subtask generation."""
         with patch("app.domains.ai.service.genai"):
             with patch("app.domains.ai.service.settings") as mock_settings:
@@ -348,9 +346,7 @@ class TestAIService:
                 mock_file.content_type = "text/plain"
                 mock_file.file_size = 1024
 
-                prompt = service._build_file_analysis_prompt(
-                    mock_file, "summary", "Additional context"
-                )
+                prompt = service._build_file_analysis_prompt(mock_file, "summary", "Additional context")
 
                 assert "test.txt" in prompt
                 assert "summary" in prompt
@@ -472,9 +468,7 @@ class TestAIService:
                 # Verify interaction was stored
                 from sqlalchemy import select
 
-                result = await test_db.execute(
-                    select(AIInteraction).where(AIInteraction.user_id == test_user.id)
-                )
+                result = await test_db.execute(select(AIInteraction).where(AIInteraction.user_id == test_user.id))
                 interaction = result.scalar_one_or_none()
 
                 assert interaction is not None

@@ -128,9 +128,7 @@ class TestDatabaseIntegration:
     async def test_todo_hierarchical_relationship(self, test_db, test_user):
         """Test parent-child todo relationships."""
         # Create parent todo
-        parent_todo = Todo(
-            user_id=test_user.id, title="Parent Task", status="in_progress", priority=4
-        )
+        parent_todo = Todo(user_id=test_user.id, title="Parent Task", status="in_progress", priority=4)
         test_db.add(parent_todo)
         await test_db.commit()
         await test_db.refresh(parent_todo)
@@ -161,9 +159,7 @@ class TestDatabaseIntegration:
         for subtask in parent_with_subtasks.subtasks:
             assert subtask.parent_todo_id == parent_todo.id
             # Load parent relationship for verification
-            stmt_parent = (
-                select(Todo).where(Todo.id == subtask.id).options(selectinload(Todo.parent))
-            )
+            stmt_parent = select(Todo).where(Todo.id == subtask.id).options(selectinload(Todo.parent))
             result_parent = await test_db.execute(stmt_parent)
             subtask_with_parent = result_parent.scalar_one()
             assert subtask_with_parent.parent.id == parent_todo.id
@@ -350,9 +346,7 @@ class TestDatabaseIntegration:
         # Test aggregation queries
         # Count todos by status
         status_counts = await test_db.execute(
-            select(Todo.status, func.count(Todo.id))
-            .where(Todo.user_id == test_user.id)
-            .group_by(Todo.status)
+            select(Todo.status, func.count(Todo.id)).where(Todo.user_id == test_user.id).group_by(Todo.status)
         )
         status_dict = dict(status_counts.fetchall())
 
@@ -361,17 +355,13 @@ class TestDatabaseIntegration:
         assert status_dict["in_progress"] == 1
 
         # Average priority
-        avg_priority = await test_db.execute(
-            select(func.avg(Todo.priority)).where(Todo.user_id == test_user.id)
-        )
+        avg_priority = await test_db.execute(select(func.avg(Todo.priority)).where(Todo.user_id == test_user.id))
         avg_value = avg_priority.scalar()
         assert avg_value == 3.5  # (5+3+5+1)/4
 
         # High priority todos count
         high_priority_count = await test_db.execute(
-            select(func.count(Todo.id))
-            .where(Todo.user_id == test_user.id)
-            .where(Todo.priority >= 4)
+            select(func.count(Todo.id)).where(Todo.user_id == test_user.id).where(Todo.priority >= 4)
         )
         assert high_priority_count.scalar() == 2
 
@@ -448,9 +438,7 @@ class TestDatabaseIntegration:
         # Create project
         from app.schemas.project import ProjectCreate
 
-        project_data = ProjectCreate(
-            name="Statistics Project", description="For testing statistics"
-        )
+        project_data = ProjectCreate(name="Statistics Project", description="For testing statistics")
         project = await project_service.create_project(project_data, test_user.id)
 
         # Create todos with different statuses
@@ -464,15 +452,11 @@ class TestDatabaseIntegration:
         ]
 
         for config in todo_configs:
-            todo_data = TodoCreate(
-                title=config["title"], status=config["status"], project_id=project.id
-            )
+            todo_data = TodoCreate(title=config["title"], status=config["status"], project_id=project.id)
             await todo_service.create_todo(todo_data, test_user.id)
 
         # Test project with todo counts
-        project_with_counts = await project_service.get_project_with_todo_counts(
-            project.id, test_user.id
-        )
+        project_with_counts = await project_service.get_project_with_todo_counts(project.id, test_user.id)
 
         assert project_with_counts is not None
         assert project_with_counts["todo_count"] == 4
@@ -501,9 +485,7 @@ class TestDatabaseIntegration:
         project = await project_service.create_project(project_data, test_user.id)
 
         # Create parent todo
-        parent_todo_data = TodoCreate(
-            title="Parent Todo", project_id=project.id, status="in_progress"
-        )
+        parent_todo_data = TodoCreate(title="Parent Todo", project_id=project.id, status="in_progress")
         parent_todo = await todo_service.create_todo(parent_todo_data, test_user.id)
 
         # Create subtasks
@@ -524,9 +506,7 @@ class TestDatabaseIntegration:
         assert project_with_todos is not None
         assert len(project_with_todos.todos) == 4  # 1 parent + 3 subtasks
 
-        parent_with_subtasks = await todo_service.get_todo_with_subtasks(
-            parent_todo.id, test_user.id
-        )
+        parent_with_subtasks = await todo_service.get_todo_with_subtasks(parent_todo.id, test_user.id)
 
         assert parent_with_subtasks is not None
         assert len(parent_with_subtasks.subtasks) == 3

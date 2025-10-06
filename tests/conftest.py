@@ -32,9 +32,7 @@ from app.main import app
 from models import AIInteraction, Base, Project, Todo, User, UserSettings
 
 # Test database URL - Use environment variable or default
-TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL", "postgresql+asyncpg://test:test@localhost:5432/test_ai_todo"
-)
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://test:test@localhost:5432/test_ai_todo")
 
 
 @pytest.fixture(scope="session")
@@ -172,9 +170,7 @@ async def test_project(test_db, test_user):
 @pytest_asyncio.fixture
 async def test_project_2(test_db, test_user):
     """Create a second test project."""
-    project = Project(
-        user_id=test_user.id, name="Test Project 2", description="Another test project"
-    )
+    project = Project(user_id=test_user.id, name="Test Project 2", description="Another test project")
     test_db.add(project)
     await test_db.commit()
     await test_db.refresh(project)

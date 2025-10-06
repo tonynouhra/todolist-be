@@ -9,35 +9,31 @@ from uuid import UUID
 
 import google.generativeai as genai
 from google.generativeai.types import HarmBlockThreshold, HarmCategory
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
 
 from app.core.config import settings
 from app.exceptions.ai import (
     AIConfigurationError,
-    AIParsingError,
     AIServiceError,
     AITimeoutError,
 )
 from app.schemas.chat import (
     ChatAction,
-    ChatConversationCreate,
     ChatConversationDetailResponse,
     ChatConversationResponse,
     ChatHistoryResponse,
     ChatMessageResponse,
     ChatRequest,
     ChatResponse,
-    ChatSuggestionResponse,
     MessageRole,
-    SuggestedAction,
 )
 from models.chat_conversation import ChatConversation
 from models.chat_message import ChatMessage
 from models.project import Project
 from models.todo import Todo
+
 
 logger = logging.getLogger(__name__)
 
@@ -70,18 +66,10 @@ class ChatService:
             self.model = genai.GenerativeModel(
                 model_name=model_name,
                 safety_settings={
-                    HarmCategory.HARM_CATEGORY_HARASSMENT: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
-                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
-                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
-                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
+                    HarmCategory.HARM_CATEGORY_HARASSMENT: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
                 },
                 generation_config=genai.types.GenerationConfig(
                     candidate_count=1,
@@ -141,9 +129,7 @@ class ChatService:
                 for action_data in parsed_response["suggested_actions"]:
                     if not action_data.get("confirmation_required", True):
                         # Auto-execute actions that don't need confirmation
-                        action_result = await self._execute_action(
-                            action_data, user_id, conversation.id
-                        )
+                        action_result = await self._execute_action(action_data, user_id, conversation.id)
                         actions_taken.append(action_result)
 
             # Store assistant message with actions
@@ -151,9 +137,7 @@ class ChatService:
                 conversation_id=conversation.id,
                 role=MessageRole.ASSISTANT,
                 content=parsed_response.get("message", response_text),
-                actions=[action.model_dump() for action in actions_taken]
-                if actions_taken
-                else None,
+                actions=[action.model_dump() for action in actions_taken] if actions_taken else None,
                 has_actions=len(actions_taken) > 0,
             )
             self.db.add(assistant_message)
@@ -182,9 +166,7 @@ class ChatService:
             logger.error(f"Chat service error: {str(e)}")
             raise AIServiceError(f"Chat service error: {str(e)}") from e
 
-    async def get_conversation_history(
-        self, conversation_id: UUID, user_id: UUID
-    ) -> ChatConversationDetailResponse:
+    async def get_conversation_history(self, conversation_id: UUID, user_id: UUID) -> ChatConversationDetailResponse:
         """Get conversation with all messages.
 
         Args:
@@ -194,9 +176,8 @@ class ChatService:
         Returns:
             Conversation with messages
         """
-        query = (
-            select(ChatConversation)
-            .where(ChatConversation.id == conversation_id, ChatConversation.user_id == user_id)
+        query = select(ChatConversation).where(
+            ChatConversation.id == conversation_id, ChatConversation.user_id == user_id
         )
         result = await self.db.execute(query)
         conversation = result.scalar_one_or_none()
@@ -206,9 +187,7 @@ class ChatService:
 
         # Get messages
         messages_query = (
-            select(ChatMessage)
-            .where(ChatMessage.conversation_id == conversation_id)
-            .order_by(ChatMessage.created_at)
+            select(ChatMessage).where(ChatMessage.conversation_id == conversation_id).order_by(ChatMessage.created_at)
         )
         messages_result = await self.db.execute(messages_query)
         messages = messages_result.scalars().all()
@@ -224,9 +203,7 @@ class ChatService:
             updated_at=conversation.updated_at,
         )
 
-    async def get_user_conversations(
-        self, user_id: UUID, page: int = 1, size: int = 20
-    ) -> ChatHistoryResponse:
+    async def get_user_conversations(self, user_id: UUID, page: int = 1, size: int = 20) -> ChatHistoryResponse:
         """Get all conversations for a user.
 
         Args:
@@ -240,9 +217,7 @@ class ChatService:
         offset = (page - 1) * size
 
         # Get total count
-        count_query = select(func.count(ChatConversation.id)).where(
-            ChatConversation.user_id == user_id
-        )
+        count_query = select(func.count(ChatConversation.id)).where(ChatConversation.user_id == user_id)
         total_result = await self.db.execute(count_query)
         total = total_result.scalar() or 0
 
@@ -260,9 +235,7 @@ class ChatService:
         # Get message counts
         conversation_responses = []
         for conv in conversations:
-            msg_count_query = select(func.count(ChatMessage.id)).where(
-                ChatMessage.conversation_id == conv.id
-            )
+            msg_count_query = select(func.count(ChatMessage.id)).where(ChatMessage.conversation_id == conv.id)
             msg_count_result = await self.db.execute(msg_count_query)
             msg_count = msg_count_result.scalar() or 0
 
@@ -296,9 +269,8 @@ class ChatService:
         Returns:
             True if deleted successfully
         """
-        query = (
-            select(ChatConversation)
-            .where(ChatConversation.id == conversation_id, ChatConversation.user_id == user_id)
+        query = select(ChatConversation).where(
+            ChatConversation.id == conversation_id, ChatConversation.user_id == user_id
         )
         result = await self.db.execute(query)
         conversation = result.scalar_one_or_none()
@@ -312,9 +284,7 @@ class ChatService:
 
     # Private helper methods
 
-    async def _get_or_create_conversation(
-        self, conversation_id: UUID | None, user_id: UUID
-    ) -> ChatConversation:
+    async def _get_or_create_conversation(self, conversation_id: UUID | None, user_id: UUID) -> ChatConversation:
         """Get existing conversation or create new one."""
         if conversation_id:
             query = select(ChatConversation).where(
@@ -337,18 +307,14 @@ class ChatService:
     async def _get_conversation_history(self, conversation_id: UUID) -> list[dict]:
         """Get conversation message history."""
         query = (
-            select(ChatMessage)
-            .where(ChatMessage.conversation_id == conversation_id)
-            .order_by(ChatMessage.created_at)
+            select(ChatMessage).where(ChatMessage.conversation_id == conversation_id).order_by(ChatMessage.created_at)
         )
         result = await self.db.execute(query)
         messages = result.scalars().all()
 
         return [{"role": msg.role.value, "content": msg.content} for msg in messages]
 
-    def _build_chat_prompt(
-        self, message: str, history: list[dict], context: dict | None, user_id: UUID
-    ) -> str:
+    def _build_chat_prompt(self, message: str, history: list[dict], context: dict | None, _user_id: UUID) -> str:
         """Build chat prompt with context and history."""
         system_prompt = """You are an AI assistant helping users manage their tasks and projects.
 
@@ -449,15 +415,13 @@ Execute the action to create the project with all suggested tasks.
             logger.warning(f"Failed to parse chat JSON, using raw response: {str(e)}")
             return {"message": response, "suggested_actions": []}
 
-    async def _execute_action(
-        self, action_data: dict, user_id: UUID, conversation_id: UUID
-    ) -> ChatAction:
+    async def _execute_action(self, action_data: dict, user_id: UUID, _conversation_id: UUID) -> ChatAction:
         """Execute an AI-suggested action.
 
         Args:
             action_data: Action data from AI response
             user_id: User ID
-            conversation_id: Conversation ID
+            _conversation_id: Conversation ID (reserved for future use)
 
         Returns:
             ChatAction with execution result
@@ -541,9 +505,7 @@ Execute the action to create the project with all suggested tasks.
         try:
             available_models = list(genai.list_models())
             model_names = [
-                model.name
-                for model in available_models
-                if "generateContent" in model.supported_generation_methods
+                model.name for model in available_models if "generateContent" in model.supported_generation_methods
             ]
 
             logger.info(f"Available models with generateContent: {model_names}")

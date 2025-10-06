@@ -11,6 +11,7 @@ from app.schemas.base import ResponseSchema
 from app.tasks.notification_tasks import send_test_reminder_task
 from models.user import User
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -24,7 +25,7 @@ router = APIRouter(
 async def send_test_reminder(
     _request: Request,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    _db: AsyncSession = Depends(get_db),
 ):
     """Send a test reminder email to the current user.
 

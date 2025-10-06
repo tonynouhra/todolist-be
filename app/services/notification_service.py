@@ -12,6 +12,7 @@ from models.todo import Todo
 from models.user import User
 from models.user_settings import UserSettings
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,9 +123,7 @@ class NotificationService:
         logger.info(f"Found {len(users)} users with email notifications enabled")
         return list(users)
 
-    async def _get_expiring_tasks(
-        self, user_id: Any, days_ahead: int = 3
-    ) -> list[Todo]:
+    async def _get_expiring_tasks(self, user_id: Any, days_ahead: int = 3) -> list[Todo]:
         """Get tasks expiring within the specified number of days.
 
         Args:
@@ -137,15 +136,19 @@ class NotificationService:
         now = datetime.now(UTC)
         future = now + timedelta(days=days_ahead)
 
-        query = select(Todo).where(
-            and_(
-                Todo.user_id == user_id,
-                Todo.status.in_(["todo", "in_progress"]),
-                Todo.due_date.isnot(None),
-                Todo.due_date >= now,
-                Todo.due_date <= future,
+        query = (
+            select(Todo)
+            .where(
+                and_(
+                    Todo.user_id == user_id,
+                    Todo.status.in_(["todo", "in_progress"]),
+                    Todo.due_date.isnot(None),
+                    Todo.due_date >= now,
+                    Todo.due_date <= future,
+                )
             )
-        ).order_by(Todo.due_date.asc())
+            .order_by(Todo.due_date.asc())
+        )
 
         result = await self.db.execute(query)
         tasks = result.scalars().all()
@@ -153,9 +156,7 @@ class NotificationService:
         logger.debug(f"Found {len(tasks)} expiring tasks for user {user_id}")
         return list(tasks)
 
-    async def _get_pending_tasks(
-        self, user_id: Any, limit: int = 20
-    ) -> list[Todo]:
+    async def _get_pending_tasks(self, user_id: Any, limit: int = 20) -> list[Todo]:
         """Get pending tasks for a user.
 
         Args:
@@ -201,9 +202,7 @@ class NotificationService:
             "description": task.description,
             "priority": task.priority,
             "status": task.status,
-            "due_date": task.due_date.strftime("%B %d, %Y at %I:%M %p")
-            if task.due_date
-            else None,
+            "due_date": task.due_date.strftime("%B %d, %Y at %I:%M %p") if task.due_date else None,
         }
 
     async def send_test_reminder(self, user_email: str) -> bool:

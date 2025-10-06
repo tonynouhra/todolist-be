@@ -87,9 +87,7 @@ async def get_current_user(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive")
 
         # Add user info to request state for logging
         request.state.user_id = user.id

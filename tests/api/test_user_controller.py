@@ -227,9 +227,7 @@ class TestUserAuthController:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_update_current_user_service_error(
-        self, authenticated_client: AsyncClient, test_user
-    ):
+    async def test_update_current_user_service_error(self, authenticated_client: AsyncClient, test_user):
         """Test updating user with service error."""
         update_data = {"username": "error_username"}
 

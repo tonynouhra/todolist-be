@@ -8,6 +8,7 @@ from typing import Any
 
 from app.core.config import settings
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -106,14 +107,10 @@ class EmailService:
             True if email sent successfully, False otherwise
         """
         # Generate HTML content
-        html_content = self._generate_reminder_html(
-            username, expiring_tasks, pending_tasks
-        )
+        html_content = self._generate_reminder_html(username, expiring_tasks, pending_tasks)
 
         # Generate plain text content
-        text_content = self._generate_reminder_text(
-            username, expiring_tasks, pending_tasks
-        )
+        text_content = self._generate_reminder_text(username, expiring_tasks, pending_tasks)
 
         subject = "📋 Your Daily Task Reminder"
 
@@ -276,7 +273,11 @@ class EmailService:
                 text += f"... and {len(pending_tasks) - 10} more pending tasks\n\n"
 
         text += "\n" + "=" * 50 + "\n"
-        text += "View all your tasks at: " + (settings.allowed_origins_list[0] if settings.allowed_origins_list else "http://localhost:3000") + "\n\n"
+        text += (
+            "View all your tasks at: "
+            + (settings.allowed_origins_list[0] if settings.allowed_origins_list else "http://localhost:3000")
+            + "\n\n"
+        )
         text += "To manage your notification settings, visit your account settings.\n"
 
         return text

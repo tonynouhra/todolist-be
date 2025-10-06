@@ -49,9 +49,8 @@ class UserSettingsUpdate(BaseSchema):
     @classmethod
     def validate_timezone(cls, v: str | None) -> str | None:
         """Validate timezone string."""
-        if v is not None and v:
-            if not v.strip():
-                raise ValueError("Timezone cannot be empty")
+        if v is not None and v and not v.strip():
+            raise ValueError("Timezone cannot be empty")
         return v
 
 

@@ -103,11 +103,7 @@ class TodoActive(BaseModel):
         """Check if the todo is overdue."""
         from datetime import datetime, timezone
 
-        return (
-            self.due_date is not None
-            and self.due_date < datetime.now(timezone.utc)
-            and not self.is_completed()
-        )
+        return self.due_date is not None and self.due_date < datetime.now(timezone.utc) and not self.is_completed()
 
     def can_have_subtasks(self) -> bool:
         """Check if this todo can have subtasks based on depth limit."""
@@ -291,11 +287,7 @@ class Todo:
         """Check if the todo is overdue."""
         from datetime import datetime, timezone
 
-        return (
-            self.due_date is not None
-            and self.due_date < datetime.now(timezone.utc)
-            and not self.is_completed()
-        )
+        return self.due_date is not None and self.due_date < datetime.now(timezone.utc) and not self.is_completed()
 
 
 # ====================================================================

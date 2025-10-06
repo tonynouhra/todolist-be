@@ -60,9 +60,7 @@ class TestProjectService:
             await service.create_project(project_data, test_user.id)
 
     @pytest.mark.asyncio
-    async def test_create_project_same_name_different_user(
-        self, test_db, test_user, test_user_2, test_project
-    ):
+    async def test_create_project_same_name_different_user(self, test_db, test_user, test_user_2, test_project):
         """Test creating project with same name but different user."""
         service = ProjectService(test_db)
         project_data = ProjectCreate(
@@ -162,9 +160,7 @@ class TestProjectService:
         """Test projects list with description search."""
         service = ProjectService(test_db)
 
-        project_data_1 = ProjectCreate(
-            name="Project One", description="This contains special keyword"
-        )
+        project_data_1 = ProjectCreate(name="Project One", description="This contains special keyword")
         project_data_2 = ProjectCreate(name="Project Two", description="Regular description")
 
         await service.create_project(project_data_1, test_user.id)
@@ -232,9 +228,7 @@ class TestProjectService:
             await service.update_project(fake_id, update_data, test_user.id)
 
     @pytest.mark.asyncio
-    async def test_update_project_duplicate_name(
-        self, test_db, test_user, test_project, test_project_2
-    ):
+    async def test_update_project_duplicate_name(self, test_db, test_user, test_project, test_project_2):
         """Test updating project to duplicate name."""
         service = ProjectService(test_db)
         update_data = ProjectUpdate(name=test_project_2.name)
@@ -246,9 +240,7 @@ class TestProjectService:
     async def test_update_project_same_name(self, test_db, test_user, test_project):
         """Test updating project with same name (should succeed)."""
         service = ProjectService(test_db)
-        update_data = ProjectUpdate(
-            name=test_project.name, description="Updated description only"  # Same name
-        )
+        update_data = ProjectUpdate(name=test_project.name, description="Updated description only")  # Same name
 
         result = await service.update_project(test_project.id, update_data, test_user.id)
 
@@ -271,9 +263,7 @@ class TestProjectService:
         assert deleted_project is None
 
     @pytest.mark.asyncio
-    async def test_delete_project_with_todos_unassign(
-        self, test_db, test_user, test_project, test_todo
-    ):
+    async def test_delete_project_with_todos_unassign(self, test_db, test_user, test_project, test_todo):
         """Test deleting project with todos unassigns them."""
         service = ProjectService(test_db)
         project_id = test_project.id
@@ -438,9 +428,7 @@ class TestProjectService:
         assert result.id == test_project.id
 
     @pytest.mark.asyncio
-    async def test_get_project_by_name_and_user_different_user(
-        self, test_db, test_user_2, test_project
-    ):
+    async def test_get_project_by_name_and_user_different_user(self, test_db, test_user_2, test_project):
         """Test getting project by name with different user."""
         service = ProjectService(test_db)
 

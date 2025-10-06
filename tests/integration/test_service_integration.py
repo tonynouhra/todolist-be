@@ -37,9 +37,7 @@ class TestServiceIntegration:
         )
 
         # Create project for user
-        project_data = ProjectCreate(
-            name="Workflow Project", description="Testing complete workflow"
-        )
+        project_data = ProjectCreate(name="Workflow Project", description="Testing complete workflow")
         project = await project_service.create_project(project_data, user.id)
 
         # Create todos in project
@@ -118,9 +116,7 @@ class TestServiceIntegration:
             subtasks.append(subtask)
 
         # Verify hierarchy
-        parent_with_subtasks = await todo_service.get_todo_with_subtasks(
-            parent_todo.id, test_user.id
-        )
+        parent_with_subtasks = await todo_service.get_todo_with_subtasks(parent_todo.id, test_user.id)
         assert len(parent_with_subtasks.subtasks) == 4
 
         # Verify all subtasks belong to same project
@@ -134,9 +130,7 @@ class TestServiceIntegration:
             await todo_service.update_todo(subtask.id, update_data, test_user.id)
 
         # Get updated project statistics
-        project_with_counts = await project_service.get_project_with_todo_counts(
-            project.id, test_user.id
-        )
+        project_with_counts = await project_service.get_project_with_todo_counts(project.id, test_user.id)
 
         assert project_with_counts["todo_count"] == 5  # 1 parent + 4 subtasks
         assert project_with_counts["completed_todo_count"] == 2
@@ -216,9 +210,7 @@ class TestServiceIntegration:
                 generate_ai_subtasks=True,
             )
 
-            ai_todo = await todo_service.create_todo(
-                ai_todo_data, test_user.id, generate_ai_subtasks=True
-            )
+            ai_todo = await todo_service.create_todo(ai_todo_data, test_user.id, generate_ai_subtasks=True)
 
             # Verify subtasks were created
             todo_with_subtasks = await todo_service.get_todo_with_subtasks(ai_todo.id, test_user.id)
@@ -235,9 +227,7 @@ class TestServiceIntegration:
         todo_service = TodoService(test_db)
 
         # Create project
-        project_data = ProjectCreate(
-            name="Deletion Test Project", description="Will be deleted to test impact"
-        )
+        project_data = ProjectCreate(name="Deletion Test Project", description="Will be deleted to test impact")
         project = await project_service.create_project(project_data, test_user.id)
 
         # Create todos in the project
@@ -291,9 +281,7 @@ class TestServiceIntegration:
         parent_todo_data = TodoCreate(title="Parent Todo", project_id=project.id)
         parent_todo = await todo_service.create_todo(parent_todo_data, user.id)
 
-        subtask_data = TodoCreate(
-            title="Subtask", parent_todo_id=parent_todo.id, project_id=project.id
-        )
+        subtask_data = TodoCreate(title="Subtask", parent_todo_id=parent_todo.id, project_id=project.id)
         subtask = await todo_service.create_todo(subtask_data, user.id)
 
         # Store IDs for verification
@@ -336,9 +324,7 @@ class TestServiceIntegration:
             # Create todos with mixed statuses
             for j in range(4):
                 status = "done" if j < 2 else "todo"  # First 2 are completed
-                todo_data = TodoCreate(
-                    title=f"Project {i} Todo {j}", project_id=project.id, status=status
-                )
+                todo_data = TodoCreate(title=f"Project {i} Todo {j}", project_id=project.id, status=status)
                 await todo_service.create_todo(todo_data, test_user.id)
                 total_todos_created += 1
                 if status == "done":

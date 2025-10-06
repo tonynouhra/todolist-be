@@ -210,9 +210,7 @@ class TestErrorHandlingWorkflows:
             "app.domains.ai.service.AIService.generate_subtasks",
             side_effect=AIConfigurationError("AI service not configured"),
         ):
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=ai_request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=ai_request_data)
 
             assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
             data = response.json()
@@ -228,9 +226,7 @@ class TestErrorHandlingWorkflows:
                 side_effect=AIQuotaExceededError("API quota exceeded"),
             ),
         ):
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=ai_request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=ai_request_data)
 
             assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
             data = response.json()
@@ -245,9 +241,7 @@ class TestErrorHandlingWorkflows:
                 side_effect=AITimeoutError("Request timed out"),
             ),
         ):
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=ai_request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=ai_request_data)
 
             assert response.status_code == status.HTTP_408_REQUEST_TIMEOUT
             data = response.json()
@@ -262,9 +256,7 @@ class TestErrorHandlingWorkflows:
                 side_effect=AIServiceError("Generic AI error"),
             ),
         ):
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=ai_request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=ai_request_data)
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
@@ -284,9 +276,7 @@ class TestErrorHandlingWorkflows:
             assert data["data"]["service_available"] is False
 
     @pytest.mark.asyncio
-    async def test_data_consistency_error_workflow(
-        self, authenticated_client: AsyncClient, test_user
-    ):
+    async def test_data_consistency_error_workflow(self, authenticated_client: AsyncClient, test_user):
         """Test workflow ensuring data consistency during errors."""
 
         # Step 1: Create project and todos
@@ -333,23 +323,17 @@ class TestErrorHandlingWorkflows:
             "project_id": str(uuid.uuid4()),  # Non-existent project
         }
 
-        update_response = await authenticated_client.put(
-            f"/api/todos/{parent_todo_id}", json=invalid_update_data
-        )
+        update_response = await authenticated_client.put(f"/api/todos/{parent_todo_id}", json=invalid_update_data)
         assert update_response.status_code == status.HTTP_400_BAD_REQUEST
 
         # Verify that the parent todo wasn't changed and subtasks are still there
-        parent_check_response = await authenticated_client.get(
-            f"/api/todos/{parent_todo_id}?include_subtasks=true"
-        )
+        parent_check_response = await authenticated_client.get(f"/api/todos/{parent_todo_id}?include_subtasks=true")
         parent_data = parent_check_response.json()["data"]
         assert parent_data["title"] == "Parent Todo"  # Original title
         assert len(parent_data["subtasks"]) == initial_subtasks_count
 
     @pytest.mark.asyncio
-    async def test_concurrent_access_error_workflow(
-        self, authenticated_client: AsyncClient, test_user
-    ):
+    async def test_concurrent_access_error_workflow(self, authenticated_client: AsyncClient, test_user):
         """Test workflow with simulated concurrent access scenarios."""
         import asyncio
 

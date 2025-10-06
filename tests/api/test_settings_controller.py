@@ -16,9 +16,7 @@ class TestSettingsController:
     """Test cases for Settings API endpoints."""
 
     @pytest.mark.asyncio
-    async def test_get_settings_success(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_get_settings_success(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test successful retrieval of user settings."""
         response = await authenticated_client.get("/api/settings")
 
@@ -52,9 +50,7 @@ class TestSettingsController:
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
-    async def test_get_settings_service_error(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_get_settings_service_error(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test get_settings with service error."""
         with patch(
             "app.domains.settings.service.SettingsService.get_user_settings",
@@ -67,9 +63,7 @@ class TestSettingsController:
             assert "Failed to retrieve settings" in data["message"]
 
     @pytest.mark.asyncio
-    async def test_update_settings_theme(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_update_settings_theme(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test updating theme setting."""
         update_data = {"theme": "dark"}
 
@@ -81,9 +75,7 @@ class TestSettingsController:
         assert data["user_id"] == str(test_user.id)
 
     @pytest.mark.asyncio
-    async def test_update_settings_language(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_update_settings_language(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test updating language setting."""
         update_data = {"language": "es"}
 
@@ -94,9 +86,7 @@ class TestSettingsController:
         assert data["language"] == "es"
 
     @pytest.mark.asyncio
-    async def test_update_settings_timezone(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_update_settings_timezone(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test updating timezone setting."""
         update_data = {"timezone": "America/New_York"}
 
@@ -147,9 +137,7 @@ class TestSettingsController:
         assert data["notifications_enabled"] is False
 
     @pytest.mark.asyncio
-    async def test_update_settings_partial(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_update_settings_partial(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test partial update of settings."""
         original_language = test_user_settings.language
         update_data = {"theme": "dark"}  # Only update theme
@@ -215,9 +203,7 @@ class TestSettingsController:
             assert "Failed to update settings" in data["message"]
 
     @pytest.mark.asyncio
-    async def test_reset_settings_success(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_reset_settings_success(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test successful reset of settings to defaults."""
         # First update settings to non-default values
         await authenticated_client.put(
@@ -243,9 +229,7 @@ class TestSettingsController:
         assert data["push_notifications"] is True
 
     @pytest.mark.asyncio
-    async def test_reset_settings_creates_if_not_exists(
-        self, authenticated_client: AsyncClient, test_user
-    ):
+    async def test_reset_settings_creates_if_not_exists(self, authenticated_client: AsyncClient, test_user):
         """Test that reset creates settings if they don't exist."""
         response = await authenticated_client.post("/api/settings/reset")
 
@@ -263,9 +247,7 @@ class TestSettingsController:
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
-    async def test_reset_settings_service_error(
-        self, authenticated_client: AsyncClient, test_user, test_user_settings
-    ):
+    async def test_reset_settings_service_error(self, authenticated_client: AsyncClient, test_user, test_user_settings):
         """Test reset_settings with service error."""
         with patch(
             "app.domains.settings.service.SettingsService.reset_user_settings",

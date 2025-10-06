@@ -193,9 +193,7 @@ def setup_routers(fastapi_app: FastAPI):
 
             return {
                 "status": (
-                    "healthy"
-                    if db_status == "healthy" and (ai_status in ["healthy", "not_configured"])
-                    else "degraded"
+                    "healthy" if db_status == "healthy" and (ai_status in ["healthy", "not_configured"]) else "degraded"
                 ),
                 "version": "1.0.0",
                 "environment": settings.environment,

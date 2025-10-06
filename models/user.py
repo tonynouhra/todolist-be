@@ -68,20 +68,12 @@ class User(BaseModel):
 
     # New partitioned relationships
     active_todos = relationship("TodoActive", back_populates="user", cascade="all, delete-orphan")
-    archived_todos = relationship(
-        "TodoArchived", back_populates="user", cascade="all, delete-orphan"
-    )
-    ai_interactions = relationship(
-        "AITodoInteraction", back_populates="user", cascade="all, delete-orphan"
-    )
+    archived_todos = relationship("TodoArchived", back_populates="user", cascade="all, delete-orphan")
+    ai_interactions = relationship("AITodoInteraction", back_populates="user", cascade="all, delete-orphan")
 
     # Other relationships
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     files = relationship("File", back_populates="user", cascade="all, delete-orphan")
     settings = relationship("UserSettings", back_populates="user", cascade="all, delete-orphan", uselist=False)
-    chat_conversations = relationship(
-        "ChatConversation", back_populates="user", cascade="all, delete-orphan"
-    )
-    push_subscriptions = relationship(
-        "PushSubscription", back_populates="user", cascade="all, delete-orphan"
-    )
+    chat_conversations = relationship("ChatConversation", back_populates="user", cascade="all, delete-orphan")
+    push_subscriptions = relationship("PushSubscription", back_populates="user", cascade="all, delete-orphan")

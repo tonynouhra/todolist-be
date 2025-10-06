@@ -18,8 +18,7 @@ async def get_settings(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Get current user's settings.
+    """Get current user's settings.
 
     This endpoint retrieves the authenticated user's settings,
     creating default settings if they don't exist yet.
@@ -42,8 +41,7 @@ async def update_settings(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Update current user's settings.
+    """Update current user's settings.
 
     This endpoint allows users to update their preferences.
     Only provided fields will be updated; others remain unchanged.
@@ -74,8 +72,7 @@ async def reset_settings(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Reset current user's settings to defaults.
+    """Reset current user's settings to defaults.
 
     This endpoint resets all user settings to their default values:
     - theme: system

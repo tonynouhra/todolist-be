@@ -130,12 +130,8 @@ class TestTodoController:
     async def test_get_todos_list_with_status_filter(self, authenticated_client: AsyncClient):
         """Test todos list with status filter."""
         # Create todos with different statuses
-        await authenticated_client.post(
-            "/api/todos/", json={"title": "Todo Item", "status": "todo"}
-        )
-        await authenticated_client.post(
-            "/api/todos/", json={"title": "Done Item", "status": "done"}
-        )
+        await authenticated_client.post("/api/todos/", json={"title": "Todo Item", "status": "todo"})
+        await authenticated_client.post("/api/todos/", json={"title": "Done Item", "status": "done"})
 
         response = await authenticated_client.get("/api/todos/?status=done")
 
@@ -147,12 +143,8 @@ class TestTodoController:
     @pytest.mark.asyncio
     async def test_get_todos_list_with_priority_filter(self, authenticated_client: AsyncClient):
         """Test todos list with priority filter."""
-        await authenticated_client.post(
-            "/api/todos/", json={"title": "High Priority", "priority": 5}
-        )
-        await authenticated_client.post(
-            "/api/todos/", json={"title": "Low Priority", "priority": 1}
-        )
+        await authenticated_client.post("/api/todos/", json={"title": "High Priority", "priority": 5})
+        await authenticated_client.post("/api/todos/", json={"title": "Low Priority", "priority": 1})
 
         response = await authenticated_client.get("/api/todos/?priority=5")
 
@@ -162,9 +154,7 @@ class TestTodoController:
             assert todo["priority"] == 5
 
     @pytest.mark.asyncio
-    async def test_get_todos_list_with_project_filter(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_get_todos_list_with_project_filter(self, authenticated_client: AsyncClient, test_project):
         """Test todos list with project filter."""
         await authenticated_client.post(
             "/api/todos/",
@@ -235,13 +225,9 @@ class TestTodoController:
         assert data["data"]["title"] == test_todo.title
 
     @pytest.mark.asyncio
-    async def test_get_todo_by_id_with_subtasks(
-        self, authenticated_client: AsyncClient, test_todo_with_subtasks
-    ):
+    async def test_get_todo_by_id_with_subtasks(self, authenticated_client: AsyncClient, test_todo_with_subtasks):
         """Test getting todo with its subtasks."""
-        response = await authenticated_client.get(
-            f"/api/todos/{test_todo_with_subtasks.id}?include_subtasks=true"
-        )
+        response = await authenticated_client.get(f"/api/todos/{test_todo_with_subtasks.id}?include_subtasks=true")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -327,9 +313,7 @@ class TestTodoController:
         assert get_data["status"] == "error"
 
     @pytest.mark.asyncio
-    async def test_delete_todo_with_subtasks(
-        self, authenticated_client: AsyncClient, test_todo_with_subtasks
-    ):
+    async def test_delete_todo_with_subtasks(self, authenticated_client: AsyncClient, test_todo_with_subtasks):
         """Test deleting todo that has subtasks."""
         parent_id = str(test_todo_with_subtasks.id)
         subtask_ids = [str(subtask.id) for subtask in test_todo_with_subtasks.subtasks]
@@ -367,9 +351,7 @@ class TestTodoController:
         assert data["data"]["status"] == "done"
 
     @pytest.mark.asyncio
-    async def test_toggle_todo_status_to_todo(
-        self, authenticated_client: AsyncClient, completed_todo
-    ):
+    async def test_toggle_todo_status_to_todo(self, authenticated_client: AsyncClient, completed_todo):
         """Test toggling completed todo status back to todo."""
         response = await authenticated_client.patch(f"/api/todos/{completed_todo.id}/toggle-status")
 
@@ -383,12 +365,8 @@ class TestTodoController:
         """Test getting todo statistics."""
         # Create todos with different statuses
         await authenticated_client.post("/api/todos/", json={"title": "Pending", "status": "todo"})
-        await authenticated_client.post(
-            "/api/todos/", json={"title": "In Progress", "status": "in_progress"}
-        )
-        await authenticated_client.post(
-            "/api/todos/", json={"title": "Completed", "status": "done"}
-        )
+        await authenticated_client.post("/api/todos/", json={"title": "In Progress", "status": "in_progress"})
+        await authenticated_client.post("/api/todos/", json={"title": "Completed", "status": "done"})
 
         response = await authenticated_client.get("/api/todos/stats/summary")
 
@@ -400,13 +378,9 @@ class TestTodoController:
         assert "completion_rate" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_get_todo_subtasks(
-        self, authenticated_client: AsyncClient, test_todo_with_subtasks
-    ):
+    async def test_get_todo_subtasks(self, authenticated_client: AsyncClient, test_todo_with_subtasks):
         """Test getting subtasks of a todo."""
-        response = await authenticated_client.get(
-            f"/api/todos/{test_todo_with_subtasks.id}/subtasks"
-        )
+        response = await authenticated_client.get(f"/api/todos/{test_todo_with_subtasks.id}/subtasks")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -436,9 +410,7 @@ class TestTodoController:
                 json={"title": f"Subtask {i}", "parent_todo_id": str(test_todo.id)},
             )
 
-        response = await authenticated_client.get(
-            f"/api/todos/{test_todo.id}/subtasks?page=1&size=10"
-        )
+        response = await authenticated_client.get(f"/api/todos/{test_todo.id}/subtasks?page=1&size=10")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()

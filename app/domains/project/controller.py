@@ -64,16 +64,12 @@ async def get_projects(
     pagination = PaginationParams(page=page, size=size)
 
     service = ProjectService(db)
-    result = await service.get_projects_list(
-        user_id=current_user.id, filters=filters, pagination=pagination
-    )
+    result = await service.get_projects_list(user_id=current_user.id, filters=filters, pagination=pagination)
 
     projects = []
     for project in result["items"]:
         # Get project with todo counts
-        project_with_counts = await service.get_project_with_todo_counts(
-            project.id, current_user.id
-        )
+        project_with_counts = await service.get_project_with_todo_counts(project.id, current_user.id)
         if project_with_counts:
             projects.append(ProjectResponse.model_validate(project_with_counts))
         else:

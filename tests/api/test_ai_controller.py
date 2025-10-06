@@ -54,9 +54,7 @@ class TestAIController:
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
             mock_ai_service.return_value.generate_subtasks = AsyncMock(return_value=mock_response)
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_201_CREATED
             data = response.json()
@@ -77,16 +75,12 @@ class TestAIController:
             mock_ai_service.return_value.generate_subtasks = AsyncMock(
                 side_effect=AIInvalidRequestError("Todo not found")
             )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_ai_configuration_error(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_generate_subtasks_ai_configuration_error(self, authenticated_client: AsyncClient, test_todo):
         """Test subtask generation with AI configuration error."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
@@ -94,9 +88,7 @@ class TestAIController:
             mock_ai_service.return_value.generate_subtasks = AsyncMock(
                 side_effect=AIConfigurationError("AI service not configured")
             )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
             data = response.json()
@@ -105,9 +97,7 @@ class TestAIController:
             assert "AI_CONFIGURATION_ERROR" in data["data"]["error_code"]
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_quota_exceeded(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_generate_subtasks_quota_exceeded(self, authenticated_client: AsyncClient, test_todo):
         """Test subtask generation with quota exceeded."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
@@ -115,9 +105,7 @@ class TestAIController:
             mock_ai_service.return_value.generate_subtasks = AsyncMock(
                 side_effect=AIQuotaExceededError("API quota exceeded")
             )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
             data = response.json()
@@ -135,9 +123,7 @@ class TestAIController:
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
             mock_ai_service.return_value.generate_subtasks = AsyncMock(side_effect=rate_limit_error)
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
             assert "retry-after" in response.headers
@@ -153,12 +139,8 @@ class TestAIController:
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.generate_subtasks = AsyncMock(
-                side_effect=AITimeoutError("Request timed out")
-            )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(side_effect=AITimeoutError("Request timed out"))
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_408_REQUEST_TIMEOUT
             data = response.json()
@@ -167,9 +149,7 @@ class TestAIController:
             assert "AI_TIMEOUT" in data["data"]["error_code"]
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_service_unavailable(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_generate_subtasks_service_unavailable(self, authenticated_client: AsyncClient, test_todo):
         """Test subtask generation with service unavailable."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
@@ -177,9 +157,7 @@ class TestAIController:
             mock_ai_service.return_value.generate_subtasks = AsyncMock(
                 side_effect=AIServiceUnavailableError("Service temporarily unavailable")
             )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
             data = response.json()
@@ -187,19 +165,13 @@ class TestAIController:
             assert data["message"] == "AI service is temporarily unavailable"
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_generic_error(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_generate_subtasks_generic_error(self, authenticated_client: AsyncClient, test_todo):
         """Test subtask generation with generic AI service error."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.generate_subtasks = AsyncMock(
-                side_effect=AIServiceError("Generic AI error")
-            )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(side_effect=AIServiceError("Generic AI error"))
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
@@ -207,19 +179,13 @@ class TestAIController:
             assert data["message"] == "AI service encountered an error"
 
     @pytest.mark.asyncio
-    async def test_generate_subtasks_unexpected_error(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_generate_subtasks_unexpected_error(self, authenticated_client: AsyncClient, test_todo):
         """Test subtask generation with unexpected error."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.generate_subtasks = AsyncMock(
-                side_effect=Exception("Unexpected error")
-            )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(side_effect=Exception("Unexpected error"))
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             data = response.json()
@@ -240,15 +206,11 @@ class TestAIController:
         ]
 
         for invalid_data in invalid_cases:
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=invalid_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=invalid_data)
             assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_analyze_file_success(
-        self, authenticated_client: AsyncClient, sample_file_analysis_response
-    ):
+    async def test_analyze_file_success(self, authenticated_client: AsyncClient, sample_file_analysis_response):
         """Test successful file analysis."""
         file_id = uuid.uuid4()
         request_data = {
@@ -288,9 +250,7 @@ class TestAIController:
         from app.exceptions.ai import AIInvalidRequestError
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.analyze_file = AsyncMock(
-                side_effect=AIInvalidRequestError("File not found")
-            )
+            mock_ai_service.return_value.analyze_file = AsyncMock(side_effect=AIInvalidRequestError("File not found"))
             response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -317,9 +277,7 @@ class TestAIController:
 
             with patch("app.domains.ai.controller.AIService") as mock_ai_service:
                 mock_ai_service.return_value.analyze_file = AsyncMock(return_value=mock_response)
-                response = await authenticated_client.post(
-                    "/api/ai/analyze-file", json=request_data
-                )
+                response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
                 assert response.status_code == status.HTTP_201_CREATED
                 data = response.json()
@@ -361,9 +319,7 @@ class TestAIController:
         request_data = {"file_id": file_id, "analysis_type": "summary"}
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.analyze_file = AsyncMock(
-                side_effect=AIServiceError("Analysis failed")
-            )
+            mock_ai_service.return_value.analyze_file = AsyncMock(side_effect=AIServiceError("Analysis failed"))
             response = await authenticated_client.post("/api/ai/analyze-file", json=request_data)
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -421,9 +377,7 @@ class TestAIController:
     async def test_get_ai_service_status_error(self, authenticated_client: AsyncClient):
         """Test AI service status check with error."""
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.get_service_status = AsyncMock(
-                side_effect=Exception("Status check failed")
-            )
+            mock_ai_service.return_value.get_service_status = AsyncMock(side_effect=Exception("Status check failed"))
             response = await authenticated_client.get("/api/ai/status")
 
             assert response.status_code == status.HTTP_200_OK
@@ -472,9 +426,7 @@ class TestAIController:
         ]
 
         for invalid_data in invalid_subtask_cases:
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=invalid_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=invalid_data)
             assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
         # Test file analysis validation
@@ -497,12 +449,8 @@ class TestAIController:
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
-            mock_ai_service.return_value.generate_subtasks = AsyncMock(
-                side_effect=AIConfigurationError("Test error")
-            )
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            mock_ai_service.return_value.generate_subtasks = AsyncMock(side_effect=AIConfigurationError("Test error"))
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             data = response.json()
 
@@ -520,9 +468,7 @@ class TestAIController:
             assert isinstance(error_data["suggestions"], list)
 
     @pytest.mark.asyncio
-    async def test_ai_request_logging_integration(
-        self, authenticated_client: AsyncClient, test_todo
-    ):
+    async def test_ai_request_logging_integration(self, authenticated_client: AsyncClient, test_todo):
         """Test that AI requests are properly logged/tracked."""
         request_data = {"todo_id": str(test_todo.id), "max_subtasks": 3}
 
@@ -536,9 +482,7 @@ class TestAIController:
 
         with patch("app.domains.ai.controller.AIService") as mock_ai_service:
             mock_ai_service.return_value.generate_subtasks = AsyncMock(return_value=mock_response)
-            response = await authenticated_client.post(
-                "/api/ai/generate-subtasks", json=request_data
-            )
+            response = await authenticated_client.post("/api/ai/generate-subtasks", json=request_data)
 
             assert response.status_code == status.HTTP_201_CREATED
             mock_ai_service.assert_called_once()

@@ -79,9 +79,7 @@ async def get_todos(
     pagination = PaginationParams(page=page, size=size)
 
     service = TodoService(db)
-    result = await service.get_todos_list(
-        user_id=current_user.id, filters=filters, pagination=pagination
-    )
+    result = await service.get_todos_list(user_id=current_user.id, filters=filters, pagination=pagination)
 
     todos = [TodoResponse.model_validate(todo) for todo in result["items"]]
 
@@ -188,9 +186,7 @@ async def get_todo_stats(
     service = TodoService(db)
     stats = await service.get_user_todo_stats(current_user.id)
 
-    return ResponseSchema(
-        status="success", message="Todo statistics retrieved successfully", data=stats
-    )
+    return ResponseSchema(status="success", message="Todo statistics retrieved successfully", data=stats)
 
 
 @router.get("/{todo_id}/subtasks", response_model=TodoListResponse)
@@ -214,9 +210,7 @@ async def get_todo_subtasks(
     filters = TodoFilter(parent_todo_id=todo_id)
     pagination = PaginationParams(page=page, size=size)
 
-    result = await service.get_todos_list(
-        user_id=current_user.id, filters=filters, pagination=pagination
-    )
+    result = await service.get_todos_list(user_id=current_user.id, filters=filters, pagination=pagination)
 
     todos = [TodoResponse.model_validate(todo) for todo in result["items"]]
 

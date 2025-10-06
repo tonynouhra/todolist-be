@@ -4,15 +4,15 @@ import asyncio
 import logging
 from typing import Any
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 # Import all models to ensure they're registered before creating session
-import models  # noqa: F401
-
+import models  # noqa: F401  # pylint: disable=unused-import
 from app.celery_app import celery_app
 from app.core.config import settings
 from app.services.notification_service import NotificationService
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +30,7 @@ def get_async_session() -> AsyncSession:
         max_overflow=10,
     )
 
-    async_session_maker = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     return async_session_maker()
 
@@ -57,7 +55,7 @@ def send_daily_reminders_task(self) -> dict[str, Any]:
     except Exception as e:
         logger.error(f"❌ Daily reminders task failed: {str(e)}")
         # Retry the task with exponential backoff
-        raise self.retry(exc=e, countdown=60 * 5, max_retries=3)
+        raise self.retry(exc=e, countdown=60 * 5, max_retries=3) from e
 
 
 async def _send_daily_reminders_async() -> dict[str, Any]:
@@ -101,9 +99,9 @@ def send_test_reminder_task(user_email: str) -> dict[str, Any]:
         if result:
             logger.info(f"✅ Test reminder sent to {user_email}")
             return {"success": True, "email": user_email}
-        else:
-            logger.error(f"❌ Failed to send test reminder to {user_email}")
-            return {"success": False, "email": user_email, "error": "Email send failed"}
+
+        logger.error(f"❌ Failed to send test reminder to {user_email}")
+        return {"success": False, "email": user_email, "error": "Email send failed"}
 
     except Exception as e:
         logger.error(f"❌ Test reminder task failed: {str(e)}")

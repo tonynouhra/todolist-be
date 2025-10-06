@@ -104,9 +104,7 @@ class TestSettingsService:
         """Test updating timezone setting."""
         service = SettingsService(test_db)
 
-        result = await service.update_user_settings(
-            user_id=test_user.id, timezone="America/New_York"
-        )
+        result = await service.update_user_settings(user_id=test_user.id, timezone="America/New_York")
 
         assert result is not None
         assert result.timezone == "America/New_York"
@@ -152,9 +150,7 @@ class TestSettingsService:
         """Test that update creates settings if they don't exist."""
         service = SettingsService(test_db)
 
-        result = await service.update_user_settings(
-            user_id=test_user.id, theme="dark", language="es"
-        )
+        result = await service.update_user_settings(user_id=test_user.id, theme="dark", language="es")
 
         assert result is not None
         assert result.user_id == test_user.id

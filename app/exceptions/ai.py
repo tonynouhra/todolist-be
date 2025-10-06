@@ -124,9 +124,7 @@ AI_ERROR_MAPPING = {
 }
 
 
-def map_ai_error(
-    error_type: str, message: str, details: dict[str, Any] | None = None
-) -> AIServiceError:
+def map_ai_error(error_type: str, message: str, details: dict[str, Any] | None = None) -> AIServiceError:
     """Map error type to appropriate exception."""
     exception_class = AI_ERROR_MAPPING.get(error_type, AIServiceError)
     return exception_class(message, details)

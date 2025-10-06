@@ -42,9 +42,7 @@ class TestProjectController:
         assert data["data"]["description"] is None
 
     @pytest.mark.asyncio
-    async def test_create_project_duplicate_name(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_create_project_duplicate_name(self, authenticated_client: AsyncClient, test_project):
         """Test creating project with duplicate name."""
         project_data = {
             "name": test_project.name,
@@ -127,9 +125,7 @@ class TestProjectController:
     async def test_get_projects_list_with_todo_counts(self, authenticated_client: AsyncClient):
         """Test that projects list includes todo counts."""
         # Create project
-        project_response = await authenticated_client.post(
-            "/api/projects/", json={"name": "Project with Todos"}
-        )
+        project_response = await authenticated_client.post("/api/projects/", json={"name": "Project with Todos"})
         project_id = project_response.json()["data"]["id"]
 
         # Add some todos to the project
@@ -165,9 +161,7 @@ class TestProjectController:
         assert data["data"]["name"] == test_project.name
 
     @pytest.mark.asyncio
-    async def test_get_project_by_id_with_todos(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_get_project_by_id_with_todos(self, authenticated_client: AsyncClient, test_project):
         """Test getting project with its todos."""
         # Add some todos to the project
         for i in range(2):
@@ -176,9 +170,7 @@ class TestProjectController:
                 json={"title": f"Project Todo {i}", "project_id": str(test_project.id)},
             )
 
-        response = await authenticated_client.get(
-            f"/api/projects/{test_project.id}?include_todos=true"
-        )
+        response = await authenticated_client.get(f"/api/projects/{test_project.id}?include_todos=true")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -212,9 +204,7 @@ class TestProjectController:
             "description": "Updated description",
         }
 
-        response = await authenticated_client.put(
-            f"/api/projects/{test_project.id}", json=update_data
-        )
+        response = await authenticated_client.put(f"/api/projects/{test_project.id}", json=update_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -228,9 +218,7 @@ class TestProjectController:
         original_description = test_project.description
         update_data = {"name": "New Name Only"}
 
-        response = await authenticated_client.put(
-            f"/api/projects/{test_project.id}", json=update_data
-        )
+        response = await authenticated_client.put(f"/api/projects/{test_project.id}", json=update_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -238,15 +226,11 @@ class TestProjectController:
         assert data["data"]["description"] == original_description
 
     @pytest.mark.asyncio
-    async def test_update_project_duplicate_name(
-        self, authenticated_client: AsyncClient, test_project, test_project_2
-    ):
+    async def test_update_project_duplicate_name(self, authenticated_client: AsyncClient, test_project, test_project_2):
         """Test updating project to have duplicate name."""
         update_data = {"name": test_project_2.name}
 
-        response = await authenticated_client.put(
-            f"/api/projects/{test_project.id}", json=update_data
-        )
+        response = await authenticated_client.put(f"/api/projects/{test_project.id}", json=update_data)
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -258,9 +242,7 @@ class TestProjectController:
             "description": "Updated description only",
         }
 
-        response = await authenticated_client.put(
-            f"/api/projects/{test_project.id}", json=update_data
-        )
+        response = await authenticated_client.put(f"/api/projects/{test_project.id}", json=update_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -336,18 +318,14 @@ class TestProjectController:
     async def test_get_project_stats(self, authenticated_client: AsyncClient):
         """Test getting project statistics."""
         # Create projects with and without todos
-        project1_response = await authenticated_client.post(
-            "/api/projects/", json={"name": "Project with todos"}
-        )
+        project1_response = await authenticated_client.post("/api/projects/", json={"name": "Project with todos"})
         project1_id = project1_response.json()["data"]["id"]
 
         await authenticated_client.post("/api/projects/", json={"name": "Empty project"})
 
         # Add todos to first project
         for i in range(3):
-            await authenticated_client.post(
-                "/api/todos/", json={"title": f"Todo {i}", "project_id": project1_id}
-            )
+            await authenticated_client.post("/api/todos/", json={"title": f"Todo {i}", "project_id": project1_id})
 
         response = await authenticated_client.get("/api/projects/stats/summary")
 
@@ -401,9 +379,7 @@ class TestProjectController:
         assert data["message"] == "Project not found"
 
     @pytest.mark.asyncio
-    async def test_get_project_todos_empty_project(
-        self, authenticated_client: AsyncClient, test_project
-    ):
+    async def test_get_project_todos_empty_project(self, authenticated_client: AsyncClient, test_project):
         """Test getting todos for project with no todos."""
         response = await authenticated_client.get(f"/api/projects/{test_project.id}/todos")
 
@@ -435,14 +411,10 @@ class TestProjectController:
             assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
-    async def test_project_user_isolation(
-        self, authenticated_client: AsyncClient, client: AsyncClient, test_user_2
-    ):
+    async def test_project_user_isolation(self, authenticated_client: AsyncClient, client: AsyncClient, test_user_2):
         """Test that users can only access their own projects."""
         # Create project with first user
-        project_response = await authenticated_client.post(
-            "/api/projects/", json={"name": "Private Project"}
-        )
+        project_response = await authenticated_client.post("/api/projects/", json={"name": "Private Project"})
         project_id = project_response.json()["data"]["id"]
 
         # Try to access with second user

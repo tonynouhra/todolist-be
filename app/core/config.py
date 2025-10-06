@@ -42,9 +42,7 @@ class Settings(BaseSettings):
 
     # ===== Application Settings =====
     app_name: str = Field(default="AI Todo List API", description="Application name")
-    environment: EnvironmentEnum = Field(
-        default=EnvironmentEnum.development, description="Environment type"
-    )
+    environment: EnvironmentEnum = Field(default=EnvironmentEnum.development, description="Environment type")
     debug: bool = Field(default=False, description="Debug mode")
     version: str = Field(default="1.0.0", description="Application version")
 
@@ -71,7 +69,7 @@ class Settings(BaseSettings):
     # ===== AI Service (Gemini) =====
     gemini_api_key: str | None = Field(default=None, description="Google Gemini API key")
     gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model to use")
-    gemini_max_tokens: int = Field(default=2048, description="Maximum tokens for Gemini (increased from 1000 to handle JSON responses)")
+    gemini_max_tokens: int = Field(default=2048, description="Maximum tokens for Gemini (increased for JSON responses)")
     ai_request_timeout: int = Field(default=30, description="AI request timeout in seconds")
 
     # AI Rate Limiting & Retry
@@ -79,7 +77,7 @@ class Settings(BaseSettings):
     ai_retry_backoff_factor: float = Field(default=2.0, description="Exponential backoff factor for retries")
     ai_retry_min_wait: int = Field(default=1, description="Minimum wait time between retries (seconds)")
     ai_retry_max_wait: int = Field(default=60, description="Maximum wait time between retries (seconds)")
-    ai_requests_per_minute: int = Field(default=15, description="Rate limit: requests per minute (gemini-1.5-flash default)")
+    ai_requests_per_minute: int = Field(default=15, description="Rate limit: requests per minute (gemini-1.5-flash)")
 
     # ===== File Storage Settings =====
     aws_access_key_id: str | None = Field(default=None, description="AWS access key ID")
@@ -89,15 +87,9 @@ class Settings(BaseSettings):
     s3_endpoint_url: str | None = Field(default=None, description="S3 endpoint URL")
 
     cloudflare_account_id: str | None = Field(default=None, description="CloudFlare account ID")
-    cloudflare_access_key_id: str | None = Field(
-        default=None, description="CloudFlare R2 access key"
-    )
-    cloudflare_secret_access_key: str | None = Field(
-        default=None, description="CloudFlare R2 secret key"
-    )
-    cloudflare_bucket_name: str | None = Field(
-        default=None, description="CloudFlare R2 bucket name"
-    )
+    cloudflare_access_key_id: str | None = Field(default=None, description="CloudFlare R2 access key")
+    cloudflare_secret_access_key: str | None = Field(default=None, description="CloudFlare R2 secret key")
+    cloudflare_bucket_name: str | None = Field(default=None, description="CloudFlare R2 bucket name")
 
     # ===== Redis Configuration =====
     redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
@@ -127,12 +119,8 @@ class Settings(BaseSettings):
         return self.allowed_origins if isinstance(self.allowed_origins, list) else []
 
     # ===== Background Tasks (Celery) =====
-    celery_broker_url: str = Field(
-        default="redis://localhost:6379/1", description="Celery broker URL"
-    )
-    celery_result_backend: str = Field(
-        default="redis://localhost:6379/2", description="Celery result backend"
-    )
+    celery_broker_url: str = Field(default="redis://localhost:6379/1", description="Celery broker URL")
+    celery_result_backend: str = Field(default="redis://localhost:6379/2", description="Celery result backend")
 
     # ===== Email Configuration =====
     smtp_host: str | None = Field(default=None, description="SMTP host")
@@ -147,12 +135,8 @@ class Settings(BaseSettings):
     sentry_dsn: str | None = Field(default=None, description="Sentry DSN for error tracking")
 
     # ===== WebSocket Configuration =====
-    websocket_heartbeat_interval: int = Field(
-        default=30, description="WebSocket heartbeat interval"
-    )
-    websocket_max_connections: int = Field(
-        default=1000, description="Maximum WebSocket connections"
-    )
+    websocket_heartbeat_interval: int = Field(default=30, description="WebSocket heartbeat interval")
+    websocket_max_connections: int = Field(default=1000, description="Maximum WebSocket connections")
 
     # ===== Server Settings =====
     host: str = Field(default="127.0.0.1", description="Host to bind the server")
@@ -190,11 +174,7 @@ class Settings(BaseSettings):
     def has_file_storage(self) -> bool:
         return bool(
             (self.aws_access_key_id and self.aws_secret_access_key and self.s3_bucket_name)
-            or (
-                self.cloudflare_access_key_id
-                and self.cloudflare_secret_access_key
-                and self.cloudflare_bucket_name
-            )
+            or (self.cloudflare_access_key_id and self.cloudflare_secret_access_key and self.cloudflare_bucket_name)
         )
 
     @property

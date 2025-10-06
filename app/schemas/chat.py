@@ -118,9 +118,7 @@ class ChatSuggestionResponse(BaseSchema):
     """Schema for chat with suggested actions."""
 
     message: str = Field(..., description="AI response message")
-    suggested_actions: list[SuggestedAction] = Field(
-        default=[], description="Suggested actions for user to approve"
-    )
+    suggested_actions: list[SuggestedAction] = Field(default=[], description="Suggested actions for user to approve")
 
 
 # Update forward references if needed

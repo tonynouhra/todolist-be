@@ -84,8 +84,4 @@ class Todo(BaseModel):
         """Check if the todo is overdue."""
         from datetime import datetime, timezone
 
-        return (
-            self.due_date is not None
-            and self.due_date < datetime.now(timezone.utc)
-            and not self.is_completed()
-        )
+        return self.due_date is not None and self.due_date < datetime.now(timezone.utc) and not self.is_completed()

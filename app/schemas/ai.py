@@ -14,19 +14,15 @@ class SubtaskGenerationRequest(BaseSchema):
     """Schema for requesting AI subtask generation for an existing todo."""
 
     todo_id: UUID = Field(..., description="ID of the existing todo to generate subtasks for")
-    min_subtasks: int = Field(
-        default=3, ge=1, le=5, description="Minimum number of subtasks to generate"
-    )
-    max_subtasks: int = Field(
-        default=5, ge=3, le=5, description="Maximum number of subtasks to generate"
-    )
+    min_subtasks: int = Field(default=3, ge=1, le=5, description="Minimum number of subtasks to generate")
+    max_subtasks: int = Field(default=5, ge=3, le=5, description="Maximum number of subtasks to generate")
 
-    @field_validator('max_subtasks')
+    @field_validator("max_subtasks")
     @classmethod
     def validate_subtask_range(cls, v, info):
         """Ensure max_subtasks is greater than or equal to min_subtasks."""
-        if 'min_subtasks' in info.data and v < info.data['min_subtasks']:
-            raise ValueError('max_subtasks must be greater than or equal to min_subtasks')
+        if "min_subtasks" in info.data and v < info.data["min_subtasks"]:
+            raise ValueError("max_subtasks must be greater than or equal to min_subtasks")
         return v
 
 
@@ -36,9 +32,7 @@ class GeneratedSubtask(BaseSchema):
     title: str = Field(..., min_length=1, max_length=500)
     description: str | None = None
     priority: int = Field(default=3, ge=1, le=5)
-    estimated_time: str | None = Field(
-        None, description="Estimated time to complete (e.g., '30 minutes', '2 hours')"
-    )
+    estimated_time: str | None = Field(None, description="Estimated time to complete (e.g., '30 minutes', '2 hours')")
     order: int = Field(..., ge=1, description="Suggested order of completion")
 
 
@@ -112,7 +106,7 @@ class TodoSuggestionRequest(BaseSchema):
     project_id: UUID | None = Field(None, description="ID of project to generate todos for")
     user_input: str = Field(..., min_length=1, description="Description of what user wants to accomplish")
     existing_todos: list[str] = Field(default=[], description="List of existing todo titles for context")
-    max_todos: int = Field(default=3, ge=1, le=10, description="Maximum number of todos to generate (default 3 for better quality)")
+    max_todos: int = Field(default=3, ge=1, le=10, description="Maximum number of todos to generate (3 default)")
 
 
 class GeneratedTodo(BaseSchema):
@@ -121,9 +115,7 @@ class GeneratedTodo(BaseSchema):
     title: str = Field(..., min_length=1, max_length=500)
     description: str | None = None
     priority: int = Field(default=3, ge=1, le=5)
-    estimated_time: str | None = Field(
-        None, description="Estimated time to complete (e.g., '30 minutes', '2 hours')"
-    )
+    estimated_time: str | None = Field(None, description="Estimated time to complete (e.g., '30 minutes', '2 hours')")
     category: str | None = Field(None, description="Suggested category for the todo")
 
 
@@ -146,7 +138,7 @@ class TaskOptimizationRequest(BaseSchema):
     optimization_type: str = Field(
         default="description",
         pattern="^(description|title|both|clarity|detail)$",
-        description="Type of optimization to perform"
+        description="Type of optimization to perform",
     )
     context: str | None = Field(None, description="Additional context for optimization")
 

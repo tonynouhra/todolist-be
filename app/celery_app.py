@@ -5,6 +5,7 @@ from celery.schedules import crontab
 
 from app.core.config import settings
 
+
 # Create Celery instance
 celery_app = Celery(
     "todolist",
@@ -33,7 +34,6 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.notification_tasks.send_daily_reminders_task",
         "schedule": crontab(hour=12, minute=30),  # Run at 12:30 PM UTC (TESTING)
         # "schedule": crontab(minute="*/5"),  # Run every 5 minutes
-
         "options": {"expires": 3600},  # Task expires after 1 hour
     },
 }

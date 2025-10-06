@@ -14,11 +14,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from tenacity import (
+    before_sleep_log,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    before_sleep_log,
 )
 
 from app.core.config import settings
@@ -97,18 +97,10 @@ class AIService:
             self.model = genai.GenerativeModel(
                 model_name=model_name,
                 safety_settings={
-                    HarmCategory.HARM_CATEGORY_HARASSMENT: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
-                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
-                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
-                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: (
-                        HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-                    ),
+                    HarmCategory.HARM_CATEGORY_HARASSMENT: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: (HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
                 },
                 generation_config=genai.types.GenerationConfig(
                     candidate_count=1,
@@ -116,7 +108,7 @@ class AIService:
                     temperature=0.7,
                 ),
             )
-            logger.info(f"✅ Google Gemini client initialized successfully")
+            logger.info("✅ Google Gemini client initialized successfully")
             logger.info(f"📊 Model: {model_name}")
             logger.info(f"⚡ Rate limit: {settings.ai_requests_per_minute} requests/minute")
             logger.info(f"🔄 Max retries: {settings.ai_max_retry_attempts} with exponential backoff")
@@ -131,9 +123,7 @@ class AIService:
                 logger.warning("Could not list available models")
             raise AIConfigurationError(f"Failed to initialize AI service: {str(e)}") from e
 
-    async def generate_subtasks(
-        self, request: SubtaskGenerationRequest, user_id: UUID
-    ) -> SubtaskGenerationResponse:
+    async def generate_subtasks(self, request: SubtaskGenerationRequest, user_id: UUID) -> SubtaskGenerationResponse:
         """Generate AI subtasks for an existing todo."""
         if not self.model:
             raise AIServiceUnavailableError("AI service not properly initialized")
@@ -144,9 +134,7 @@ class AIService:
             raise AIInvalidRequestError("Todo not found or access denied")
 
         # Build the prompt using todo data
-        prompt = self._build_subtask_generation_prompt_from_todo(
-            todo, request.min_subtasks, request.max_subtasks
-        )
+        prompt = self._build_subtask_generation_prompt_from_todo(todo, request.min_subtasks, request.max_subtasks)
 
         try:
             # Make the AI request with timeout and retry logic
@@ -219,9 +207,7 @@ class AIService:
                 logger.error(f"AI service error: {str(e)}")
                 raise AIServiceError(f"AI service error: {str(e)}") from e
 
-    async def analyze_file(
-        self, request: FileAnalysisRequest, user_id: UUID
-    ) -> FileAnalysisResponse:
+    async def analyze_file(self, request: FileAnalysisRequest, user_id: UUID) -> FileAnalysisResponse:
         """Analyze a file using AI."""
         if not self.model:
             raise AIServiceUnavailableError("AI service not properly initialized")
@@ -278,9 +264,7 @@ class AIService:
                 logger.error(f"AI service error: {str(e)}")
                 raise AIServiceError(f"AI service error: {str(e)}") from e
 
-    async def suggest_todos(
-        self, request: TodoSuggestionRequest, user_id: UUID
-    ) -> TodoSuggestionResponse:
+    async def suggest_todos(self, request: TodoSuggestionRequest, user_id: UUID) -> TodoSuggestionResponse:
         """Generate AI todo suggestions based on user input."""
         if not self.model:
             raise AIServiceUnavailableError("AI service not properly initialized")
@@ -332,9 +316,7 @@ class AIService:
                 logger.error(f"AI service error: {str(e)}")
                 raise AIServiceError(f"AI service error: {str(e)}") from e
 
-    async def optimize_task(
-        self, request: TaskOptimizationRequest, user_id: UUID
-    ) -> TaskOptimizationResponse:
+    async def optimize_task(self, request: TaskOptimizationRequest, user_id: UUID) -> TaskOptimizationResponse:
         """Optimize an existing task title and/or description using AI."""
         if not self.model:
             raise AIServiceUnavailableError("AI service not properly initialized")
@@ -353,9 +335,7 @@ class AIService:
             current_description = request.current_description
 
         if not current_title and not current_description:
-            raise AIInvalidRequestError(
-                "Either todo_id or current_title/description must be provided"
-            )
+            raise AIInvalidRequestError("Either todo_id or current_title/description must be provided")
 
         # Build the optimization prompt
         prompt = self._build_task_optimization_prompt(
@@ -445,9 +425,7 @@ class AIService:
 
             # Test service availability with a simple request
             test_prompt = "Respond with 'OK' if you can process this request."
-            response = await asyncio.wait_for(
-                self._generate_content_with_retry(test_prompt), timeout=5.0
-            )
+            response = await asyncio.wait_for(self._generate_content_with_retry(test_prompt), timeout=5.0)
 
             service_available = "ok" in response.lower()
 
@@ -473,9 +451,7 @@ class AIService:
 
     # Private helper methods
 
-    def _build_subtask_generation_prompt_from_todo(
-        self, todo: Todo, min_subtasks: int, max_subtasks: int
-    ) -> str:
+    def _build_subtask_generation_prompt_from_todo(self, todo: Todo, min_subtasks: int, max_subtasks: int) -> str:
         """Build prompt for subtask generation from todo data."""
         base_prompt = f"""
 Given the following main task, generate a list of specific,
@@ -522,9 +498,7 @@ Generate practical, actionable subtasks that break down the main task effectivel
 
         return base_prompt
 
-    def _build_file_analysis_prompt(
-        self, file: File, analysis_type: str, context: str | None
-    ) -> str:
+    def _build_file_analysis_prompt(self, file: File, analysis_type: str, context: str | None) -> str:
         """Build prompt for file analysis."""
         prompt = f"""
 Analyze the following file and provide insights based on the analysis type requested.
@@ -598,9 +572,7 @@ Generate a list of actionable todo items based on the user's input.
 """
 
         if request.project_id:
-            prompt += (
-                f"**Project Context:** This is for a specific project (ID: {request.project_id})\n"
-            )
+            prompt += f"**Project Context:** This is for a specific project (ID: {request.project_id})\n"
 
         if request.existing_todos:
             existing_list = "\n".join([f"- {todo}" for todo in request.existing_todos[:10]])
@@ -780,20 +752,18 @@ Make the task more actionable and well-defined:
                 raise AIServiceError("Empty response from AI service")
 
             # Check if candidates exist and are not empty
-            if not hasattr(response, 'candidates') or not response.candidates:
+            if not hasattr(response, "candidates") or not response.candidates:
                 logger.error("AI response has no candidates - content may be blocked")
                 # Log prompt_feedback if available for debugging
-                if hasattr(response, 'prompt_feedback'):
+                if hasattr(response, "prompt_feedback"):
                     logger.error(f"Prompt feedback: {response.prompt_feedback}")
-                raise AIContentFilterError(
-                    "Content was blocked by AI safety filters. Please rephrase your request."
-                )
+                raise AIContentFilterError("Content was blocked by AI safety filters. Please rephrase your request.")
 
             # Get the first candidate
             candidate = response.candidates[0]
 
             # Check finish_reason for issues
-            if hasattr(candidate, 'finish_reason'):
+            if hasattr(candidate, "finish_reason"):
                 finish_reason = candidate.finish_reason
                 logger.info(f"Response finish_reason: {finish_reason}")
 
@@ -846,9 +816,7 @@ Make the task more actionable and well-defined:
                 logger.error(f"Index error accessing response.text: {str(e)}")
                 logger.error(f"Candidates length: {len(response.candidates)}")
                 logger.error(f"Parts length: {len(candidate.content.parts) if candidate.content.parts else 0}")
-                raise AIServiceError(
-                    "AI response structure was invalid - candidates array issue"
-                ) from e
+                raise AIServiceError("AI response structure was invalid - candidates array issue") from e
 
         except AIContentFilterError:
             # Re-raise content filter errors as-is
@@ -868,7 +836,7 @@ Make the task more actionable and well-defined:
                 logger.error(f"Quota exceeded. Retry after {retry_delay}s. Error: {full_error_msg}")
                 raise AIQuotaExceededError(
                     f"API quota exceeded. Please try again in {retry_delay} seconds",
-                    details={"retry_after": retry_delay, "error": full_error_msg}
+                    details={"retry_after": retry_delay, "error": full_error_msg},
                 ) from e
             elif "429" in full_error_msg or ("rate" in error_msg and "limit" in error_msg):
                 logger.warning(f"Rate limit hit. Retry after {retry_delay}s")
@@ -1059,9 +1027,7 @@ Make the task more actionable and well-defined:
             # First try the configured model
             available_models = list(genai.list_models())
             model_names = [
-                model.name
-                for model in available_models
-                if "generateContent" in model.supported_generation_methods
+                model.name for model in available_models if "generateContent" in model.supported_generation_methods
             ]
 
             logger.info(f"🔍 Available Gemini models with generateContent: {model_names}")
@@ -1087,13 +1053,13 @@ Make the task more actionable and well-defined:
 
             # Fall back to preferred model names (prioritize gemini-1.5-flash for best rate limits)
             preferred_models = [
-                "gemini-1.5-flash",        # 15 req/min - BEST for free tier
+                "gemini-1.5-flash",  # 15 req/min - BEST for free tier
                 "gemini-1.5-flash-latest",
                 "models/gemini-1.5-flash",
-                "gemini-1.5-pro",          # 15 req/min
+                "gemini-1.5-pro",  # 15 req/min
                 "gemini-1.5-pro-latest",
                 "models/gemini-1.5-pro",
-                "gemini-pro",              # 60 req/min (legacy)
+                "gemini-pro",  # 60 req/min (legacy)
                 "models/gemini-pro",
             ]
 

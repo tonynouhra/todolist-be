@@ -47,9 +47,7 @@ class TestUserService:
         email = "newuser@example.com"
         username = "newuser"
 
-        result = await service.create_user(
-            clerk_user_id=clerk_user_id, email=email, username=username
-        )
+        result = await service.create_user(clerk_user_id=clerk_user_id, email=email, username=username)
 
         assert result is not None
         assert result.clerk_user_id == clerk_user_id
@@ -82,9 +80,7 @@ class TestUserService:
         with patch.object(test_db, "commit", side_effect=SQLAlchemyError("Database error")):
             with patch.object(test_db, "rollback") as mock_rollback:
                 with pytest.raises(SQLAlchemyError):
-                    await service.create_user(
-                        clerk_user_id="test_clerk_id", email="error@example.com"
-                    )
+                    await service.create_user(clerk_user_id="test_clerk_id", email="error@example.com")
                 mock_rollback.assert_called_once()
 
     @pytest.mark.asyncio
@@ -142,9 +138,7 @@ class TestUserService:
         new_username = "updated_username"
         new_email = "updated@example.com"
 
-        result = await service.update_user(
-            user_id=test_user.id, username=new_username, email=new_email
-        )
+        result = await service.update_user(user_id=test_user.id, username=new_username, email=new_email)
 
         assert result is not None
         assert result.id == test_user.id

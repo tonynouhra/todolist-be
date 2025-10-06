@@ -44,9 +44,7 @@ async def signup(signup_data: UserSignupRequest, db: AsyncSession = Depends(get_
             username=signup_data.username,
         )
 
-        return AuthResponse(
-            user=UserResponse.model_validate(user), message="User created successfully"
-        )
+        return AuthResponse(user=UserResponse.model_validate(user), message="User created successfully")
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -67,9 +65,7 @@ async def login(login_data: UserLoginRequest, db: AsyncSession = Depends(get_db)
         clerk_user_id = payload.get("sub")
 
         if not clerk_user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
         # Get or create user in local database
         user_service = UserService(db)

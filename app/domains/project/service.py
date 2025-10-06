@@ -98,9 +98,7 @@ class ProjectService:
                 "has_prev": False,
             }
 
-    async def update_project(
-        self, project_id: UUID, project_data: ProjectUpdate, user_id: UUID
-    ) -> Project:
+    async def update_project(self, project_id: UUID, project_data: ProjectUpdate, user_id: UUID) -> Project:
         """Update a project."""
         project = await self._get_project_by_id_and_user(project_id, user_id)
         if not project:
@@ -183,9 +181,7 @@ class ProjectService:
             "average_todos_per_project": float(avg_todos),
         }
 
-    async def get_project_with_todo_counts(
-        self, project_id: UUID, user_id: UUID
-    ) -> dict[str, Any] | None:
+    async def get_project_with_todo_counts(self, project_id: UUID, user_id: UUID) -> dict[str, Any] | None:
         """Get project with todo counts."""
         project = await self._get_project_by_id_and_user(project_id, user_id)
         if not project:

@@ -80,19 +80,13 @@ class AIInteractionFactory(SQLAlchemyModelFactory):
         sqlalchemy_session_persistence = "commit"
 
     prompt = factory.Faker("sentence", nb_words=10)
-    response = factory.LazyFunction(
-        lambda: '{"subtasks": [{"title": "Test subtask", "priority": 3}]}'
-    )
-    interaction_type = factory.Iterator(
-        ["subtask_generation", "file_analysis", "task_optimization"]
-    )
+    response = factory.LazyFunction(lambda: '{"subtasks": [{"title": "Test subtask", "priority": 3}]}')
+    interaction_type = factory.Iterator(["subtask_generation", "file_analysis", "task_optimization"])
     # user_id and todo_id will be passed when creating
 
 
 # Utility functions for creating test data
-async def create_user_with_todos(
-    session, num_todos: int = 3, **user_kwargs
-) -> tuple[User, list[Todo]]:
+async def create_user_with_todos(session, num_todos: int = 3, **user_kwargs) -> tuple[User, list[Todo]]:
     """Create a user with a specified number of todos."""
     UserFactory._meta.sqlalchemy_session = session
     TodoFactory._meta.sqlalchemy_session = session
@@ -108,9 +102,7 @@ async def create_user_with_todos(
     return user, todos
 
 
-async def create_project_with_todos(
-    session, user_id: uuid.UUID, num_todos: int = 5
-) -> tuple[Project, list[Todo]]:
+async def create_project_with_todos(session, user_id: uuid.UUID, num_todos: int = 5) -> tuple[Project, list[Todo]]:
     """Create a project with a specified number of todos."""
     ProjectFactory._meta.sqlalchemy_session = session
     TodoFactory._meta.sqlalchemy_session = session
@@ -140,18 +132,14 @@ async def create_todo_with_subtasks(
 
     subtasks = []
     for _i in range(num_subtasks):
-        subtask = SubtaskFactory.create(
-            user_id=user_id, parent_todo_id=parent_todo.id, project_id=project_id
-        )
+        subtask = SubtaskFactory.create(user_id=user_id, parent_todo_id=parent_todo.id, project_id=project_id)
         subtasks.append(subtask)
 
     await session.commit()
     return parent_todo, subtasks
 
 
-async def create_mixed_status_todos(
-    session, user_id: uuid.UUID, project_id: uuid.UUID | None = None
-) -> list[Todo]:
+async def create_mixed_status_todos(session, user_id: uuid.UUID, project_id: uuid.UUID | None = None) -> list[Todo]:
     """Create todos with different statuses for testing."""
     TodoFactory._meta.sqlalchemy_session = session
 

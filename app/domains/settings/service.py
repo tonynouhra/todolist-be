@@ -18,8 +18,7 @@ class SettingsService:
         self.db = db
 
     async def get_user_settings(self, user_id: UUID) -> UserSettings:
-        """
-        Get user settings, creating with defaults if they don't exist.
+        """Get user settings, creating with defaults if they don't exist.
 
         Args:
             user_id: The user's unique identifier
@@ -30,9 +29,7 @@ class SettingsService:
         Raises:
             SQLAlchemyError: If database operation fails
         """
-        result = await self.db.execute(
-            select(UserSettings).where(UserSettings.user_id == user_id)
-        )
+        result = await self.db.execute(select(UserSettings).where(UserSettings.user_id == user_id))
         settings = result.scalar_one_or_none()
 
         if not settings:
@@ -42,8 +39,7 @@ class SettingsService:
         return settings
 
     async def create_default_settings(self, user_id: UUID) -> UserSettings:
-        """
-        Create default settings for a user.
+        """Create default settings for a user.
 
         Args:
             user_id: The user's unique identifier
@@ -83,8 +79,7 @@ class SettingsService:
         email_notifications: bool | None = None,
         push_notifications: bool | None = None,
     ) -> UserSettings:
-        """
-        Update user settings with provided values.
+        """Update user settings with provided values.
 
         Args:
             user_id: The user's unique identifier
@@ -127,8 +122,7 @@ class SettingsService:
             raise e
 
     async def reset_user_settings(self, user_id: UUID) -> UserSettings:
-        """
-        Reset user settings to defaults.
+        """Reset user settings to defaults.
 
         Args:
             user_id: The user's unique identifier
@@ -150,8 +144,7 @@ class SettingsService:
         )
 
     async def delete_user_settings(self, user_id: UUID) -> bool:
-        """
-        Delete user settings.
+        """Delete user settings.
 
         Args:
             user_id: The user's unique identifier
@@ -162,9 +155,7 @@ class SettingsService:
         Raises:
             SQLAlchemyError: If database operation fails
         """
-        result = await self.db.execute(
-            select(UserSettings).where(UserSettings.user_id == user_id)
-        )
+        result = await self.db.execute(select(UserSettings).where(UserSettings.user_id == user_id))
         settings = result.scalar_one_or_none()
 
         if not settings:

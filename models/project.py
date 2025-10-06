@@ -26,9 +26,5 @@ class Project(BaseModel):
     todos = relationship("Todo", back_populates="project", cascade="all, delete-orphan")
 
     # New partitioned relationships
-    active_todos = relationship(
-        "TodoActive", back_populates="project", cascade="all, delete-orphan"
-    )
-    archived_todos = relationship(
-        "TodoArchived", back_populates="project", cascade="all, delete-orphan"
-    )
+    active_todos = relationship("TodoActive", back_populates="project", cascade="all, delete-orphan")
+    archived_todos = relationship("TodoArchived", back_populates="project", cascade="all, delete-orphan")

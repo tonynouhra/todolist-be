@@ -48,9 +48,7 @@ class UserService:
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
-    async def update_user(
-        self, user_id: UUID, username: str = None, email: str = None
-    ) -> User | None:
+    async def update_user(self, user_id: UUID, username: str = None, email: str = None) -> User | None:
         """Update user information."""
         user = await self.get_user_by_id(user_id)
         if not user:

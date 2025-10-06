@@ -48,9 +48,7 @@ async def generate_subtasks(
     """Generate AI subtasks for a given task."""
     try:
         service = AIService(db)
-        result = await service.generate_subtasks(
-            request=generation_request, user_id=current_user.id
-        )
+        result = await service.generate_subtasks(request=generation_request, user_id=current_user.id)
 
         return ResponseSchema(
             status="success",
@@ -182,9 +180,7 @@ async def generate_subtasks(
         logger.error(f"Unexpected error in AI subtask generation: {str(e)}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=ResponseSchema(
-                status="error", message="An unexpected error occurred", data=None
-            ).model_dump(),
+            content=ResponseSchema(status="error", message="An unexpected error occurred", data=None).model_dump(),
         )
 
 
@@ -258,9 +254,7 @@ async def get_ai_service_status(
         return ResponseSchema(
             status="success",
             message="AI service status check failed",
-            data=AIServiceStatus(
-                service_available=False, model_name="unknown", requests_today=0
-            ).model_dump(),
+            data=AIServiceStatus(service_available=False, model_name="unknown", requests_today=0).model_dump(),
         )
 
 
