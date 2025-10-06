@@ -14,7 +14,8 @@ alembic==1.12.0
 asyncpg==0.28.0
 
 # ===== Authentication & Security =====
-PyJWT[crypto]>=2.8.0  # Secure JWT library replacing python-jose 
+PyJWT[crypto]>=2.8.0  # Secure JWT library replacing python-jose
+authlib>=1.6.5  # Fix CVE-2025-59420 (GHSA-9ggr-2464-2j32) - JWS crit header bypass
 passlib[bcrypt]==1.7.4
 python-multipart>=0.0.18  # Fix GHSA-2jv5-9r88-3w3p, GHSA-59g5-xgcq-4qw3
 
@@ -42,6 +43,14 @@ setuptools>=78.1.1  # Fix PYSEC-2022-43012 and PYSEC-2025-49
 starlette>=0.47.2  # Fix GHSA-f96h-pmfr-66vw, GHSA-2c2j-9gv5-cj73
 urllib3>=2.5.0  # Fix GHSA-pq67-6m6q-mj2v
 # Note: ecdsa vulnerability (CVE-2024-23342) mitigated by using cryptography lib via PyJWT
+
+# ===== Known Security Advisories (Not Yet Patched) =====
+# pip 25.2 - GHSA-4xh5-x5gv-qwph (CVE-2025-8869)
+# Issue: Fallback tar extraction doesn't validate symlink targets
+# Status: Awaiting fix in pip 25.3 (https://github.com/pypa/pip/pull/13550)
+# Mitigation: Avoid installing source distributions from untrusted sources
+# Impact: MODERATE - only affects installations from malicious sdists
+# Last checked: 2025-10-06
 
 # ===== Utilities =====
 python-dotenv==1.0.0
