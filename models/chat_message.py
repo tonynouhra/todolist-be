@@ -2,7 +2,7 @@
 Chat message model for AI assistant messages.
 """
 
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Text
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, JSON, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 import enum
@@ -30,7 +30,8 @@ class ChatMessage(BaseModel):
     content = Column(Text, nullable=False)
 
     # Optional: Store actions taken by AI (e.g., created project, task, etc.)
-    actions = Column(JSONB, nullable=True)  # {"type": "create_project", "data": {...}}
+    # Use JSON.with_variant() for cross-database compatibility (PostgreSQL uses JSONB, SQLite uses JSON)
+    actions = Column(JSON().with_variant(JSONB(), "postgresql"), nullable=True)  # {"type": "create_project", "data": {...}}
 
     # Whether this message led to action execution
     has_actions = Column(Boolean, default=False)
